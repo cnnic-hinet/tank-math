@@ -1,0 +1,10 @@
+{
+  "name": "坦克数学大作战",
+  "short_name": "坦克数学",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#bfe7ff",
+  "theme_color": "#bfe7ff",
+  "icons": [{ "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }]
+}
