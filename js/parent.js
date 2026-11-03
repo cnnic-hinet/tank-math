@@ -6,26 +6,25 @@
 
   const color = r => (r >= 0.85 ? '#4caf50' : r >= 0.6 ? '#ffb300' : '#ff6b5e');
 
+  // 学习分析：这里只放摘要，详细的在维修厂「📊 学习分析」
   const accCard = () => {
-    const st = Store.data.stats;
-    const body = [];
-    L.ZONES.forEach(z => {
-      const types = [...new Set(z.levels.filter(l => !l.boss && !l.mini).flatMap(l => l.types))];
-      body.push(h('div', { class: 'zone-label' }, `${z.icon} ${z.name}`));
-      types.forEach(t => {
-        const s = st[t] || { n: 0, ok: 0 };
-        const r = s.n ? s.ok / s.n : 0;
-        // 自动调难度的状态（看最近 10 次）
-        const adj = L.weak(t) ? h('span', { class: 'adj weak' }, '多给基础题') : L.strong(t) ? h('span', { class: 'adj strong' }, '多给挑战题') : null;
-        body.push(h('div', { class: 'acc-row' },
-          h('span', null, Q.names[t], adj),
-          h('div', { class: 'acc-bar' }, h('i', { style: { width: r * 100 + '%', background: color(r) } })),
-          h('span', { class: 'num' }, s.n ? `${Math.round(r * 100)}%（${s.n}题）` : '还没做')));
-      });
-    });
-    return h('div', { class: 'p-card' }, h('h3', null, '📊 各题型正确率（第一次作答）'), body,
-      h('div', { class: 'note' }, '绿色 ≥85% 已掌握；黄色 60–85% 需要多练；红色 <60% 建议家长陪着用实物讲一讲。'),
-      h('div', { class: 'note' }, '难度会自动调整：某个题型最近 10 次正确率 ≥90%，普通关多出挑战题；<60% 就多出基础题，并且答题前可以先看提示。'));
+    const A = TM.Analysis;
+    const rows = A.rows(), all = A.all(rows);
+    const weak = rows.filter(r => A.level(r) >= 2).slice(0, 4);
+    return h('div', { class: 'p-card' },
+      h('h3', null, '📊 学习分析'),
+      h('div', { class: 'an-sum' }, A.summary()),
+      weak.length ? h('div', { class: 'an-list', style: { marginTop: '10px' } }, weak.map(r => h('div', { class: 'an-row lv' + A.level(r) },
+        h('div', { class: 'an-row-top' },
+          h('b', null, r.name),
+          h('span', { class: 'an-zone' }, r.zone ? `${r.zone.icon} ${r.zone.name}` : ''),
+          h('span', { class: 'an-state ' + (r.acc >= 0.85 ? 'good' : r.acc >= 0.6 ? 'mid' : 'bad') }, `${Math.round(r.acc * 100)}%`)),
+        h('div', { class: 'an-bar' }, h('i', { style: { width: Math.round(r.acc * 100) + '%', background: color(r.acc) } })),
+        h('div', { class: 'an-meta' }, h('span', null, `做了 ${r.n} 次，错 ${r.wrong} 次`),
+          r.main ? h('span', null, `主要错在${A.KINDS[r.main].name}`) : null)))) : null,
+      h('button', { class: 'btn green', style: { marginTop: '12px', width: '100%' }, onclick: () => { Audio.sfx.tap(); TM.Garage.show('an'); } },
+        '打开详细分析（按题型、难度、错法）'),
+      h('div', { class: 'note' }, `一共做了 ${all.n} 题，第一次答对 ${all.ok} 题。详细页面里能看到每个题型的正确率、基础/提高/挑战分开的表现、错在哪儿，还能直接出题练。`));
   };
 
   const weekCard = () => {

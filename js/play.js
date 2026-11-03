@@ -293,7 +293,7 @@
             f.setHearts(hearts, L.HEARTS);
           },
         });
-        Store.record(q.type, r.firstOk);
+        Store.record(q.type, r.firstOk, { diff: q.diff, prompt: q.prompt, answer: q.answer, got: r.wrong, src: 'play' });
         if (!r.ok) Repair.add(q, r.wrong);
         Store.save();
         results.push({ type: q.type, diff: q.diff, firstOk: r.firstOk, ok: r.ok });
@@ -473,7 +473,7 @@
           onWrong: () => wait(300),
           onMiss: async () => { Repair.review(item, false); await wait(300); },
         });
-        Store.record(q.type, r.firstOk);
+        Store.record(q.type, r.firstOk, { diff: q.diff, prompt: q.prompt, answer: q.answer, got: r.wrong, src: 'review' });
         if (r.ok) TM.Tasks.bump('fix');
         if (r.firstOk) { TM.Tasks.bump('first'); RW.earn(1); earned++; }
         Store.save();
@@ -501,6 +501,63 @@
     } catch (e) {
       if (e !== ABORT) throw e;
       return null;
+    }
+  };
+
+  // ---------- 弱项特训：针对不熟的题型出几道题 ----------
+  // types：题型列表；n：题数。答对一次给 1 颗星星，做错送进维修厂
+  P.practice = async (types, n = 5) => {
+    const list = (types || []).filter(t => Q.gens[t]);
+    if (!list.length) return;
+    const qs = [];
+    for (let i = 0; i < n; i++) qs.push(Q.make(list[i % list.length], i < n - 1 ? 0 : 1));
+    const st = stage({ title: '🎯 弱项特训', exitText: '这次练习的进度不会保存。' });
+    const f = st.field;
+    const results = [], marks = [];
+    let earned = 0;
+    try {
+      await Audio.wait();
+      st.check();
+      Audio.speak(`练一练${list.map(t => Q.names[t]).join('、')}，一共${n}道题。`);
+      for (let i = 0; i < qs.length; i++) {
+        const q = qs[i];
+        setProgress(st.progress, qs.length, marks, i);
+        f.setQueue(qs.slice(i + 1).map(kindOf));
+        await f.spawn(kindOf(q));
+        st.check();
+        const r = await answer(st, q, {
+          tries: 2, explain: true,
+          onRight: async firstTry => { Lines.say(firstTry && i === qs.length - 1 ? 'win' : 'hit'); await f.fire(RW.pickWeapon()); },
+          onWrong: () => f.advance(),
+          onMiss: async () => { await f.advance(); await f.enemyFire(); },
+        });
+        Store.record(q.type, r.firstOk, { diff: q.diff, prompt: q.prompt, answer: q.answer, got: r.wrong, src: 'practice' });
+        if (!r.ok) Repair.add(q, r.wrong);
+        if (r.firstOk) { TM.Tasks.bump('first'); RW.earn(1); earned++; }
+        Store.save();
+        results.push(r);
+        marks.push(r.ok ? 'ok' : 'miss');
+        if (!r.ok) await f.retreat();
+        st.check();
+      }
+      setProgress(st.progress, qs.length, marks, -1);
+      const first = results.filter(r => r.firstOk).length;
+      Audio.sfx.win();
+      const v = await TM.App.ask({
+        emoji: '🎯', title: '特训完成！',
+        text: [
+          h('div', { class: 'stat-row' },
+            h('div', { class: 'stat' }, h('b', null, `${first}/${results.length}`), h('span', null, '一次答对')),
+            h('div', { class: 'stat' }, h('b', null, `+${earned}`), h('span', null, '得到星星'))),
+          h('div', { class: 'praise' }, first === results.length ? '全部一次答对，这个题型已经拿下啦！' : first * 2 >= results.length ? '大部分都对了，再练几次就熟了。' : '没关系，做错的已经送到维修厂，明天再修一次。'),
+          h('div', { class: 'note' }, '在维修厂「📊 学习分析」里可以随时再练。'),
+        ],
+        buttons: [{ label: '回地图', value: 0, cls: 'green' }, { label: '再练一组', value: 1, cls: 'blue' }],
+      });
+      if (v) P.practice(types, n);
+      else TM.App.map();
+    } catch (e) {
+      if (e !== ABORT) throw e;
     }
   };
 

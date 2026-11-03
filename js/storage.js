@@ -10,7 +10,8 @@
     open: {},           // 整个战区直接开放（入营测试跳过的战区）{z1: true}
     levels: {},         // 'z1-0': {stars, best}
     repair: [],         // 维修厂（错题本）
-    stats: {},          // 题型统计 {type: {n, ok}}，按首次作答计
+    stats: {},          // 题型统计 {type: {n, ok, d:[[n,ok],[n,ok],[n,ok]]}}，按首次作答计，d 是按难度分开的
+    mistakes: {},       // 错题样本 {type: [{d, p, a, g, t, s}]}，每种题型最近 12 道
     daily: {},          // 每天 {sec, n, ok, wrong: {type: count}}
     skin: 'green',      // 我方坦克涂装
     model: 'basic',     // 我方坦克车型
@@ -50,18 +51,40 @@
     return (d[key] = d[key] || { sec: 0, n: 0, ok: 0, wrong: {} });
   };
 
-  // 记录一道题的首次作答结果
-  S.record = (type, ok) => {
+  // 记录一道题的首次作答结果。extra = {diff, prompt, answer, got, src} 用来做错题分析
+  S.record = (type, ok, extra = {}) => {
     const st = (S.data.stats[type] = S.data.stats[type] || { n: 0, ok: 0 });
     st.n++;
     if (ok) st.ok++;
+    // 按难度分开统计：d[0] 基础、d[1] 提高、d[2] 挑战，每项是 [做了几道, 对几道]
+    if (extra.diff != null) {
+      const d = (st.d = st.d || [[0, 0], [0, 0], [0, 0]]);
+      while (d.length < 3) d.push([0, 0]);
+      d[extra.diff][0]++;
+      if (ok) d[extra.diff][1]++;
+    }
     const r = (S.data.recent[type] = S.data.recent[type] || []);
     r.push(!!ok);
     if (r.length > 10) r.shift();
-    const d = S.day();
-    d.n++;
-    if (ok) d.ok++;
-    else d.wrong[type] = (d.wrong[type] || 0) + 1;
+    const day = S.day();
+    day.n++;
+    if (ok) day.ok++;
+    else {
+      day.wrong[type] = (day.wrong[type] || 0) + 1;
+      if (extra.got != null) S.miss(type, extra);
+    }
+  };
+
+  // 记下一道错题的样子，每种题型留最近 12 道，用来分析「错在哪儿」
+  S.miss = (type, { diff, prompt, answer, got, src }) => {
+    const m = (S.data.mistakes = S.data.mistakes || {});
+    const list = (m[type] = m[type] || []);
+    list.push({
+      d: diff == null ? 0 : diff, p: String(prompt == null ? '' : prompt),
+      a: String(answer == null ? '' : answer), g: String(got),
+      t: U.today(), s: src || 'play',
+    });
+    if (list.length > 12) list.splice(0, list.length - 12);
   };
 
   S.addTime = sec => { S.day().sec += sec; };
