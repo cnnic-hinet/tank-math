@@ -58,10 +58,16 @@
     card.innerHTML = '';
     card.dataset.answer = q.answer; // 方便自动化测试
     const scene = V.render(q.scene);
+    // 没听清可以点一下再读一遍。跟着题目一起排，压在题目下面，不跟题目区抢点击
+    const say = h('button', {
+      class: 'say-btn',
+      onclick: () => { Audio.sfx.tap(); Audio.speak(q.speak); },
+    }, '🔊 再读一遍');
     const body = h('div', { class: 'qbody' },
       scene,
       h('div', { class: 'prompt' + (isExpr(q.prompt) ? ' expr' : q.prompt.length > 24 ? ' long' : '') }, q.prompt),
-      q.sub ? h('div', { class: 'sub' }, q.sub) : null);
+      q.sub ? h('div', { class: 'sub' }, q.sub) : null,
+      say);
     let resolve = null;
     // 有一个选项字多，就都用小一号的字，免得大小不一
     const txt = q.choices.some(c => String(c).length > 2);
@@ -87,7 +93,6 @@
     }, '💡 提示') : null;
     card.append(
       h('div', { class: 'qtag ' + (tag ? 'review' : 'd' + q.diff) }, tag || TAGS[q.diff]),
-      h('button', { class: 'btn-icon speak-btn', onclick: () => Audio.speak(q.speak) }, '🔊'),
       ...[early, body, choices].filter(Boolean));
 
     const help = kind => {
