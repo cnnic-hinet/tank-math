@@ -8,7 +8,9 @@
     h('div', { class: 'gi-tank', html: V.tank(x.fixed ? 'me' : 'broken') }),
     h('div', { class: 'gi-main' },
       h('div', { class: 'gi-name' }, Repair.name(x)),
-      h('div', { class: 'gi-q' }, x.q.prompt + (x.fixed ? '' : `（当时选了 ${x.wrong}）`))),
+      h('div', { class: 'gi-q' }, x.q.prompt + (x.fixed ? '' : `（当时选了 ${x.wrong}）`)),
+      x.replayN ? h('div', { class: 'gi-replay' },
+        `老对手来找过 ${x.replayN} 次` + (x.replayOk ? `，打退 ${x.replayOk} 次` : '')) : null),
     h('span', { class: 'gi-state ' + (cls || '') }, state));
 
   let tab = 'repair';
@@ -51,7 +53,7 @@
     const right = h('div', { class: 'g-col' },
       h('h3', null, `修好的坦克 🏅 ${fixed.length} 辆`),
       fixed.length
-        ? h('div', { class: 'g-list' }, fixed.map(x => item(x, '修好了 ' + x.fixedDate.slice(5), 'ok')))
+        ? h('div', { class: 'g-list' }, fixed.map(x => item(x, (x.replayOk >= 2 ? '服了 ' : '修好了 ') + x.fixedDate.slice(5), 'ok')))
         : h('div', { class: 'empty-tip' }, h('b', null, '🛠️'), '答错的题会送到这里。', '隔一天再来修，连续答对 2 次就彻底修好啦。'));
 
     const body = tab === 'an'

@@ -133,12 +133,20 @@
       const kinds = {};
       (mis[t] || []).forEach(m => { const k = A.classify(m); kinds[k] = (kinds[k] || 0) + 1; });
       const main = Object.entries(kinds).sort((x, y) => y[1] - x[1])[0];
+      // 复仇题（旧错题在关卡里回来）的表现
+      const reps = rep.filter(x => x.type === t && x.replayN);
+      const lastRep = reps.sort((a, b) => ((a.lastReplay || '') < (b.lastReplay || '') ? 1 : -1))[0];
+      const replayN = reps.reduce((s, x) => s + (x.replayN || 0), 0);
+      const replayOk = reps.reduce((s, x) => s + (x.replayOk || 0), 0);
       return {
         t, name: Q.names[t], zone: zoneOf(t), n: s.n, ok: s.ok, acc, wrong: s.n - s.ok,
         d: s.d || null, recent, kinds, main: main ? main[0] : null, mainN: main ? main[1] : 0,
         hist: histBy[t] || null, hd: hdBy[t] || null,
         active: rep.filter(x => !x.fixed && x.type === t).length,
         fixed: rep.filter(x => x.fixed && x.type === t).length,
+        replayN, replayOk,
+        lastReplay: lastRep ? lastRep.lastReplay : null,
+        lastReplayOk: lastRep ? !!lastRep.lastReplayOk : null,
       };
     }).sort((a, b) => b.wrong * (1.2 - b.acc) - a.wrong * (1.2 - a.acc));
   };
@@ -229,6 +237,10 @@
         h('div', { class: 'an-d-num' }, pct(r.acc)),
         h('div', { class: 'an-d-sub' }, `做了 ${r.n} 次 · 错 ${r.wrong} 次 · ${LEVEL[A.level(r)]}`),
         r.active || r.fixed ? h('div', { class: 'an-d-sub' }, `维修厂：待修 ${r.active} 辆，已修好 ${r.fixed} 辆`) : null,
+        r.replayN ? h('div', { class: 'an-d-sub' },
+          `老对手回来 ${r.replayN} 次，一次答对 ${r.replayOk} 次` +
+          (r.lastReplay ? ` · 上次 ${r.lastReplay.slice(5).replace('-', '/')}` : '') +
+          (r.replayOk >= 2 && r.lastReplayOk ? ' · 已掌握' : r.lastReplayOk === false ? ' · 又忘了' : '')) : null,
         diffChips(r),
         !r.d && r.hd && r.hd.some(x => x)
           ? h('div', { class: 'an-d-sub' }, `以前的错题里：基础 ${r.hd[0]} 道 · 提高 ${r.hd[1]} 道 · 挑战 ${r.hd[2]} 道`)
@@ -261,7 +273,10 @@
       r.recent != null ? h('span', { class: 'an-trend ' + (r.recent - r.acc >= 0.15 ? 'up' : r.recent - r.acc <= -0.15 ? 'down' : '') },
         r.recent - r.acc >= 0.15 ? '↑ 最近在进步' : r.recent - r.acc <= -0.15 ? '↓ 最近错得更多' : '→ 稳定') : null),
     diffChips(r),
-    r.main ? h('div', { class: 'an-main' }, `最近错题：${KINDS[r.main].icon} ${KINDS[r.main].name}（${r.mainN} 次）`) : null))),
+    r.main ? h('div', { class: 'an-main' }, `最近错题：${KINDS[r.main].icon} ${KINDS[r.main].name}（${r.mainN} 次）`) : null,
+    r.replayN ? h('div', { class: 'an-replay' },
+      `😤 老对手回来 ${r.replayN} 次，一次答对 ${r.replayOk} 次` +
+      (r.replayOk >= 2 && r.lastReplayOk ? ' · 已掌握' : r.lastReplayOk === false ? ' · 又忘了' : '')) : null))),
     rows.length > 8 ? h('div', { class: 'an-note', style: { marginTop: '8px', marginBottom: '0' } },
       `还有 ${rows.length - 8} 个题型做得不错，没有列出来。`) : null);
 

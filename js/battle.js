@@ -10,8 +10,10 @@
   // 特殊小兵：角标、占几道题。盾牌兵和飞行兵要打中两次才掉，所以占两道题
   const TRAITS = { shield: '🛡️', flyer: '🪽', counter: '⚡' };
   const TRAIT_SPAN = { shield: 2, flyer: 2, counter: 1 };
+  // 复仇兵：以前打败过的敌人回来看起来很生气
+  const REVENGE = 'revenge', REVENGE_BADGE = '😤';
   const isTrait = k => !!TRAITS[k];
-  const baseKind = k => (isTrait(k) ? 'enemy' : k);
+  const baseKind = k => (isTrait(k) || k === REVENGE ? 'enemy' : k);
 
   // 每种武器怎么飞过去、打中后敌人怎么样。没写的用普通炮弹和爆炸
   // fly：shell 炮弹 / ammo 用图标当炮弹 / beam 光束 / sky 天上劈闪电 / meteor 流星雨 / air 空中支援
@@ -150,13 +152,20 @@
       this.comboEl.classList.add('pop');
     }
 
-    // 顶部显示还剩几个敌人
+    // 顶部显示还剩几个敌人。kind 可以是字符串，也可以是 { k, zi }
+    // zi 用来让复仇兵用原来战区的样子出现
     setQueue(kinds) {
       this.queue.innerHTML = '';
-      kinds.forEach(k => this.queue.append(h('div', {
-        class: 'mini ' + baseKind(k) + (isTrait(k) ? ' trait-' + k : ''),
-        html: V.enemy(this.zi, baseKind(k)),
-      })));
+      kinds.forEach(k => {
+        const o = typeof k === 'string' ? { k } : k;
+        const base = baseKind(o.k);
+        const zi = o.zi == null ? this.zi : o.zi;
+        const mark = isTrait(o.k) ? ' trait-' + o.k : o.k === REVENGE ? ' ' + REVENGE : '';
+        this.queue.append(h('div', {
+          class: 'mini ' + base + mark,
+          html: V.enemy(zi, base),
+        }));
+      });
     }
 
     // 字幕气泡
@@ -169,13 +178,18 @@
       this._bt = setTimeout(() => b.remove(), 3200);
     }
 
-    async spawn(kind, hp = 1) {
+    // opts.zi：用哪个战区的样子（复仇兵是原来战区的敌人）
+    async spawn(kind, hp = 1, opts = {}) {
       const trait = isTrait(kind) ? kind : null;
+      const revenge = kind === REVENGE;
       const look = baseKind(kind);
-      const t = h('div', { class: `tank enemy ${look}${trait ? ' trait-' + trait : ''} z${this.zi}`, html: V.enemy(this.zi, look) });
+      const zi = opts.zi == null ? this.zi : opts.zi;
+      const t = h('div', { class: `tank enemy ${look}${trait ? ' trait-' + trait : ''}${revenge ? ' ' + REVENGE : ''} z${zi}`, html: V.enemy(zi, look) });
       if (trait) t.append(h('div', { class: 'trait-badge' }, TRAITS[trait]));
+      else if (revenge) t.append(h('div', { class: 'trait-badge' }, REVENGE_BADGE));
       t.style.top = '-30%';
       this.trait = trait;
+      this.revenge = revenge;
       this.guard = trait === 'shield' || trait === 'flyer' ? 1 : 0;
       this.y = ENEMY_Y;
       if (hp > 1) {
@@ -377,6 +391,7 @@
       const e = this.enemy;
       this.enemy = null;
       this.trait = null;
+      this.revenge = false;
       const bigShot = !!this.hpBar || !!fx.big || combo >= 3;
       if (combo >= 3) this.sparks(p, 8, 90, ['🔥', '✨', '⭐']);
       const ms = await (END[fx.end] || END.boom)(this, e, p, bigShot, fx);
@@ -433,6 +448,7 @@
       const e = this.enemy;
       this.enemy = null;
       this.trait = null;
+      this.revenge = false;
       this.guard = 0;
       e.style.top = '-35%';
       await wait(700);

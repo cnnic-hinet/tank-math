@@ -147,7 +147,7 @@
     const ui = render(st, q, o.tag);
     if (o.effect) ui.effect(o.effect);
     // 先来一句作战播报（发现敌人），再读题
-    if (o.intro) Lines.say(o.intro, 0, q.speak);
+    if (o.intro) Lines.say(o.intro, o.introK || 0, q.speak);
     else Audio.speak(q.speak);
     let wrong = null;
     for (let t = 0; t < o.tries; t++) {
@@ -193,15 +193,44 @@
 
   // 顶部显示还没出场的敌人；Boss 关前 bossAt 题是小兵，后面全是 Boss 一个
   // 盾牌兵、飞行兵要打两下，占两道题，列表里只算一个
+  // 复仇题用小对象带上原来战区的样子
   const queueKinds = (qs, i, bossAt) => {
     const ks = [], span = TM.Battle.TRAIT_SPAN;
     for (let j = 0; j < Math.min(qs.length, bossAt); j++) {
       const q = qs[j];
-      if (q.trait) { if (j > i) ks.push(q.trait); j += (span[q.trait] || 1) - 1; }
+      if (q.replay) { if (j > i) ks.push({ k: 'revenge', zi: q.replayZi }); }
+      else if (q.trait) { if (j > i) ks.push(q.trait); j += (span[q.trait] || 1) - 1; }
       else if (j > i) ks.push(kindOf(q));
     }
     if (i < bossAt && bossAt < qs.length) ks.push('boss');
     return ks;
+  };
+
+  // 复仇题：把维修厂里的旧错题混进这一关，最多两道
+  // 位置避开特殊兵占的题和挑战题，不改这一关的题数
+  const attachReplay = (qs, lv) => {
+    if (lv.boss || lv.mini) return [];
+    const picks = Repair.replayPick(2, { types: lv.types });
+    if (!picks.length) return [];
+    const span = TM.Battle.TRAIT_SPAN, blocked = new Set();
+    qs.forEach((q, i) => {
+      if (q.trait) for (let k = 0; k < (span[q.trait] || 1); k++) blocked.add(i + k);
+      if (q.diff === 2) blocked.add(i);
+    });
+    const slots = [1, 4, 5, 2, 0].filter(i => i < qs.length && !blocked.has(i));
+    const used = new Set(qs.map(q => q.prompt)), out = [];
+    picks.forEach((item, k) => {
+      if (k >= slots.length) return;
+      let q = Repair.replayQuestion(item);
+      for (let t = 0; t < 8 && used.has(q.prompt); t++) q = Q.make(item.type, item.diff);
+      used.add(q.prompt);
+      q.replay = true;
+      q.replayItem = item;
+      q.replayZi = Repair.zoneIndex(item.type);
+      qs[slots[k]] = q;
+      out.push(q);
+    });
+    return out;
   };
 
   // 每个战区的 Boss 技能（Boss 血量掉到一半时放一次）
@@ -238,6 +267,8 @@
     // 每个战区的特殊小兵：第 2 关起放在第 4 题（提高题），Boss 关不放
     const trait = !lv.boss && li >= 1 ? L.TRAIT[zi] : null;
     if (trait && qs.length > 3) qs[3].trait = trait;
+    // 把维修厂里的旧错题混进来（复仇兵）
+    attachReplay(qs, lv);
     const bossAt = lv.boss ? 3 : Infinity;
     const st = stage({ title: `${zone.icon} ${lv.name}`, zi });
     const f = st.field;
@@ -266,20 +297,31 @@
           await f.spawn('enemy');
         } else if (!f.enemy) {
           if (isBoss) await f.spawn('boss', qs.length - bossAt);
+          else if (q.replay) await f.spawn('revenge', 1, { zi: q.replayZi });
           else await f.spawn(q.trait || kindOf(q));
         }
         st.check();
-        // 第一题、精英、Boss、特殊小兵出场都播报；普通小兵偶尔播报，免得太啰嗦
-        const intro = q.trait ? 'trait_' + q.trait
+        // 第一题、精英、Boss、特殊小兵、复仇兵出场都播报；普通小兵偶尔播报，免得太啰嗦
+        const intro = q.replay ? 'revenge'
+          : q.trait ? 'trait_' + q.trait
           : isBoss ? (i === bossAt ? 'boss' : null)
           : q.diff === 2 ? 'elite'
           : i === 0 || Math.random() < 0.35 ? 'spawn' : null;
+        const introK = q.replay ? (Repair.zone(q.type)?.name || '以前') : 0;
         const fx = effect;
         effect = null;
         if (i === 0) { await opening; st.check(); }
         const r = await answer(st, q, {
-          tries: 2, explain: true, intro, effect: fx,
+          tries: 2, explain: true, intro, introK, effect: fx,
+          tag: q.replay ? '😤 老对手' : null,
           onRight: async firstTry => {
+            // 复仇题：一次答对才算打退；不打连击、不给能量
+            if (q.replay) {
+              const retired = Repair.replayResult(q.replayItem, { firstOk: firstTry, ok: true });
+              Lines.say(retired ? 'revengeMaster' : firstTry ? 'revengeWin' : 'revengeStay');
+              await f.fire(RW.pickWeapon(), 0);
+              return;
+            }
             combo = firstTry ? combo + 1 : 0;
             maxCombo = Math.max(maxCombo, combo);
             f.setCombo(combo);
@@ -313,6 +355,14 @@
           },
           onWrong: () => f.advance(),
           onMiss: async () => {
+            // 复仇题：不扣心，它跑掉，题目留在维修厂
+            if (q.replay) {
+              Repair.replayResult(q.replayItem, { firstOk: false, ok: false });
+              Lines.say('revengeEscape');
+              await f.advance();
+              await f.retreat();
+              return;
+            }
             await f.advance();
             // 反击兵：两题都没答对，扣 2 颗心
             const dmg = q.trait === 'counter' ? 2 : 1;
@@ -324,10 +374,13 @@
             f.setHearts(hearts, L.HEARTS);
           },
         });
-        Store.record(q.type, r.firstOk, { diff: q.diff, prompt: q.prompt, answer: q.answer, got: r.wrong, src: 'play' });
-        if (!r.ok) Repair.add(q, r.wrong);
-        Store.save();
-        results.push({ type: q.type, diff: q.diff, firstOk: r.firstOk, ok: r.ok });
+        // 复仇题是旧错题的复现，不重复计入题型正确率（免得拉低自动调难度）
+        if (!q.replay) {
+          Store.record(q.type, r.firstOk, { diff: q.diff, prompt: q.prompt, answer: q.answer, got: r.wrong, src: 'play' });
+          if (!r.ok) Repair.add(q, r.wrong);
+          Store.save();
+        }
+        results.push({ type: q.type, diff: q.diff, firstOk: r.firstOk, ok: r.ok, replay: !!q.replay });
         marks.push(r.ok ? 'ok' : 'miss');
         if (hearts <= 0) return fail(zi, li);
         if (!r.ok) {
@@ -350,25 +403,29 @@
         }
       }
       setProgress(st.progress, qs.length, marks, -1);
-      const stars = L.stars(results, true);
+      // 复仇题不影响这一关的星级和纪录
+      const real = results.filter(r => !r.replay);
+      const stars = L.stars(real, true);
       const key = L.key(zi, li);
       const old = Store.data.levels[key] || { stars: 0, best: 0 };
-      const first = results.filter(r => r.firstOk).length;
+      const first = real.filter(r => r.firstOk).length;
       Store.data.levels[key] = { stars: Math.max(old.stars, stars), best: Math.max(old.best || 0, first) };
       Store.save();
       TM.Tasks.bump('win');
       if (stars === 3) TM.Tasks.bump('three');
       const newZone = !zoneWasOpen && zi + 1 < L.ZONES.length && L.zoneOpen(zi + 1) ? L.ZONES[zi + 1] : null;
-      // 发星星：一次答对的题每题 1 颗，新拿到的关卡星每颗 2 颗，最高连击到 5 再奖 2 颗
+      // 发星星：一次答对的题每题 1 颗，新拿到的关卡星每颗 2 颗，打退老对手每只 1 颗，最高连击到 5 再奖 2 颗
       const gain = Math.max(0, stars - old.stars);
       const comboPay = maxCombo >= 5 ? 2 : 0;
+      const replayWins = results.filter(r => r.replay && r.firstOk).length;
       const pay = RW.pay([
         [`一次答对 ${first} 题`, first],
         [`新拿到 ${gain} 颗关卡星`, gain * 2],
+        replayWins ? [`打退老对手 ${replayWins} 只`, replayWins] : ['', 0],
         comboPay ? [`最高连击 ×${maxCombo}`, comboPay] : ['', 0],
       ]);
       await wait(400);
-      return report({ zi, li, results, stars, sec: (Date.now() - t0) / 1000, fixedBefore, newZone, pay, maxCombo });
+      return report({ zi, li, results, stars, sec: (Date.now() - t0) / 1000, fixedBefore, newZone, pay, maxCombo, replayWins });
     } catch (e) {
       if (e !== ABORT) throw e;
     }
@@ -398,17 +455,19 @@
   };
 
   // ---------- 战报 ----------
-  const report = async ({ zi, li, results, stars, sec, fixedBefore, newZone, pay, maxCombo = 0 }) => {
-    const n = results.length, first = results.filter(r => r.firstOk).length;
-    const types = [...new Set(results.map(r => r.type))];
+  const report = async ({ zi, li, results, stars, sec, fixedBefore, newZone, pay, maxCombo = 0, replayWins = 0 }) => {
+    const real = results.filter(r => !r.replay);
+    const n = real.length, first = real.filter(r => r.firstOk).length;
+    const types = [...new Set(real.map(r => r.type))];
     // 具体表扬：这一关里全部一次答对的题型
-    const lines = types.filter(t => results.filter(r => r.type === t).every(r => r.firstOk)).slice(0, 2).map(t => Q.praise[t] + '！');
-    if (results.some(r => r.diff === 2 && r.firstOk)) lines.push('挑战题也一下子打下来了，真了不起！');
-    if (results.some(r => r.ok && !r.firstOk)) lines.push('看了提示马上就想明白了，很会动脑筋！');
+    const lines = types.filter(t => real.filter(r => r.type === t).every(r => r.firstOk)).slice(0, 2).map(t => Q.praise[t] + '！');
+    if (real.some(r => r.diff === 2 && r.firstOk)) lines.push('挑战题也一下子打下来了，真了不起！');
+    if (real.some(r => r.ok && !r.firstOk)) lines.push('看了提示马上就想明白了，很会动脑筋！');
     if (maxCombo >= 5) lines.push(`最高连击 ×${maxCombo}，火力全开！`);
+    if (replayWins) lines.push(`打退老对手 ×${replayWins} 只，旧仇已报！`);
     if (fixedBefore) lines.push(`出征前还修好了 ${fixedBefore} 辆坦克！`);
     if (!lines.length) lines.push('坚持打完了这一关，很勇敢！');
-    const missed = [...new Set(results.filter(r => !r.ok).map(r => Q.names[r.type]))];
+    const missed = [...new Set(real.filter(r => !r.ok).map(r => Q.names[r.type]))];
     const next = nextOf(zi, li);
 
     Audio.sfx.win();

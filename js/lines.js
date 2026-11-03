@@ -26,6 +26,12 @@
     shieldBreak: ['护盾碎啦！再打一下就消灭它！'],
     flyerDodge: ['它躲开啦！再打一下就掉下来！'],
     counter: ['反击兵打回来啦！掉了两颗心！'],
+    // 复仇兵（以前答错的题，现在回来再考一次）
+    revenge: ['{k}的老对手不服气，又回来啦！'],
+    revengeWin: ['打退它啦！真棒！'],
+    revengeMaster: ['它服啦，再也不敢来了！'],
+    revengeStay: ['这次答对啦，再打它一次就服了！'],
+    revengeEscape: ['它跑掉啦，下次还会来哦。'],
     bossHurt: ['打中 Boss 啦！', 'Boss 快撑不住了！'],
     bossDown: ['Boss 被打败啦！'],
     retry: ['再想一想。'],
