@@ -863,6 +863,9 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .p-warn { background: #fff1d1; color: #8a5a00; border-radius: 12px; padding: 10px 14px; font-size: 16px; font-weight: 700; margin-bottom: 10px; line-height: 1.5; }
 .p-input { width: 260px; padding: 6px 10px; border-radius: 10px; border: 2px solid #ddd8e8; font-size: 18px; }
 .p-muted { font-size: 15px; color: var(--soft); }
+.snap-list { display: flex; flex-direction: column; gap: 6px; }
+.snap-list .set-row { margin: 0; padding: 6px 10px; background: #f5f7fa; border-radius: 12px; }
+.snap-list .set-row b { min-width: 96px; }
 .rec-row b { width: 140px; }
 .adj { margin-left: 6px; font-size: 13px; font-weight: 900; padding: 1px 8px; border-radius: 999px; }
 .adj.weak { background: #ffe1de; color: #c0392b; }

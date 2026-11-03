@@ -172,6 +172,33 @@
 
   const backupCard = () => {
     const ta = h('textarea', { placeholder: '把备份内容粘贴到这里，再点“导入”' });
+    // 自动快照：每天第一次打开时自动存一份，升级/恢复/导入前也会存
+    const restore = async s => {
+      const v = await TM.App.ask({
+        emoji: '⚠️', title: '用这份快照恢复？',
+        text: `「${s.label}」的进度会覆盖现在的进度。恢复前会先把现在这份存成「恢复前」，点错了还能退回来。`,
+        buttons: [{ label: '取消', value: 0, cls: 'gray' }, { label: '恢复', value: 1, cls: 'red' }],
+      });
+      if (!v) return;
+      if (Store.restore(s.raw)) { TM.App.toast('已恢复，正在重新打开'); setTimeout(() => location.reload(), 800); }
+      else TM.App.toast('恢复失败');
+    };
+    const snaps = Store.snaps();
+    const snapBox = h('div', null,
+      h('h3', { style: { marginTop: '14px' } }, '🕘 自动快照'),
+      h('div', { class: 'note' }, '每天第一次打开时自动存一份，留 7 天；升级、导入、恢复之前也会各存一份。存档读不出来时，从这里恢复。'),
+      snaps.length
+        ? h('div', { class: 'snap-list' }, snaps.map(s => h('div', { class: 'set-row' },
+          h('b', null, s.label),
+          h('span', { class: 'p-muted' }, s.broken ? '这份读不出来' : `做了 ${s.n} 题 · ⭐ ${s.wallet} · ${Math.max(1, Math.round(s.size / 1024))}KB`),
+          h('button', { class: 'btn small blue', onclick: () => restore(s) }, '恢复'))))
+        : h('div', { class: 'note' }, '还没有快照，下次打开时会自动存。'));
+    const brokenBox = Store.broken ? h('div', { class: 'p-warn' },
+      h('div', null, '⚠️ 存档读取失败。原文件已经另存了一份，不会被覆盖。可以先在下面「自动快照」里恢复，或者点右边的按钮以新存档继续。'),
+      h('button', { class: 'btn small red', onclick: async () => {
+        const v = await TM.App.ask({ emoji: '⚠️', title: '以新存档继续？', text: '本次打开后做的进度会保存。读不出来的那份已经单独留了，之后还能在快照里找到。', buttons: [{ label: '取消', value: 0, cls: 'gray' }, { label: '继续', value: 1, cls: 'red' }] });
+        if (v) { Store.acceptNew(); TM.App.toast('已保存新存档'); P.show(); }
+      } }, '以新存档继续')) : null;
     const download = () => {
       const blob = new Blob([Store.exportText()], { type: 'application/json' });
       const a = h('a', { href: URL.createObjectURL(blob), download: `坦克数学备份-${U.today()}.json` });
@@ -215,7 +242,9 @@
         h('button', { class: 'btn small green', onclick: doImport }, '导入'),
         h('button', { class: 'btn small red', onclick: doReset }, '清空进度'), fileIn),
       ta,
-      h('div', { class: 'note' }, '进度只存在这台 iPad 的 Safari 里。清除 Safari 网站数据会丢失进度，建议每周备份一次。家长录音不在备份里。'));
+      brokenBox,
+      snapBox,
+      h('div', { class: 'note' }, `进度只存在这台 iPad 的 Safari 里。清除 Safari 网站数据会丢失进度，建议每周备份一次。家长录音不在备份里。当前存档 ${Math.max(1, Math.round(Store.size() / 1024))}KB。`));
   };
 
   P.show = () => {

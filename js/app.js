@@ -157,6 +157,7 @@
     // 请求持久存储，减少被浏览器清理的可能
     navigator.storage?.persist?.().catch(() => {});
     App.map();
+    if (Store.broken) App.toast('存档读取失败，原文件已保留。请到家长页恢复。', 8000);
     // 阻止双指缩放、双击放大
     document.addEventListener('gesturestart', e => e.preventDefault());
     document.addEventListener('dblclick', e => e.preventDefault());
