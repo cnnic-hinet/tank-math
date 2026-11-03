@@ -152,6 +152,8 @@
 
   App.boot = () => {
     Store.load();
+    // 把以前维修厂记下的错题补进分析用的样本（只做一次）
+    TM.Analysis?.backfill();
     // 请求持久存储，减少被浏览器清理的可能
     navigator.storage?.persist?.().catch(() => {});
     App.map();

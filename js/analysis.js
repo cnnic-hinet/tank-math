@@ -45,6 +45,73 @@
     return 'far';
   };
 
+  // ---------- 历史错题：把以前维修厂记下的错题也拿来做分析 ----------
+  // v8 以前没单独存错题样本，但维修厂每道错题都留了题目、选的答案和日期（history）
+  const historyOf = () => {
+    const out = [];
+    (D().repair || []).forEach(it => {
+      const hist = Array.isArray(it.history) && it.history.length
+        ? it.history
+        : [{ prompt: it.q && it.q.prompt, answer: it.q && it.q.answer, wrong: it.wrong, date: it.date }];
+      hist.forEach(x => {
+        if (x && x.wrong != null && x.answer != null) {
+          out.push({ t: it.type, d: it.diff, p: x.prompt, a: x.answer, g: x.wrong, date: x.date || it.date });
+        }
+      });
+    });
+    return out;
+  };
+  A.historyOf = historyOf;
+
+  // 打开时把历史错题补进 mistakes，只做一次；不覆盖已经记下的样本
+  A.backfill = () => {
+    const S = D();
+    if (S.mistakesBackfilled) return;
+    const m = (S.mistakes = S.mistakes || {});
+    historyOf().forEach(x => {
+      const list = (m[x.t] = m[x.t] || []);
+      const p = String(x.p == null ? '' : x.p), a = String(x.a), g = String(x.g);
+      if (list.some(y => y.p === p && y.g === g && y.t === x.date)) return;
+      list.push({ d: x.d == null ? 0 : x.d, p, a, g, t: x.date || U.today(), s: 'history' });
+    });
+    Object.keys(m).forEach(t => {
+      m[t].sort((a, b) => (a.t < b.t ? -1 : a.t > b.t ? 1 : 0));
+      if (m[t].length > 12) m[t].splice(0, m[t].length - 12);
+    });
+    S.mistakesBackfilled = true;
+    TM.Store.save();
+  };
+
+  // 每天的 daily.wrong 是完整的历史：统计每个题型一共错过多少、什么时候开始/最近错
+  A.history = () => {
+    const daily = D().daily || {}, out = {};
+    Object.keys(daily).forEach(k => {
+      Object.entries(daily[k].wrong || {}).forEach(([t, c]) => {
+        const o = (out[t] = out[t] || { t, n: 0, first: k, last: k, days: {} });
+        o.n += c;
+        o.days[k] = (o.days[k] || 0) + c;
+        if (k < o.first) o.first = k;
+        if (k > o.last) o.last = k;
+      });
+    });
+    return Object.values(out).sort((a, b) => b.n - a.n);
+  };
+
+  // 最近 n 周每周错了几道（含本周）
+  A.weeks = (t, n = 4) => {
+    const today = U.today(), out = [];
+    for (let w = n - 1; w >= 0; w--) {
+      let sum = 0;
+      for (let i = 0; i < 7; i++) {
+        const d = D().daily[U.addDays(today, -(w * 7 + i))];
+        if (d && d.wrong) sum += d.wrong[t] || 0;
+      }
+      out.push(sum);
+    }
+    return out;
+  };
+  A.WEEK_LABEL = ['3 周前', '2 周前', '上周', '本周'];
+
   // ---------- 每个题型的统计 ----------
   const zoneOf = t => L.ZONES.find(z => z.levels.some(l => !l.boss && !l.mini && l.types.includes(t)));
   const has = t => D().stats[t] && D().stats[t].n > 0 && Q.names[t];
@@ -52,6 +119,14 @@
   // 需要重点练的排前面：错得多、正确率低的优先
   A.rows = () => {
     const st = D().stats, rec = D().recent || {}, mis = D().mistakes || {}, rep = D().repair || [];
+    const hs = A.history(), histBy = {};
+    hs.forEach(h => { histBy[h.t] = h; });
+    // 历史错题按难度分开（只能统计错的那部分，对的部分没有难度记录）
+    const hdBy = {};
+    historyOf().forEach(x => {
+      const a = (hdBy[x.t] = hdBy[x.t] || [0, 0, 0]);
+      a[Math.min(2, Math.max(0, x.d || 0))]++;
+    });
     return Object.keys(st).filter(has).map(t => {
       const s = st[t], acc = s.ok / s.n, r = rec[t] || [];
       const recent = r.length >= 3 ? r.filter(Boolean).length / r.length : null;
@@ -61,6 +136,7 @@
       return {
         t, name: Q.names[t], zone: zoneOf(t), n: s.n, ok: s.ok, acc, wrong: s.n - s.ok,
         d: s.d || null, recent, kinds, main: main ? main[0] : null, mainN: main ? main[1] : 0,
+        hist: histBy[t] || null, hd: hdBy[t] || null,
         active: rep.filter(x => !x.fixed && x.type === t).length,
         fixed: rep.filter(x => x.fixed && x.type === t).length,
       };
@@ -145,6 +221,8 @@
   const detail = async r => {
     const mis = (D().mistakes[r.t] || []).filter(m => String(m.g) !== String(m.a)).slice(-3).reverse();
     const k = r.main ? KINDS[r.main] : null;
+    const wk = A.weeks(r.t);
+    const wkSum = wk.reduce((a, b) => a + b, 0);
     const v = await TM.App.ask({
       cls: 'an-detail', emoji: r.zone ? r.zone.icon : '📊', title: r.name,
       text: [
@@ -152,9 +230,14 @@
         h('div', { class: 'an-d-sub' }, `做了 ${r.n} 次 · 错 ${r.wrong} 次 · ${LEVEL[A.level(r)]}`),
         r.active || r.fixed ? h('div', { class: 'an-d-sub' }, `维修厂：待修 ${r.active} 辆，已修好 ${r.fixed} 辆`) : null,
         diffChips(r),
+        !r.d && r.hd && r.hd.some(x => x)
+          ? h('div', { class: 'an-d-sub' }, `以前的错题里：基础 ${r.hd[0]} 道 · 提高 ${r.hd[1]} 道 · 挑战 ${r.hd[2]} 道`)
+          : null,
+        wkSum ? h('div', { class: 'an-d-sub' }, '近 4 周错题：' + wk.map((n, i) => `${A.WEEK_LABEL[i]} ${n}`).join(' · ')) : null,
         k ? h('div', { class: 'an-d-tip' }, h('b', null, `${k.icon} 主要错在：${k.name}`), h('div', null, k.tip)) : null,
         mis.length ? h('div', { class: 'an-d-list' }, h('b', null, '最近的错题'),
-          mis.map(m => h('div', { class: 'an-d-q' }, `${m.p}　选了 ${m.g}，应该是 ${m.a}`))) : null,
+          mis.map(m => h('div', { class: 'an-d-q' }, `${m.p}　选了 ${m.g}，应该是 ${m.a}`,
+            h('span', { class: 'an-d-date' }, m.t ? String(m.t).slice(5).replace('-', '/') : '')))) : null,
       ],
       buttons: [{ label: '🎯 练 5 道', value: 1, cls: 'green' }, { label: '知道了', value: 0, cls: 'gray' }],
     });
@@ -182,13 +265,40 @@
     rows.length > 8 ? h('div', { class: 'an-note', style: { marginTop: '8px', marginBottom: '0' } },
       `还有 ${rows.length - 8} 个题型做得不错，没有列出来。`) : null);
 
+  // 历史错题：以前的记录也能看，不用等新的题慢慢攒
+  const historyCard = () => {
+    const hs = A.history();
+    if (!hs.length) return null;
+    const tot = hs.reduce((s, h) => s + h.n, 0);
+    const peak = hs[0].n;
+    return h('div', { class: 'an-card' },
+      h('h3', null, '📚 历史错题（全部记录）'),
+      h('div', { class: 'an-note' }, `一共错了 ${tot} 道，涉及 ${hs.length} 个题型。这是从头到现在的记录，不是这次的更新才开始的。`),
+      h('div', { class: 'an-list' }, hs.slice(0, 6).map(x => {
+        const wk = A.weeks(x.t), sum = wk.reduce((a, b) => a + b, 0);
+        const half = Math.floor(wk.length / 2);
+        const old = wk.slice(0, half).reduce((a, b) => a + b, 0), now = wk.slice(half).reduce((a, b) => a + b, 0);
+        return h('div', { class: 'an-hrow' },
+          h('div', { class: 'an-hrow-top' },
+            h('b', null, Q.names[x.t] || x.t),
+            h('span', { class: 'an-cnt' }, `${x.n} 次`)),
+          h('div', { class: 'an-bar' }, h('i', { style: { width: Math.max(4, (x.n / peak) * 100) + '%', background: '#ff9b52' } })),
+          h('div', { class: 'an-meta' },
+            h('span', null, `${x.first.slice(5).replace('-', '/')} 起，最近 ${x.last.slice(5).replace('-', '/')}`),
+            sum ? h('span', { class: 'an-trend ' + (now < old ? 'up' : now > old ? 'down' : '') },
+              `近 4 周 ${wk.join(' · ')}${now < old ? ' ↓ 在变少' : now > old ? ' ↑ 在变多' : ''}`) : null));
+      })),
+      hs.length > 6 ? h('div', { class: 'an-note', style: { marginTop: '8px', marginBottom: '0' } },
+        `还有 ${hs.length - 6} 个题型错得比较少，没有列出来。`) : null);
+  };
+
   const kindsCard = () => {
     const ks = A.kinds();
     if (!ks.length) return null;
     const tot = ks.reduce((s, k) => s + k.n, 0);
     return h('div', { class: 'an-card' },
       h('h3', null, '🧩 错的都是什么'),
-      h('div', { class: 'an-note' }, '把记下来的错题按「错法」分了类。同一种错反复出现，说明是这个知识点没通。'),
+      h('div', { class: 'an-note' }, '把记下来的错题按「错法」分了类，包括以前送进维修厂的题。同一种错反复出现，说明是这个知识点没通。'),
       ks.slice(0, 6).map(k => {
         const meta = KINDS[k.k];
         return h('div', { class: 'an-k' },
@@ -248,7 +358,12 @@
       body.append(h('div', { class: 'empty-tip' }, h('b', null, '📊'), '还没有做过题。', '打几关以后，这里会分析哪些题型容易错、错在哪儿。'));
       return body;
     }
-    body.append(...[overview(rows), rowsCard(rows), kindsCard(), weekCard(), zonesCard(), actions(rows)].filter(Boolean));
+    // 两列各自排列，卡片高度不一样也不会留空白
+    body.append(overview(rows));
+    body.append(h('div', { class: 'an-cols' },
+      h('div', { class: 'an-col-box' }, ...[rowsCard(rows), weekCard()].filter(Boolean)),
+      h('div', { class: 'an-col-box' }, ...[historyCard(), kindsCard(), zonesCard()].filter(Boolean))));
+    body.append(actions(rows));
     return body;
   };
 
@@ -277,7 +392,7 @@
         const c = r.d[j] || [0, 0];
         return `${n} ${c[0] ? pct(c[1] / c[0]) + `(${c[0]})` : '没做过'}`;
       }).join('　'));
-      if (r.main) Ls.push(`   主要错误：${KINDS[r.main].name} ${r.mainN} 次`);
+      if (r.main) Ls.push(`   最近错题：${KINDS[r.main].name} ${r.mainN} 次`);
       if (r.recent != null) Ls.push(`   最近 10 次正确率 ${pct(r.recent)}`);
     });
     const ks = A.kinds();
@@ -289,6 +404,16 @@
         Ls.push(`- ${KINDS[k.k].name}：${k.n} 次（${Math.round((k.n / tot) * 100)}%）`);
         if (k.sample) Ls.push(`  例：${k.sample.p} → 选了 ${k.sample.g}，应该是 ${k.sample.a}`);
         if (KINDS[k.k].tip) Ls.push(`  建议：${KINDS[k.k].tip}`);
+      });
+    }
+    const hs = A.history();
+    if (hs.length) {
+      Ls.push('');
+      Ls.push('【历史错题】按错的次数排序');
+      hs.forEach(h => {
+        const wk = A.weeks(h.t);
+        Ls.push(`- ${Q.names[h.t] || h.t}：${h.n} 次（${h.first.slice(5)} 起，最近 ${h.last.slice(5)}）` +
+          (wk.some(x => x) ? `，近 4 周 ${wk.join(' / ')}` : ''));
       });
     }
     const zs = A.zones();

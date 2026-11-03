@@ -196,7 +196,7 @@
       if (!ta.value.trim()) return TM.App.toast('先粘贴或选择备份文件');
       const v = await TM.App.ask({ emoji: '⚠️', title: '确定导入吗？', text: '当前进度会被备份里的内容覆盖。', buttons: [{ label: '取消', value: 0, cls: 'gray' }, { label: '导入', value: 1, cls: 'red' }] });
       if (!v) return;
-      try { Store.importText(ta.value.trim()); TM.App.toast('导入成功'); P.show(); }
+      try { Store.importText(ta.value.trim()); TM.Analysis?.backfill(); TM.App.toast('导入成功'); P.show(); }
       catch (e) { TM.App.toast('导入失败：' + e.message); }
     };
     const doReset = async () => {

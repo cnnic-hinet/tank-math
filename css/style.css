@@ -631,7 +631,9 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .g-tabs { display: flex; gap: 10px; padding: 6px 20px 0; }
 .g-tab { display: flex; align-items: center; gap: 8px; min-height: 54px; padding: 0 26px; border-radius: 18px 18px 0 0; background: #e6ebf2; font-size: 22px; font-weight: 900; color: #5b6472; }
 .g-tab.on { background: var(--card); color: #22303f; box-shadow: 0 -3px 0 #b7c1cd inset; }
-.an-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px 20px 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-content: start; }
+.an-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px 20px 24px; display: flex; flex-direction: column; gap: 14px; align-content: start; }
+.an-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+.an-col-box { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .an-card { background: var(--card); border-radius: 22px; border-bottom: 6px solid #b7c1cd; padding: 14px 18px; min-width: 0; align-self: start; }
 .an-card h3 { font-size: 21px; font-weight: 900; margin-bottom: 8px; }
 .an-overview, .an-actions { grid-column: 1 / -1; }
@@ -667,6 +669,12 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .an-chip.bad { background: #ffe1de; color: var(--red-d); }
 .an-chip.none { background: #eef1f5; color: #8d95a1; }
 .an-main { font-size: 14px; font-weight: 800; color: #8a5a2b; }
+.an-hrow { margin: 10px 0; }
+.an-hrow-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 18px; margin-bottom: 4px; }
+.an-hrow-top b { font-weight: 900; }
+.an-hrow .an-meta { margin-top: 3px; }
+.an-d-q { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.an-d-date { flex: none; font-size: 13px; color: var(--soft); font-weight: 700; }
 .an-k { margin: 10px 0; }
 .an-k-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 18px; margin-bottom: 4px; }
 .an-k-top b { font-weight: 900; }

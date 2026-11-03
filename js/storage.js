@@ -12,6 +12,7 @@
     repair: [],         // 维修厂（错题本）
     stats: {},          // 题型统计 {type: {n, ok, d:[[n,ok],[n,ok],[n,ok]]}}，按首次作答计，d 是按难度分开的
     mistakes: {},       // 错题样本 {type: [{d, p, a, g, t, s}]}，每种题型最近 12 道
+    mistakesBackfilled: false, // 是否已经从维修厂的历史记录里补过错题样本
     daily: {},          // 每天 {sec, n, ok, wrong: {type: count}}
     skin: 'green',      // 我方坦克涂装
     model: 'basic',     // 我方坦克车型

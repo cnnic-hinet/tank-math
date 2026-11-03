@@ -1,5 +1,5 @@
 // 离线缓存：只有在 https 下才会启用。改了文件记得把 VERSION 加 1
-const VERSION = 'tankmath-10';
+const VERSION = 'tankmath-11';
 const FILES = [
   './', 'index.html', 'manifest.json', 'icon-512.png', 'icon.svg', 'css/style.css',
   'js/util.js', 'js/storage.js', 'js/audio.js', 'js/rec.js', 'js/lines.js', 'js/q-core.js', 'js/q-zone1.js', 'js/q-zone2.js', 'js/q-zone3.js',
