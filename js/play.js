@@ -192,9 +192,14 @@
   const kindOf = q => (q.diff === 2 ? 'elite' : 'enemy');
 
   // 顶部显示还没出场的敌人；Boss 关前 bossAt 题是小兵，后面全是 Boss 一个
+  // 盾牌兵、飞行兵要打两下，占两道题，列表里只算一个
   const queueKinds = (qs, i, bossAt) => {
-    const ks = [];
-    for (let j = i + 1; j < Math.min(qs.length, bossAt); j++) ks.push(kindOf(qs[j]));
+    const ks = [], span = TM.Battle.TRAIT_SPAN;
+    for (let j = 0; j < Math.min(qs.length, bossAt); j++) {
+      const q = qs[j];
+      if (q.trait) { if (j > i) ks.push(q.trait); j += (span[q.trait] || 1) - 1; }
+      else if (j > i) ks.push(kindOf(q));
+    }
     if (i < bossAt && bossAt < qs.length) ks.push('boss');
     return ks;
   };
@@ -230,6 +235,9 @@
   const runLevel = async (zi, li, fixedBefore) => {
     const lv = L.get(zi, li), zone = L.ZONES[zi];
     const qs = L.build(zi, li);
+    // 每个战区的特殊小兵：第 2 关起放在第 4 题（提高题），Boss 关不放
+    const trait = !lv.boss && li >= 1 ? L.TRAIT[zi] : null;
+    if (trait && qs.length > 3) qs[3].trait = trait;
     const bossAt = lv.boss ? 3 : Infinity;
     const st = stage({ title: `${zone.icon} ${lv.name}`, zi });
     const f = st.field;
@@ -239,6 +247,7 @@
     const results = [], marks = [];
     f.setHearts(hearts, L.HEARTS);
     f.setEnergy(energy, RW.ENERGY);
+    f.setCombo(0);
     // 普通关打到一半掉一个补给箱
     const crateAt = lv.boss ? -1 : U.rand(2, 3);
     let skill = lv.boss ? SKILLS[zi % SKILLS.length] : null, effect = null;
@@ -247,7 +256,7 @@
       await Audio.wait();
       st.check();
       const opening = Lines.say(lv.boss ? 'bossStart' : 'start');
-      let combo = 0;
+      let combo = 0, maxCombo = 0, airUsed = false;
       for (let i = 0; i < qs.length; i++) {
         const q = qs[i], isBoss = i >= bossAt && !q.minion;
         setProgress(st.progress, qs.length, marks, i);
@@ -257,11 +266,14 @@
           await f.spawn('enemy');
         } else if (!f.enemy) {
           if (isBoss) await f.spawn('boss', qs.length - bossAt);
-          else await f.spawn(kindOf(q));
+          else await f.spawn(q.trait || kindOf(q));
         }
         st.check();
-        // 第一题、精英、Boss 出场都播报；普通小兵偶尔播报，免得太啰嗦
-        const intro = isBoss ? (i === bossAt ? 'boss' : null) : q.diff === 2 ? 'elite' : i === 0 || Math.random() < 0.35 ? 'spawn' : null;
+        // 第一题、精英、Boss、特殊小兵出场都播报；普通小兵偶尔播报，免得太啰嗦
+        const intro = q.trait ? 'trait_' + q.trait
+          : isBoss ? (i === bossAt ? 'boss' : null)
+          : q.diff === 2 ? 'elite'
+          : i === 0 || Math.random() < 0.35 ? 'spawn' : null;
         const fx = effect;
         effect = null;
         if (i === 0) { await opening; st.check(); }
@@ -269,15 +281,25 @@
           tries: 2, explain: true, intro, effect: fx,
           onRight: async firstTry => {
             combo = firstTry ? combo + 1 : 0;
+            maxCombo = Math.max(maxCombo, combo);
+            f.setCombo(combo);
             if (firstTry) TM.Tasks.bump('first');
             TM.Tasks.bump('combo', combo, true);
-            // 能量满了就放必杀技；否则随机用一件已解锁的武器
+            // 能量满了就放必杀技；8 连也送一次空中支援（本关一次）；否则随机用一件已解锁的武器
             const sup = energy >= RW.ENERGY;
+            const air = sup || (combo >= 8 && !airUsed);
+            if (air && !sup) airUsed = true;
             if (sup) { Lines.say('super'); TM.Tasks.bump('super'); }
+            else if (air) Lines.say('combo8');
             else if (isBoss) Lines.say(f.hpBar && f.hp > 1 && !f.shield ? 'bossHurt' : f.shield ? 'hit' : 'bossDown');
-            else if (combo >= 3) Lines.say('combo', combo);
+            else if (combo >= 5) Lines.say('combo5');
+            else if (combo >= 3) Lines.say('combo3');
             else Lines.say('hit');
-            await f.fire(sup ? 'air' : RW.pickWeapon());
+            const killed = await f.fire(air ? 'air' : RW.pickWeapon(), combo);
+            // 盾牌碎了 / 飞行兵躲开：还要再打一下
+            if (!killed && !f.blocked && (q.trait === 'shield' || q.trait === 'flyer')) {
+              Lines.say(q.trait === 'shield' ? 'shieldBreak' : 'flyerDodge');
+            }
             energy = sup ? 0 : Math.min(RW.ENERGY, energy + (firstTry ? 1 : 0));
             f.setEnergy(energy, RW.ENERGY);
             // 护盾挡住了这一炮，Boss 的血没掉，多补一题
@@ -292,9 +314,13 @@
           onWrong: () => f.advance(),
           onMiss: async () => {
             await f.advance();
-            await f.enemyFire();
-            hearts--;
+            // 反击兵：两题都没答对，扣 2 颗心
+            const dmg = q.trait === 'counter' ? 2 : 1;
+            if (dmg > 1) Lines.say('counter');
+            for (let d = 0; d < dmg; d++) await f.enemyFire();
+            hearts -= dmg;
             combo = 0;
+            f.setCombo(0);
             f.setHearts(hearts, L.HEARTS);
           },
         });
@@ -333,11 +359,16 @@
       TM.Tasks.bump('win');
       if (stars === 3) TM.Tasks.bump('three');
       const newZone = !zoneWasOpen && zi + 1 < L.ZONES.length && L.zoneOpen(zi + 1) ? L.ZONES[zi + 1] : null;
-      // 发星星：一次答对的题每题 1 颗，新拿到的关卡星每颗 2 颗
+      // 发星星：一次答对的题每题 1 颗，新拿到的关卡星每颗 2 颗，最高连击到 5 再奖 2 颗
       const gain = Math.max(0, stars - old.stars);
-      const pay = RW.pay([[`一次答对 ${first} 题`, first], [`新拿到 ${gain} 颗关卡星`, gain * 2]]);
+      const comboPay = maxCombo >= 5 ? 2 : 0;
+      const pay = RW.pay([
+        [`一次答对 ${first} 题`, first],
+        [`新拿到 ${gain} 颗关卡星`, gain * 2],
+        comboPay ? [`最高连击 ×${maxCombo}`, comboPay] : ['', 0],
+      ]);
       await wait(400);
-      return report({ zi, li, results, stars, sec: (Date.now() - t0) / 1000, fixedBefore, newZone, pay });
+      return report({ zi, li, results, stars, sec: (Date.now() - t0) / 1000, fixedBefore, newZone, pay, maxCombo });
     } catch (e) {
       if (e !== ABORT) throw e;
     }
@@ -367,13 +398,14 @@
   };
 
   // ---------- 战报 ----------
-  const report = async ({ zi, li, results, stars, sec, fixedBefore, newZone, pay }) => {
+  const report = async ({ zi, li, results, stars, sec, fixedBefore, newZone, pay, maxCombo = 0 }) => {
     const n = results.length, first = results.filter(r => r.firstOk).length;
     const types = [...new Set(results.map(r => r.type))];
     // 具体表扬：这一关里全部一次答对的题型
     const lines = types.filter(t => results.filter(r => r.type === t).every(r => r.firstOk)).slice(0, 2).map(t => Q.praise[t] + '！');
     if (results.some(r => r.diff === 2 && r.firstOk)) lines.push('挑战题也一下子打下来了，真了不起！');
     if (results.some(r => r.ok && !r.firstOk)) lines.push('看了提示马上就想明白了，很会动脑筋！');
+    if (maxCombo >= 5) lines.push(`最高连击 ×${maxCombo}，火力全开！`);
     if (fixedBefore) lines.push(`出征前还修好了 ${fixedBefore} 辆坦克！`);
     if (!lines.length) lines.push('坚持打完了这一关，很勇敢！');
     const missed = [...new Set(results.filter(r => !r.ok).map(r => Q.names[r.type]))];

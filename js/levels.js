@@ -90,6 +90,10 @@
   const L = { ZONES };
   L.HEARTS = 3;
 
+  // 每个战区的特殊小兵（第 2 关起，普通关第 4 题出现一个）：
+  // shield 盾牌兵、flyer 飞行兵、counter 反击兵，见 battle.js
+  L.TRAIT = ['shield', 'flyer', 'counter', 'shield', 'counter', 'flyer'];
+
   L.key = (zi, li) => `${ZONES[zi].id}-${ZONES[zi].levels[li].id}`;
   L.get = (zi, li) => ZONES[zi].levels[li];
   L.bossKey = zi => `${ZONES[zi].id}-6`;

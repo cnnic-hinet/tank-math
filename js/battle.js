@@ -7,6 +7,12 @@
   const ENEMY_Y = 16;   // 敌方坦克停下来的位置（%）
   const STEP = 13;      // 答错一次往前开的距离
 
+  // 特殊小兵：角标、占几道题。盾牌兵和飞行兵要打中两次才掉，所以占两道题
+  const TRAITS = { shield: '🛡️', flyer: '🪽', counter: '⚡' };
+  const TRAIT_SPAN = { shield: 2, flyer: 2, counter: 1 };
+  const isTrait = k => !!TRAITS[k];
+  const baseKind = k => (isTrait(k) ? 'enemy' : k);
+
   // 每种武器怎么飞过去、打中后敌人怎么样。没写的用普通炮弹和爆炸
   // fly：shell 炮弹 / ammo 用图标当炮弹 / beam 光束 / sky 天上劈闪电 / meteor 流星雨 / air 空中支援
   // end：打中后的样子，见下面的 END
@@ -107,9 +113,10 @@
       this.queue = h('div', { class: 'enemy-queue' });
       this.hearts = h('div', { class: 'hearts' });
       this.energy = h('div', { class: 'energy' });
+      this.comboEl = h('div', { class: 'combo' });
       this.me = h('div', { class: 'tank me', html: V.tank('me') });
       this.base = h('div', { class: 'base' }, h('div', { class: 'flag' }, '🚩'), h('div', { class: 'base-name' }, TM.Store.data.nick + '的基地'));
-      el.append(h('div', { class: 'road' }), this.queue, this.energy, this.layer, this.me, this.base, this.hearts);
+      el.append(h('div', { class: 'road' }), this.queue, this.energy, this.comboEl, this.layer, this.me, this.base, this.hearts);
       this.enemy = null;
     }
 
@@ -128,10 +135,28 @@
       for (let i = 0; i < max; i++) this.energy.append(h('i', { class: i < n ? 'on' : '' }));
     }
 
+    // 连击牌子：3 连起显示，5 连换个更亮的颜色
+    setCombo(n) {
+      const on = n >= 3;
+      this.comboEl.classList.toggle('on', on);
+      this.comboEl.classList.toggle('hot', n >= 5);
+      if (!on) { this.comboEl.innerHTML = ''; this._comboN = 0; return; }
+      if (this._comboN === n) return;
+      this._comboN = n;
+      this.comboEl.innerHTML = '';
+      this.comboEl.append(h('span', null, '🔥'), h('b', null, '×' + n));
+      this.comboEl.classList.remove('pop');
+      this.comboEl.getBoundingClientRect();
+      this.comboEl.classList.add('pop');
+    }
+
     // 顶部显示还剩几个敌人
     setQueue(kinds) {
       this.queue.innerHTML = '';
-      kinds.forEach(k => this.queue.append(h('div', { class: 'mini ' + k, html: V.enemy(this.zi, k) })));
+      kinds.forEach(k => this.queue.append(h('div', {
+        class: 'mini ' + baseKind(k) + (isTrait(k) ? ' trait-' + k : ''),
+        html: V.enemy(this.zi, baseKind(k)),
+      })));
     }
 
     // 字幕气泡
@@ -145,8 +170,13 @@
     }
 
     async spawn(kind, hp = 1) {
-      const t = h('div', { class: `tank enemy ${kind} z${this.zi}`, html: V.enemy(this.zi, kind) });
+      const trait = isTrait(kind) ? kind : null;
+      const look = baseKind(kind);
+      const t = h('div', { class: `tank enemy ${look}${trait ? ' trait-' + trait : ''} z${this.zi}`, html: V.enemy(this.zi, look) });
+      if (trait) t.append(h('div', { class: 'trait-badge' }, TRAITS[trait]));
       t.style.top = '-30%';
+      this.trait = trait;
+      this.guard = trait === 'shield' || trait === 'flyer' ? 1 : 0;
       this.y = ENEMY_Y;
       if (hp > 1) {
         this.hpBar = h('div', { class: 'hpbar' }, h('i'));
@@ -176,11 +206,11 @@
     }
 
     // 炮弹从 from 飞到 to（元素）。text 不为空时用 emoji 当炮弹
-    async shell(from, to, cls, text, ms = 380) {
+    // offs：多发的横向偏移，比如双管坦克、连击五连的双发
+    async shell(from, to, cls, text, ms = 380, offs) {
       const a = this.center(from), b = this.center(to);
-      // 双管坦克一次打两发
-      const offs = from === this.me && TM.Rewards.model().id === 'twin' ? [-13, 13] : [0];
-      const ss = offs.map(dx => {
+      const dxs = offs || (from === this.me && TM.Rewards.model().id === 'twin' ? [-13, 13] : [0]);
+      const ss = dxs.map(dx => {
         const s = h('div', { class: 'shell ' + cls }, text || '');
         s.style.transitionDuration = ms + 'ms';
         s.style.left = a.x + dx + 'px';
@@ -190,7 +220,7 @@
       });
       ss[0].getBoundingClientRect();
       ss.forEach((s, i) => {
-        s.style.left = b.x + offs[i] / 2 + 'px';
+        s.style.left = b.x + dxs[i] + 'px';
         s.style.top = b.y + 'px';
       });
       await wait(ms);
@@ -264,18 +294,19 @@
       return p;
     }
 
-    // 按武器发射，返回命中点
-    async launch(id) {
+    // 按武器发射，返回命中点。twin：五连击的双发
+    async launch(id, twin) {
       const fx = FX[id] || FX.shell, fly = fx.fly || 'shell';
       if (fly === 'air') return this.airStrike();
       this.me.classList.add('recoil');
       Audio.sfx[fx.sfx || 'shoot']();
+      const offs = twin ? [-26, 26] : null;
       let p;
       if (fly === 'beam') p = await this.beam(fx.cls || '');
       else if (fly === 'sky') p = await this.thunder();
       else if (fly === 'meteor') p = await this.meteors();
-      else if (fly === 'ammo') p = await this.shell(this.me, this.enemy, 'ammo ' + (fx.cls || ''), fx.ammo, fx.ms);
-      else p = await this.shell(this.me, this.enemy, 'mine ' + (fx.cls || ''));
+      else if (fly === 'ammo') p = await this.shell(this.me, this.enemy, 'ammo ' + (fx.cls || ''), fx.ammo, fx.ms, offs);
+      else p = await this.shell(this.me, this.enemy, 'mine ' + (fx.cls || ''), '', undefined, offs);
       this.me.classList.remove('recoil');
       return p;
     }
@@ -313,11 +344,14 @@
 
     // 我方开火（weapon 是武器 id）。返回敌人是否被消灭
     // 敌人有护盾时这一炮只打碎护盾，this.blocked 设为 true
-    async fire(weapon = 'shell') {
+    // combo：本关当前连击数，3 连爆炸更大、5 连双发
+    async fire(weapon = 'shell', combo = 0) {
       if (!this.enemy) return true;
       const w = TM.Rewards.weapon(weapon), fx = FX[weapon] || FX.shell;
       if (weapon !== 'shell') this.flashWeapon(w);
-      const p = await this.launch(weapon);
+      const p = await this.launch(weapon, combo >= 5);
+      // 盾牌兵 / 飞行兵：第一炮只打掉护盾或躲开，还要再打一次
+      if (this.guard > 0) return this.guardHit(p);
       if (this.shield) {
         this.shield = false;
         this.blocked = true;
@@ -342,10 +376,39 @@
       }
       const e = this.enemy;
       this.enemy = null;
-      const ms = await (END[fx.end] || END.boom)(this, e, p, !!this.hpBar || !!fx.big, fx);
+      this.trait = null;
+      const bigShot = !!this.hpBar || !!fx.big || combo >= 3;
+      if (combo >= 3) this.sparks(p, 8, 90, ['🔥', '✨', '⭐']);
+      const ms = await (END[fx.end] || END.boom)(this, e, p, bigShot, fx);
       setTimeout(() => e.remove(), 1600);
       await wait(ms);
       return true;
+    }
+
+    // 特殊敌人的第一炮：盾牌碎掉 / 飞行兵躲开，都还活着
+    async guardHit(p) {
+      const e = this.enemy;
+      this.guard = 0;
+      e.classList.add('guard-off');
+      if (this.trait === 'shield') {
+        Audio.sfx.crack();
+        this.sparks(p, 14, 100, ['🛡️', '💠', '✨']);
+        e.classList.add('shield-broken');
+        await wait(700);
+        e.classList.remove('shield-broken');
+      } else {
+        Audio.sfx.wind();
+        this.sparks(p, 8, 70, ['💨', '✨']);
+        e.classList.add('dodging');
+        const up = Math.max(2, this.y - 14);
+        e.style.top = up + '%';
+        await wait(650);
+        e.classList.remove('dodging');
+        e.style.top = this.y + '%';
+        await wait(300);
+      }
+      // 盾牌兵和飞行兵还要再打中一次，但不再补题（占的是下一道题）
+      return false;
     }
 
     shake() {
@@ -369,6 +432,8 @@
       if (!this.enemy) return;
       const e = this.enemy;
       this.enemy = null;
+      this.trait = null;
+      this.guard = 0;
       e.style.top = '-35%';
       await wait(700);
       e.remove();
@@ -452,4 +517,5 @@
   }
 
   TM.Battle = Battle;
+  TM.Battle.TRAIT_SPAN = TRAIT_SPAN;
 })(window.TM);

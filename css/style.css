@@ -186,6 +186,27 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .hpbar { position: absolute; left: 10%; right: 10%; top: -16px; height: 12px; border-radius: 6px; background: #fff; border: 2px solid #5d35a0; overflow: hidden; }
 .hpbar i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #ff6b5e, #ffb03b); transition: width .4s; }
 
+/* 特殊小兵：盾牌兵、飞行兵、反击兵 */
+.trait-badge {
+  position: absolute; right: -6px; top: -10px; font-size: 30px; line-height: 1;
+  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, .25)); animation: bob 1.4s ease-in-out infinite;
+}
+@keyframes bob { 50% { transform: translateY(-6px); } }
+.trait-shield .tank-svg { filter: drop-shadow(0 0 10px #58b6ff) drop-shadow(0 0 22px #8fd3ff); }
+.trait-shield.shield-broken .tank-svg { animation: hurt .5s; }
+.trait-flyer .tank-svg { animation: flyerFloat 1.6s ease-in-out infinite; }
+@keyframes flyerFloat { 50% { transform: translateY(-10px); } }
+.trait-counter .tank-svg { filter: drop-shadow(0 0 9px #ff7b6b); }
+.trait-counter .trait-badge { animation: zap .9s steps(2, jump-none) infinite; }
+@keyframes zap { 50% { transform: scale(1.25); } }
+/* 护盾碎了 / 躲过一炮之后，去掉光效和角标 */
+.trait-shield.guard-off .tank-svg,
+.trait-flyer.guard-off .tank-svg,
+.trait-counter.guard-off .tank-svg { filter: drop-shadow(0 6px 0 rgba(0, 0, 0, .15)); }
+.trait-shield.guard-off .tank-svg,
+.trait-flyer.guard-off .tank-svg { animation: none; }
+.guard-off .trait-badge { display: none; }
+
 .base {
   position: absolute; left: 0; right: 0; bottom: 0; height: 58px;
   display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -197,7 +218,15 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .base .base-name { font-size: 20px; font-weight: 900; color: #fff; text-shadow: 0 2px 0 #8a5a2b; }
 
 .enemy-queue { position: absolute; top: 10px; left: 10px; display: flex; gap: 4px; z-index: 2; }
-.enemy-queue .mini { width: 34px; height: 34px; }
+.enemy-queue .mini { position: relative; width: 34px; height: 34px; }
+.enemy-queue .mini.trait-shield::after,
+.enemy-queue .mini.trait-flyer::after,
+.enemy-queue .mini.trait-counter::after {
+  position: absolute; right: -5px; top: -5px; font-size: 15px;
+}
+.enemy-queue .mini.trait-shield::after { content: '🛡️'; }
+.enemy-queue .mini.trait-flyer::after { content: '🪽'; }
+.enemy-queue .mini.trait-counter::after { content: '⚡'; }
 .hearts { position: absolute; top: 8px; right: 10px; display: flex; gap: 2px; font-size: 30px; z-index: 2; }
 .hearts .off { opacity: .6; }
 .hearts span { transition: transform .3s; }
@@ -560,6 +589,22 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .energy:empty { display: none; }
 .energy .e-icon { font-size: 18px; }
 .energy i { width: 16px; height: 16px; border-radius: 4px; background: #d8d3e6; transition: background .3s; }
+
+/* 连击牌子：3 连起出现 */
+.combo {
+  position: absolute; top: 50px; left: 12px; z-index: 2;
+  display: flex; align-items: center; gap: 3px;
+  padding: 3px 12px; border-radius: 999px;
+  background: linear-gradient(135deg, #ff9a3c, #ff5f3c); color: #fff;
+  font-size: 17px; font-weight: 900;
+  opacity: 0; transform: scale(.6); transition: opacity .2s, transform .2s;
+  pointer-events: none;
+}
+.combo.on { opacity: 1; transform: scale(1); }
+.combo.hot { background: linear-gradient(135deg, #ffd54f, #ff6b3d); box-shadow: 0 0 16px #ffb74d; }
+.combo b { font-size: 22px; }
+.combo.pop { animation: comboPop .45s; }
+@keyframes comboPop { 40% { transform: scale(1.35) rotate(-6deg); } }
 .energy i.on { background: linear-gradient(#ffe066, #ffb300); }
 .energy.full { animation: pop2 .6s infinite; background: #fff3b0; }
 
