@@ -134,6 +134,8 @@
     thunder: () => { noise(0.9, 0.5, 'lowpass', 400); tone(60, 0.8, 'square', 0.12, 0, -20); },
     hole: () => tone(500, 0.9, 'sine', 0.15, 0, -440),
     meteor: () => { noise(0.9, 0.25, 'lowpass', 1200); tone(400, 0.8, 'sawtooth', 0.04, 0, -300); },
+    boing: () => tone(300, 0.3, 'sine', 0.2, 0, 640),
+    roar: () => { noise(0.6, 0.3, 'lowpass', 320); tone(90, 0.5, 'sawtooth', 0.12, 0, -30); },
     coin: () => { tone(1320, 0.08, 'square', 0.06); tone(1760, 0.2, 'square', 0.06, 0.08); },
     buy: () => [784, 988, 1175, 1568].forEach((f, i) => tone(f, 0.22, 'triangle', 0.18, i * 0.09)),
   };

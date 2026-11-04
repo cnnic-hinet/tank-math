@@ -4,8 +4,15 @@
   const h = U.h;
   const H = {};
 
-  const TABS = [['model', '🚜 车型'], ['skin', '🎨 涂装'], ['weapon', '💥 武器']];
-  let tab = 'model';
+  // 陆战和空中都是「车型」，分开两栏方便翻
+  const TABS = [['land', '🚜 陆战'], ['air', '✈️ 空中'], ['skin', '🎨 涂装'], ['weapon', '💥 武器']];
+  const LIST = {
+    land: () => RW.MODELS.filter(m => m.cat !== 'air'),
+    air: () => RW.MODELS.filter(m => m.cat === 'air'),
+    skin: () => RW.SKINS,
+    weapon: () => RW.WEAPONS,
+  };
+  let tab = 'land';
 
   // 给孩子看的战力条
   const POWER = ['火力', '装甲', '速度'];
@@ -41,7 +48,7 @@
     const drawTabs = () => {
       tabsEl.innerHTML = '';
       TABS.forEach(([k, label]) => {
-        const xs = RW[{ model: 'MODELS', skin: 'SKINS', weapon: 'WEAPONS' }[k]];
+        const xs = LIST[k]();
         tabsEl.append(h('button', {
           class: 'h-tab' + (tab === k ? ' on' : ''),
           onclick: () => { Audio.sfx.tap(); tab = k; sel = null; drawAll(); },
@@ -64,7 +71,7 @@
 
     const drawGrid = () => {
       grid.innerHTML = '';
-      RW[{ model: 'MODELS', skin: 'SKINS', weapon: 'WEAPONS' }[tab]].forEach(x => grid.append(card(x)));
+      LIST[tab]().forEach(x => grid.append(card(x)));
     };
 
     const drawInfo = () => {

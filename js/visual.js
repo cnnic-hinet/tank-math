@@ -233,6 +233,13 @@
     night: () => '<g fill="#fff"><circle cx="27" cy="44" r="1.8"/><circle cx="74" cy="40" r="1.5"/><circle cx="24" cy="66" r="1.4"/><circle cx="35" cy="86" r="1.5"/><circle cx="66" cy="87" r="1.4"/></g><path d="M77 70 a8 8 0 1 0 0 14 a6 6 0 1 1 0 -14z" fill="#fff59d"/>',
     bolt: () => '<path d="M30 38 l-6 14 h6 l-4 14 10 -18 h-6 l4 -10z M70 66 l-6 14 h6 l-4 14 10 -18 h-6 l4 -10z" fill="#ffe14d"/>',
     lava: () => '<path d="M24 44 l8 6 -4 8 8 6 M76 46 l-7 7 5 7 -6 8 M26 86 l8 -6 6 4 M74 86 l-8 -6" stroke="#ff8a3d" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>',
+    desert: d => `<g fill="${d}" opacity=".4"><path d="M18 86 q14 -12 28 -3 q10 6 34 0 v9 h-62z"/><path d="M28 48 q10 -8 20 -2 q8 4 22 0 v8 h-42z"/></g>`,
+    city: d => `<g fill="${d}" opacity=".45"><rect x="24" y="38" width="10" height="14"/><rect x="38" y="34" width="8" height="18"/><rect x="50" y="40" width="12" height="12"/><rect x="66" y="36" width="9" height="16"/><rect x="28" y="72" width="12" height="12"/><rect x="44" y="68" width="9" height="16"/><rect x="58" y="74" width="11" height="10"/></g>`,
+    stripes: () => '<g stroke="#fff" stroke-width="5" opacity=".72" stroke-linecap="round"><path d="M18 80 L46 38"/><path d="M34 88 L62 46"/><path d="M52 90 L80 48"/></g>',
+    candy: () => '<g fill="#fff" opacity=".8"><circle cx="30" cy="46" r="4"/><circle cx="70" cy="52" r="5"/><circle cx="36" cy="78" r="4.5"/><circle cx="62" cy="82" r="4"/></g><g fill="#ffe14d" opacity=".75"><circle cx="58" cy="42" r="3"/><circle cx="32" cy="88" r="3"/><circle cx="74" cy="74" r="3"/></g>',
+    jelly: () => '<ellipse cx="36" cy="46" rx="13" ry="7" fill="#fff" opacity=".6" transform="rotate(-22 36 46)"/><ellipse cx="66" cy="76" rx="9" ry="5" fill="#fff" opacity=".45" transform="rotate(-22 66 76)"/>',
+    zebra: d => `<g stroke="${d}" stroke-width="5" fill="none" opacity=".85" stroke-linecap="round"><path d="M22 46 q14 8 0 16"/><path d="M78 42 q-14 9 0 18"/><path d="M26 76 q14 8 0 16"/><path d="M74 72 q-12 8 0 16"/></g>`,
+    diamond: () => '<g fill="#fff" opacity=".9"><path d="M28 40 l4 6 -4 6 -4 -6z"/><path d="M72 44 l4 6 -4 6 -4 -6z"/><path d="M30 78 l4 6 -4 6 -4 -6z"/><path d="M70 74 l4 6 -4 6 -4 -6z"/></g>',
   };
 
   const face = (cx, cy, kind, angry) => kind === 'broken'
@@ -287,6 +294,87 @@
       <rect x="14" y="32" width="72" height="58" rx="28" fill="${c.fill}"/>${c.deco}
       ${barrel(c, 45, 10, 4, 38)}<circle cx="50" cy="6" r="5" fill="#7fe0ff" class="blink"/>
       ${turret(c, 22, 60)}`, 60],
+    // 加农炮车：长长的炮管，炮口带个制退器
+    cannon: c => [`${TRACKS}
+      <rect x="18" y="40" width="64" height="46" rx="15" fill="${c.fill}"/>${c.deco}
+      <rect x="45" y="0" width="10" height="52" rx="5" fill="${c.dark}"/>
+      <rect x="38" y="0" width="24" height="9" rx="4" fill="${c.dark}"/>
+      ${turret(c, 20, 64)}`, 64],
+    // 装甲运兵车：方方正正，六个轮子
+    apc: c => [`<g fill="#4a4a55">
+        <rect x="6" y="34" width="18" height="22" rx="8"/><rect x="76" y="34" width="18" height="22" rx="8"/>
+        <rect x="6" y="66" width="18" height="22" rx="8"/><rect x="76" y="66" width="18" height="22" rx="8"/></g>
+      <g fill="#9a9aa6"><circle cx="15" cy="45" r="4"/><circle cx="85" cy="45" r="4"/><circle cx="15" cy="77" r="4"/><circle cx="85" cy="77" r="4"/></g>
+      <path d="M20 44 L26 32 H74 L80 44 V82 a8 8 0 0 1 -8 8 H28 a8 8 0 0 1 -8 -8Z" fill="${c.fill}"/>${c.deco}
+      <rect x="36" y="6" width="28" height="28" rx="9" fill="${c.light}" stroke="${c.dark}" stroke-width="2"/>
+      <rect x="45" y="0" width="10" height="14" rx="5" fill="${c.dark}"/>`, 64],
+    // 喷火坦克：车头一个喷火口
+    flamer: c => [`${TRACKS}${hull(c)}
+      <rect x="42" y="10" width="16" height="28" rx="8" fill="${c.dark}"/>
+      <path d="M42 4 q8 -12 16 0 q-8 8 -16 0z" fill="#ffb03b"/>
+      <circle cx="50" cy="6" r="5" fill="#ffe14d" class="blink"/>
+      ${turret(c, 22, 62)}`, 62],
+    // 导弹发射车：车厢上竖着两枚导弹
+    missile: c => [`<g fill="#4a4a55">
+        <rect x="8" y="42" width="16" height="26" rx="7"/><rect x="76" y="42" width="16" height="26" rx="7"/>
+        <rect x="8" y="72" width="16" height="24" rx="7"/><rect x="76" y="72" width="16" height="24" rx="7"/></g>
+      <g fill="#9a9aa6"><circle cx="16" cy="55" r="4"/><circle cx="84" cy="55" r="4"/><circle cx="16" cy="84" r="4"/><circle cx="84" cy="84" r="4"/></g>
+      <rect x="16" y="38" width="68" height="46" rx="10" fill="${c.fill}"/>${c.deco}
+      <rect x="24" y="6" width="18" height="34" rx="9" fill="#eef2f6" stroke="${c.dark}" stroke-width="2"/>
+      <path d="M24 13 q9 -15 18 0z" fill="#ff5252"/>
+      <rect x="58" y="6" width="18" height="34" rx="9" fill="#eef2f6" stroke="${c.dark}" stroke-width="2"/>
+      <path d="M58 13 q9 -15 18 0z" fill="#ff5252"/>
+      ${turret(c, 16, 66)}`, 66],
+    // 推土机：前面一把大铲子
+    dozer: c => [`${TRACKS}
+      <rect x="18" y="42" width="64" height="46" rx="14" fill="${c.fill}"/>${c.deco}
+      <path d="M6 32 H94 L86 12 H14Z" fill="#b8c0ca" stroke="#5b6470" stroke-width="3" stroke-linejoin="round"/>
+      <rect x="36" y="34" width="28" height="30" rx="7" fill="${c.light}" stroke="${c.dark}" stroke-width="2"/>
+      <rect x="70" y="34" width="7" height="11" rx="3.5" fill="${c.dark}"/>`, 50],
+    // 激光战车：炮塔上顶着一颗激光球
+    laser: c => [`${TRACKS}${hull(c)}
+      <rect x="46" y="12" width="8" height="30" rx="4" fill="${c.dark}"/>
+      <circle cx="50" cy="10" r="8" fill="#7fe0ff" class="blink"/>
+      <path d="M36 42 q14 -14 28 0" stroke="${c.dark}" stroke-width="3" fill="none"/>
+      ${turret(c, 21, 64)}`, 64],
+    // 武装直升机
+    heli: c => [`<rect x="44" y="56" width="12" height="32" rx="6" fill="${c.dark}"/>
+      <path d="M44 84 L34 96 H44Z M56 84 L66 96 H56Z" fill="${c.light}"/>
+      <rect x="47" y="2" width="6" height="16" fill="#555"/>
+      <g class="rotor"><rect x="6" y="2" width="88" height="5" rx="2.5" fill="#555"/></g>
+      <ellipse cx="50" cy="46" rx="27" ry="24" fill="${c.fill}"/>${c.deco}
+      <ellipse cx="50" cy="42" rx="17" ry="15" fill="${c.light}" stroke="${c.dark}" stroke-width="2"/>
+      <path d="M26 86 h48 M32 74 v12 M68 74 v12" stroke="#555" stroke-width="4" stroke-linecap="round"/>`, 44],
+    // 螺旋桨飞机
+    prop: c => [`<path d="M10 56 L50 42 L90 56 L50 68Z" fill="${c.light}" stroke="${c.dark}" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M50 78 L34 96 H66Z" fill="${c.light}" stroke="${c.dark}" stroke-width="2"/>
+      <path d="M50 4 q14 18 14 38 v30 q0 10 -14 10 q-14 0 -14 -10 v-30 q0 -20 14 -38z" fill="${c.fill}"/>${c.deco}
+      <ellipse cx="50" cy="40" rx="10" ry="12" fill="${c.light}" stroke="${c.dark}" stroke-width="2"/>
+      <circle cx="50" cy="8" r="5" fill="${c.dark}"/>
+      <g class="prop"><rect x="10" y="6" width="80" height="4" rx="2" fill="#666"/></g>`, 50],
+    // 喷气战斗机
+    jet: c => [`<path d="M34 46 L2 78 L34 72Z M66 46 L98 78 L66 72Z" fill="${c.light}" stroke="${c.dark}" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M36 76 L26 98 L38 94Z M64 76 L74 98 L62 94Z" fill="${c.light}" stroke="${c.dark}" stroke-width="2"/>
+      <path d="M50 2 q14 18 14 42 v26 q0 8 -14 8 q-14 0 -14 -8 v-26 q0 -24 14 -42z" fill="${c.fill}"/>${c.deco}
+      <ellipse cx="50" cy="38" rx="9" ry="12" fill="${c.light}" stroke="${c.dark}" stroke-width="2"/>
+      <path d="M44 76 h12 l-6 16z" fill="#7fe0ff" class="blink"/>`, 42],
+    // 轰炸机
+    bomber: c => [`<path d="M6 62 L50 46 L94 62 L50 74Z" fill="${c.light}" stroke="${c.dark}" stroke-width="2" stroke-linejoin="round"/>
+      <g fill="${c.dark}"><ellipse cx="26" cy="62" rx="6" ry="4"/><ellipse cx="40" cy="57" rx="6" ry="4"/><ellipse cx="60" cy="57" rx="6" ry="4"/><ellipse cx="74" cy="62" rx="6" ry="4"/></g>
+      <path d="M50 84 L36 98 H64Z" fill="${c.light}" stroke="${c.dark}" stroke-width="2"/>
+      <ellipse cx="50" cy="52" rx="21" ry="34" fill="${c.fill}"/>${c.deco}
+      <ellipse cx="50" cy="36" rx="11" ry="12" fill="${c.light}" stroke="${c.dark}" stroke-width="2"/>`, 40],
+    // 无人机：四个小旋翼
+    drone: c => [`<g stroke="${c.dark}" stroke-width="6" stroke-linecap="round"><path d="M50 50 L20 24 M50 50 L80 24 M50 50 L20 76 M50 50 L80 76"/></g>
+      <g fill="#555" class="blink"><ellipse cx="18" cy="22" rx="13" ry="4"/><ellipse cx="82" cy="22" rx="13" ry="4"/><ellipse cx="18" cy="78" rx="13" ry="4"/><ellipse cx="82" cy="78" rx="13" ry="4"/></g>
+      <rect x="32" y="34" width="36" height="36" rx="13" fill="${c.fill}"/>${c.deco}
+      <circle cx="50" cy="62" r="5" fill="#222"/><circle cx="50" cy="62" r="2" fill="#7fe0ff" class="blink"/>`, 50],
+    // 飞碟
+    ufo: c => [`<path d="M34 74 L26 98 H74 L66 74Z" fill="#fff59d" opacity=".3"/>
+      <ellipse cx="50" cy="64" rx="40" ry="18" fill="${c.dark}"/>
+      <ellipse cx="50" cy="58" rx="38" ry="16" fill="${c.fill}"/>${c.deco}
+      <path d="M24 54 A26 30 0 0 1 76 54Z" fill="${c.light}" stroke="${c.dark}" stroke-width="2"/>
+      <g fill="#fff59d" class="blink"><circle cx="16" cy="64" r="4"/><circle cx="34" cy="70" r="4"/><circle cx="66" cy="70" r="4"/><circle cx="84" cy="64" r="4"/></g>`, 42],
   };
 
   // 我方坦克：没传 skin、model 就用当前装备的

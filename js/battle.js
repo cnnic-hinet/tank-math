@@ -34,6 +34,16 @@
     hole: { cls: 'hole', sfx: 'hole', end: 'hole', sparks: ['🌀', '✨', '⭐'] },
     meteor: { fly: 'meteor', sfx: 'meteor', big: true, sparks: ['☄️', '🔥', '⭐', '💥'] },
     air: { fly: 'air', big: true, shake: true, sparks: ['⭐', '🌟', '💥', '✨'] },
+    snowman: { fly: 'ammo', ammo: '⛄', cls: 'roll', ms: 500, end: 'freeze', sparks: ['❄️', '⛄', '✨'] },
+    egg: { fly: 'ammo', ammo: '🥚', cls: 'roll', ms: 460, sfx: 'pop', sparks: ['🥚', '🐣', '✨', '🎉'] },
+    banana: { fly: 'ammo', ammo: '🍌', cls: 'roll', ms: 460, sfx: 'boing', end: 'slip', sparks: ['🍌', '💫', '✨'] },
+    balloon: { fly: 'ammo', ammo: '🎈', ms: 700, sfx: 'boing', end: 'bubble', sparks: ['🎈', '🎈', '✨'] },
+    chicken: { cls: 'magic', sfx: 'magic', end: 'bunny', em: '🐔', sparks: ['✨', '🐣', '💫'] },
+    magnet: { fly: 'ammo', ammo: '🧲', cls: 'roll', ms: 420, sfx: 'missile', end: 'pull', sparks: ['🧲', '⚡', '✨'] },
+    ink: { fly: 'ammo', ammo: '🐙', cls: 'roll', ms: 500, sfx: 'splat', end: 'ink', sparks: ['🐙', '💦', '✨'] },
+    dino: { fly: 'ammo', ammo: '🦖', ms: 520, sfx: 'roar', big: true, end: 'stomp', sparks: ['🦖', '💥', '💨'] },
+    ufo: { fly: 'ammo', ammo: '🛸', ms: 600, sfx: 'hole', big: true, end: 'abduct', sparks: ['🛸', '✨', '💫'] },
+    dragon: { fly: 'ammo', ammo: '🐉', ms: 600, sfx: 'roar', big: true, end: 'burn', sparks: ['🐉', '🔥', '💨', '✨'] },
   };
 
   // 消灭敌人的样子。b 是战场，e 是敌人，p 是命中点。返回还要再等多久
@@ -83,13 +93,64 @@
       e.classList.add('spun');
       return 1000;
     },
-    bunny: async (b, e, p) => {
+    bunny: async (b, e, p, big, fx) => {
       b.sparks(p, 10, 70, ['💨', '✨', '💖']);
       e.innerHTML = '';
-      e.append(h('div', { class: 'bunny-em' }, '🐰'));
+      e.append(h('div', { class: 'bunny-em' }, fx.em || '🐰'));
       await wait(500);
       e.classList.add('bunnied');
       return 1100;
+    },
+    // 香蕉皮：敌人滑倒，摔得四脚朝天
+    slip: async (b, e, p, big, fx) => {
+      b.sparks(p, 8, 80, fx.sparks);
+      e.classList.add('slipped');
+      await wait(700);
+      e.classList.add('dead');
+      return 500;
+    },
+    // 磁铁：把敌人吸到跟前再炸
+    pull: async (b, e, p, big, fx) => {
+      b.sparks(p, 8, 80, fx.sparks);
+      e.classList.add('pulled');
+      await wait(520);
+      Audio.sfx.boom();
+      b.boom(b.center(e), big, fx.sparks);
+      e.classList.add('dead');
+      return 600;
+    },
+    // 墨汁：糊一脸黑的
+    ink: async (b, e, p, big, fx) => {
+      e.append(h('div', { class: 'ink-goo' }));
+      e.classList.add('inked');
+      b.sparks(p, 8, 70, fx.sparks);
+      await wait(700);
+      e.classList.add('dead');
+      return 500;
+    },
+    // 恐龙：一只大脚掌从天上踩下来
+    stomp: async (b, e, p, big, fx) => {
+      const foot = h('div', { class: 'stomp' }, '🦶');
+      foot.style.left = p.x + 'px';
+      foot.style.top = '-60px';
+      b.el.append(foot);
+      foot.getBoundingClientRect();
+      foot.style.top = p.y + 'px';
+      await wait(320);
+      Audio.sfx.boom();
+      b.shake();
+      b.boom(p, true, fx.sparks);
+      e.classList.add('squashed');
+      setTimeout(() => foot.remove(), 600);
+      return 700;
+    },
+    // 飞碟：把敌人吸到天上去
+    abduct: async (b, e, p, big, fx) => {
+      b.sparks(p, 8, 70, ['✨', '💫', '⭐']);
+      e.classList.add('floating');
+      await wait(800);
+      b.sparks(p, 8, 60, fx.sparks);
+      return 400;
     },
     hole: async (b, e, p, big, fx) => {
       const v = h('div', { class: 'vortex' }, '🌀');

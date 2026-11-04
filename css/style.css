@@ -589,6 +589,19 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .tank.sucked { opacity: 0; transform: translateX(-50%) scale(0) rotate(-720deg); transition: transform .9s ease-in, opacity .9s ease-in !important; }
 /* 悬浮坦克飘着 */
 .tank-svg.m-hover { animation: hover 1.4s ease-in-out infinite; }
+/* 飞行器：平时轻轻飘，螺旋桨会转，喷气机开炮往前冲 */
+.tank-svg.m-heli, .tank-svg.m-prop, .tank-svg.m-jet, .tank-svg.m-bomber, .tank-svg.m-drone, .tank-svg.m-ufo { animation: hover 2.2s ease-in-out infinite; }
+.tank-svg.m-heli .rotor { transform-origin: 50px 4px; }
+.tank-svg.m-prop .prop { transform-origin: 50px 8px; animation: spin .16s linear infinite; }
+.tank.me.recoil .tank-svg.m-jet { animation: jetDash .26s ease-out; }
+@keyframes jetDash { 45% { transform: translateY(16px) scale(1.05); } }
+/* 新武器打中以后：滑倒、踩扁、糊墨、被吸过去 */
+.tank.slipped { transform: translateX(-50%) translateY(30px) rotate(80deg); transition: transform .7s ease-in, opacity .7s !important; }
+.tank.squashed { transform: translateX(-50%) scale(1.5, .12); opacity: 0; transition: transform .5s ease-in, opacity .5s !important; }
+.tank.inked .tank-svg { filter: brightness(.12); }
+.tank.pulled { top: 46% !important; transition: top .5s ease-in !important; }
+.ink-goo { position: absolute; inset: 2%; border-radius: 50%; background: radial-gradient(circle, rgba(20, 20, 30, .93) 45%, rgba(20, 20, 30, 0) 72%); animation: popin .25s; }
+.stomp { position: absolute; font-size: 92px; line-height: 1; transform: translate(-50%, -50%); z-index: 6; pointer-events: none; transition: top .3s ease-in; }
 
 /* 必杀技能量 */
 .energy { position: absolute; top: 52px; right: 12px; display: flex; align-items: center; gap: 4px; z-index: 2; background: rgba(255, 255, 255, .75); border-radius: 999px; padding: 3px 8px; }
