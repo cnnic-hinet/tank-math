@@ -208,6 +208,29 @@
         h('div', { class: 'v-group' }, f, h('div', { class: 'v-label' }, `10 − ${v.b} = ${10 - v.b}`)),
         ones ? h('div', { class: 'v-group' }, o, h('div', { class: 'v-label' }, `还有 ${ones} 个`)) : null);
     },
+    // 英语：一张大卡片，放字母、数字或单词
+    card(v) {
+      return h('div', { class: 'v-card' + (v.cls ? ' ' + v.cls : '') },
+        h('b', null, v.text), v.sub ? h('span', null, v.sub) : null);
+    },
+    // 英语：颜色块
+    color(v) {
+      return h('div', { class: 'v-color' },
+        h('span', { class: 'v-swatch', style: 'background:' + v.hex }),
+        v.label ? h('b', null, v.label) : null);
+    },
+    // 英语：一排字母或单词，'_' 表示空着要填
+    seq(v) {
+      return h('div', { class: 'v-seq' }, v.items.map(x =>
+        h('span', { class: x === '_' ? 'blank' : '' }, x === '_' ? '?' : x)));
+    },
+    // 英语：图片 + 单词 + 中文
+    word(v) {
+      return h('div', { class: 'v-word' },
+        v.e ? h('span', { class: 'v-we' }, v.e) : null,
+        h('b', null, v.w),
+        v.zh ? h('span', { class: 'v-wz' }, v.zh) : null);
+    },
   };
 
   V.render = v => (v && renderers[v.kind] ? h('div', { class: 'visual' }, renderers[v.kind](v)) : null);
@@ -444,8 +467,8 @@
     </svg>`;
   };
 
-  // 每个战区的敌人长得不一样
-  const ENEMY = { 1: heli, 2: robot, 4: heli, 5: ufo };
+  // 每个战区的敌人长得不一样（英语：字母乐园机器人、颜色数字飞碟）
+  const ENEMY = { 1: heli, 2: robot, 4: heli, 5: ufo, 6: robot, 7: ufo };
   V.enemy = (zi, kind) => (ENEMY[zi] || V.tank)(kind);
 
   TM.V = V;

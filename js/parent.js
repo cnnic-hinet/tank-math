@@ -201,7 +201,7 @@
       } }, '以新存档继续')) : null;
     const download = () => {
       const blob = new Blob([Store.exportText()], { type: 'application/json' });
-      const a = h('a', { href: URL.createObjectURL(blob), download: `坦克数学备份-${U.today()}.json` });
+      const a = h('a', { href: URL.createObjectURL(blob), download: `坦克大作战备份-${U.today()}.json` });
       document.body.append(a);
       a.click();
       setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);

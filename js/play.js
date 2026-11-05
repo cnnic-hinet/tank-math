@@ -45,12 +45,12 @@
 
   const isExpr = s => /^[\d\s+−=□○<>]+$/.test(s);
   const SYM = { '>': '大于号', '<': '小于号', '=': '等于号' };
-  const explainSpeech = q => {
+  const explainSpeech = q => q.explainSpeech || (() => {
     const a = String(q.answer);
     const head = SYM[a] ? `答案是${SYM[a]}。` : /^\d+$/.test(a) ? `答案是${a}。` : '';
     return head + q.explain.map(s => Q.speech(s.replace(/□/g, '方框').replace(/△/g, '三角形'))).join('。');
-  };
-  const hintSpeech = q => Q.speech(q.hint.text.replace(/□/g, '方框').replace(/△/g, '三角形'));
+  })();
+  const hintSpeech = q => q.hint.speech || Q.speech(q.hint.text.replace(/□/g, '方框').replace(/△/g, '三角形'));
 
   // 把题目画到卡片上
   const render = (st, q, tag) => {
@@ -61,7 +61,7 @@
     // 没听清可以点一下再读一遍。跟着题目一起排，压在题目下面，不跟题目区抢点击
     const say = h('button', {
       class: 'say-btn',
-      onclick: () => { Audio.sfx.tap(); Audio.speak(q.speak); },
+      onclick: () => { Audio.sfx.tap(); Audio.speakParts(Q.speechParts(q)); },
     }, '🔊 再读一遍');
     const body = h('div', { class: 'qbody' },
       scene,
@@ -89,7 +89,7 @@
     // 这个题型最近有点吃力：答题前就能看提示
     const early = L.weak(q.type) && q.hint ? h('button', {
       class: 'btn small hint-btn',
-      onclick: () => { Audio.sfx.tap(); early.remove(); help('hint'); Audio.speak(hintSpeech(q)); },
+      onclick: () => { Audio.sfx.tap(); early.remove(); help('hint'); Audio.speakParts(hintSpeech(q)); },
     }, '💡 提示') : null;
     card.append(
       h('div', { class: 'qtag ' + (tag ? 'review' : 'd' + q.diff) }, tag || TAGS[q.diff]),
@@ -147,8 +147,8 @@
     const ui = render(st, q, o.tag);
     if (o.effect) ui.effect(o.effect);
     // 先来一句作战播报（发现敌人），再读题
-    if (o.intro) Lines.say(o.intro, o.introK || 0, q.speak);
-    else Audio.speak(q.speak);
+    if (o.intro) Lines.say(o.intro, o.introK || 0, Q.speechParts(q));
+    else Audio.speakParts(Q.speechParts(q));
     let wrong = null;
     for (let t = 0; t < o.tries; t++) {
       const { value, btn } = await ui.wait();
@@ -208,9 +208,9 @@
 
   // 复仇题：把维修厂里的旧错题混进这一关，最多两道
   // 位置避开特殊兵占的题和挑战题，不改这一关的题数
-  const attachReplay = (qs, lv) => {
+  const attachReplay = (qs, lv, subject) => {
     if (lv.boss || lv.mini) return [];
-    const picks = Repair.replayPick(2, { types: lv.types });
+    const picks = Repair.replayPick(2, { types: lv.types, subject });
     if (!picks.length) return [];
     const span = TM.Battle.TRAIT_SPAN, blocked = new Set();
     qs.forEach((q, i) => {
@@ -234,18 +234,22 @@
   };
 
   // 每个战区的 Boss 技能（Boss 血量掉到一半时放一次）
-  const SKILLS = ['smoke', 'minion', 'shield', 'shuffle', 'minion', 'shield'];
+  const SKILLS = ['smoke', 'minion', 'shield', 'shuffle', 'minion', 'shield', 'shuffle', 'minion'];
 
+  // 下一关只在同一科目里走，数学最后一关不会跳进英语
+  const subjectOf = zi => L.ZONES[zi].subject || 'math';
+  const nextZone = zi => (zi + 1 < L.ZONES.length && subjectOf(zi + 1) === subjectOf(zi) ? zi + 1 : -1);
   const nextOf = (zi, li) => {
     if (li + 1 < L.ZONES[zi].levels.length) return L.levelOpen(zi, li + 1) ? [zi, li + 1] : null;
-    return zi + 1 < L.ZONES.length && L.zoneOpen(zi + 1) ? [zi + 1, 0] : null;
+    const nz = nextZone(zi);
+    return nz >= 0 && L.zoneOpen(nz) ? [nz, 0] : null;
   };
 
   // ---------- 闯关 ----------
   P.level = async (zi, li) => {
     if (TM.App.restIfOver()) return;
     if (L.get(zi, li).mini) return TM.Mini.run(zi, li);
-    const warm = Repair.warmup();
+    const warm = Repair.warmup(L.ZONES[zi].subject || 'math');
     let fixed = 0;
     if (warm.length) {
       await Audio.wait();
@@ -268,12 +272,13 @@
     const trait = !lv.boss && li >= 1 ? L.TRAIT[zi] : null;
     if (trait && qs.length > 3) qs[3].trait = trait;
     // 把维修厂里的旧错题混进来（复仇兵）
-    attachReplay(qs, lv);
+    attachReplay(qs, lv, zone.subject || 'math');
     const bossAt = lv.boss ? 3 : Infinity;
     const st = stage({ title: `${zone.icon} ${lv.name}`, zi });
     const f = st.field;
     const t0 = Date.now();
-    const zoneWasOpen = zi + 1 < L.ZONES.length && L.zoneOpen(zi + 1);
+    const nz = nextZone(zi);
+    const zoneWasOpen = nz >= 0 && L.zoneOpen(nz);
     let hearts = L.HEARTS, energy = 0;
     const results = [], marks = [];
     f.setHearts(hearts, L.HEARTS);
@@ -376,7 +381,7 @@
         });
         // 复仇题是旧错题的复现，不重复计入题型正确率（免得拉低自动调难度）
         if (!q.replay) {
-          Store.record(q.type, r.firstOk, { diff: q.diff, prompt: q.prompt, answer: q.answer, got: r.wrong, src: 'play' });
+          Store.record(q.type, r.firstOk, { diff: q.diff, prompt: q.prompt, answer: q.answer, got: r.wrong, kind: q.topic, src: 'play' });
           if (!r.ok) Repair.add(q, r.wrong);
           Store.save();
         }
@@ -413,7 +418,8 @@
       Store.save();
       TM.Tasks.bump('win');
       if (stars === 3) TM.Tasks.bump('three');
-      const newZone = !zoneWasOpen && zi + 1 < L.ZONES.length && L.zoneOpen(zi + 1) ? L.ZONES[zi + 1] : null;
+      const nn = nextZone(zi);
+      const newZone = !zoneWasOpen && nn >= 0 && L.zoneOpen(nn) ? L.ZONES[nn] : null;
       // 发星星：一次答对的题每题 1 颗，新拿到的关卡星每颗 2 颗，打退老对手每只 1 颗，最高连击到 5 再奖 2 颗
       const gain = Math.max(0, stars - old.stars);
       const comboPay = maxCombo >= 5 ? 2 : 0;
@@ -569,7 +575,7 @@
           onWrong: () => wait(300),
           onMiss: async () => { Repair.review(item, false); await wait(300); },
         });
-        Store.record(q.type, r.firstOk, { diff: q.diff, prompt: q.prompt, answer: q.answer, got: r.wrong, src: 'review' });
+        Store.record(q.type, r.firstOk, { diff: q.diff, prompt: q.prompt, answer: q.answer, got: r.wrong, kind: q.topic, src: 'review' });
         if (r.ok) TM.Tasks.bump('fix');
         if (r.firstOk) { TM.Tasks.bump('first'); RW.earn(1); earned++; }
         Store.save();
@@ -627,7 +633,7 @@
           onWrong: () => f.advance(),
           onMiss: async () => { await f.advance(); await f.enemyFire(); },
         });
-        Store.record(q.type, r.firstOk, { diff: q.diff, prompt: q.prompt, answer: q.answer, got: r.wrong, src: 'practice' });
+        Store.record(q.type, r.firstOk, { diff: q.diff, prompt: q.prompt, answer: q.answer, got: r.wrong, kind: q.topic, src: 'practice' });
         if (!r.ok) Repair.add(q, r.wrong);
         if (r.firstOk) { TM.Tasks.bump('first'); RW.earn(1); earned++; }
         Store.save();

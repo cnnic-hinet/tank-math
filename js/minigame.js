@@ -83,12 +83,69 @@
       };
     },
   ];
-  M.gen = zi => GENS[zi % GENS.length]();
+  // 英语战区的玩法：字母和颜色数字
+  const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  const NUMW = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+  const COLORW = ['red', 'yellow', 'blue', 'green', 'black', 'white', 'pink', 'orange', 'purple', 'brown'];
+  const EN_GENS = {
+    e1: [
+      () => ({
+        title: '点出大写字母', speak: '点出大写字母',
+        items: fill(3, want => {
+          const L = pick(ALPHA);
+          return { label: want ? L : L.toLowerCase(), ok: want, why: '这是小写' };
+        }),
+      }),
+      () => ({
+        title: '点出小写字母', speak: '点出小写字母',
+        items: fill(3, want => {
+          const L = pick(ALPHA);
+          return { label: want ? L.toLowerCase() : L, ok: want, why: '这是大写' };
+        }),
+      }),
+      () => {
+        const t = pick(ALPHA.slice(0, 10));
+        return {
+          title: `点出字母 ${t}`, speak: `点出字母`, en: t,
+          items: fill(2, want => {
+            const L = want ? t : pick(ALPHA.filter(x => x !== t));
+            return { label: want && Math.random() < 0.5 ? L.toLowerCase() : L, ok: want, why: `不是 ${t}` };
+          }),
+        };
+      },
+    ],
+    e2: [
+      () => ({
+        title: '点出表示颜色的单词', speak: '点出表示颜色的单词',
+        items: fill(3, want => want ? { label: pick(COLORW), ok: true } : { label: pick(NUMW), ok: false, why: '这是数字' }),
+      }),
+      () => ({
+        title: '点出表示数字的单词', speak: '点出表示数字的单词',
+        items: fill(3, want => want ? { label: pick(NUMW), ok: true } : { label: pick(COLORW), ok: false, why: '这是颜色' }),
+      }),
+      () => {
+        const t = rand(2, 9);
+        return {
+          title: `点出比 ${NUMW[t - 1]} 大的数字`, speak: `点出比`, en: NUMW[t - 1],
+          items: fill(3, want => {
+            const n = want ? rand(t + 1, 10) : rand(1, t);
+            return { label: NUMW[n - 1], ok: n > t, why: n === t ? '一样大' : '比它小' };
+          }),
+        };
+      },
+    ],
+  };
+  M.gen = zi => {
+    const z = L.ZONES[zi];
+    if (z && z.subject === 'en') return pick(EN_GENS[z.id] || EN_GENS.e1)();
+    return GENS[zi % GENS.length]();
+  };
   // 一轮：敌机分三条航线慢慢飞过，点中所有对的才进入下一轮。返回点错的次数
   const round = (st, r) => new Promise(done => {
     const f = st.f;
     st.banner.textContent = r.title;
-    Audio.speak(r.speak);
+    if (r.en) Audio.speakParts([{ text: r.speak }, { text: r.en, lang: 'en' }]);
+    else Audio.speak(r.speak);
     let left = r.items.filter(x => x.ok).length, miss = 0;
     r.items.forEach((it, i) => {
       const dur = 13 + (i % 3) * 2;

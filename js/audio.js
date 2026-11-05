@@ -2,38 +2,57 @@
 (function (TM) {
   const A = {};
   const hasTTS = 'speechSynthesis' in window;
-  let voice = null;
+  const voice = { zh: null, en: null };
   let ctx = null;
 
-  // 固定用婷婷（温柔女声），有增强版就用增强版
+  // 中文固定用婷婷（温柔女声），有增强版就用增强版；英文挑一个自然的女声
   const better = v => /premium|enhanced|增强|高音质/i.test(v.voiceURI + v.name);
   const TING = /Tingting|婷婷/i;
+  const EN_GOOD = /Samantha|Google US English|Ava|Allison|Susan|Karen|Serena|Alex/i;
+  const LANG = { zh: /zh[-_]CN/i, en: /^en([-_]|$)/i };
 
-  A.voices = () => (hasTTS ? speechSynthesis.getVoices().filter(v => /zh[-_]CN/i.test(v.lang)) : []);
+  A.voices = (lang = 'zh') => (hasTTS ? speechSynthesis.getVoices().filter(v => LANG[lang].test(v.lang)) : []);
 
-  const pickVoice = () => {
-    const vs = A.voices().sort((a, b) => better(b) - better(a));
-    voice = vs.find(v => TING.test(v.name + v.voiceURI)) || vs[0] || null;
+  const pickVoice = lang => {
+    if (!hasTTS) return null;
+    const vs = A.voices(lang).sort((a, b) => better(b) - better(a));
+    voice[lang] = lang === 'en'
+      ? vs.find(v => EN_GOOD.test(v.name + v.voiceURI)) || vs[0] || null
+      : vs.find(v => TING.test(v.name + v.voiceURI)) || vs[0] || null;
+    return voice[lang];
   };
-  if (hasTTS && speechSynthesis.addEventListener) speechSynthesis.addEventListener('voiceschanged', pickVoice);
+  const pickAll = () => { pickVoice('zh'); pickVoice('en'); };
+  if (hasTTS && speechSynthesis.addEventListener) speechSynthesis.addEventListener('voiceschanged', pickAll);
 
   let seq = 0, busy = 0;
   // 朗读一段话，读完（或超时）后 resolve(true)；被后面的朗读打断则 resolve(false)
-  A.speak = text => {
+  // lang：'zh' 中文（婷婷），'en' 英文（Samantha 等）
+  A.speak = (text, lang = 'zh') => {
     busy++;
-    return say(text).finally(() => { busy--; });
+    return say(text, lang === 'en' ? 'en' : 'zh').finally(() => { busy--; });
   };
-  const say = text => new Promise(resolve => {
+  // 按顺序读多段，比如「中文要求 → 英文单词」。被新的朗读打断就停下
+  A.speakParts = async parts => {
+    const list = Array.isArray(parts) ? parts : [parts];
+    for (const p of list) {
+      const o = typeof p === 'string' ? { text: p } : p;
+      if (!o || !o.text) continue;
+      const ok = await A.speak(o.text, o.lang === 'en' ? 'en' : 'zh');
+      if (!ok) return false;
+    }
+    return true;
+  };
+  const say = (text, lang) => new Promise(resolve => {
     if (!text || !hasTTS || !TM.Store.data.settings.voice) return resolve(true);
-    if (!voice) pickVoice();
+    if (!voice[lang]) pickVoice(lang);
     const my = ++seq;
     const go = () => {
       if (my !== seq) return resolve(false);
       const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'zh-CN';
-      if (voice) u.voice = voice;
-      u.rate = 0.9;
-      u.pitch = 1.1;
+      u.lang = lang === 'en' ? 'en-US' : 'zh-CN';
+      if (voice[lang]) u.voice = voice[lang];
+      u.rate = lang === 'en' ? 0.85 : 0.9;
+      u.pitch = lang === 'en' ? 1 : 1.1;
       const t = setTimeout(done, 2000 + text.length * 400);
       function done() {
         clearTimeout(t);

@@ -18,6 +18,16 @@
     return Object.assign(q, { type, diff, id: U.uid() });
   };
 
+  // 一道题怎么读：英语题可以自己给 speech（按顺序的几段，en: true 用英文声音）
+  // 没给的沿用原来的 speak（中文）；带 en 的题在后面补一段英文
+  Q.speechParts = q => {
+    if (Array.isArray(q.speech)) return q.speech;
+    const out = [];
+    if (q.speak) out.push({ text: q.speak });
+    if (q.en) out.push({ text: q.en, lang: 'en' });
+    return out;
+  };
+
   // 把算式变成朗读文字：8 + 5 = □ → 8加5等于几。问号留着，读起来才是问句的语气
   Q.say = s => String(s)
     .replace(/\s*\+\s*/g, '加')

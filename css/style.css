@@ -85,6 +85,16 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 /* ---------- 地图 ---------- */
 .map { background: linear-gradient(#bfe7ff 0%, #dff3ff 55%, #b8e597 55%, #9bd86f 100%); }
 .map .brand { font-size: 32px; font-weight: 900; color: #2d5ea8; text-shadow: 0 3px 0 #fff; flex: 1; }
+/* 科目切换 */
+.subjects { flex: none; display: flex; gap: 10px; padding: 0 20px 8px; }
+.subject {
+  height: 46px; padding: 0 20px; border-radius: 23px;
+  background: rgba(255, 255, 255, .62); color: #4a5a75;
+  font-size: 21px; font-weight: 900; box-shadow: 0 3px 0 #c9c3dc;
+  border: 3px solid transparent;
+}
+.subject:active { transform: translateY(3px); box-shadow: 0 1px 0 #c9c3dc; }
+.subject.on { background: #fff; color: #2d5ea8; border-color: #ffc93c; box-shadow: 0 3px 0 #e0a800; }
 .lock {
   position: relative; width: 48px; height: 48px; border-radius: 50%;
   font-size: 22px; opacity: .55; display: flex; align-items: center; justify-content: center;
@@ -335,6 +345,19 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .em.gone { position: relative; opacity: .45; }
 .em.gone::after { content: '✕'; position: absolute; inset: 0; color: var(--red); font-weight: 900; display: flex; align-items: center; justify-content: center; opacity: 1; }
 .v-tag { font-size: 18px; font-weight: 900; color: #b07200; margin-left: 6px; }
+/* 英语配图 */
+.v-card { display: flex; flex-direction: column; align-items: center; gap: 2px; background: #fff; border: 4px solid #7c8cf8; border-radius: 22px; padding: 6px 26px 8px; box-shadow: 0 4px 0 #d8dcfa; }
+.v-card b { font-size: 62px; line-height: 1.06; font-weight: 900; color: #3b3355; letter-spacing: 2px; }
+.v-card span { font-size: 16px; font-weight: 800; color: #7a7397; }
+.v-color { display: flex; align-items: center; gap: 14px; }
+.v-swatch { display: block; width: 84px; height: 84px; border-radius: 50%; border: 5px solid #fff; box-shadow: 0 4px 0 rgba(0, 0, 0, .18), inset 0 0 0 2px #e5e0f0; }
+.v-seq { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.v-seq span { min-width: 50px; padding: 7px 8px; background: #fff; border: 3px solid #d8dcfa; border-radius: 14px; font-size: 28px; font-weight: 900; text-align: center; color: #3b3355; }
+.v-seq .blank { background: #fff2b8; border-color: #ffc93c; color: #b07200; }
+.v-word { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.v-word .v-we { font-size: 52px; line-height: 1; }
+.v-word b { font-size: 38px; letter-spacing: 1px; color: #3b3355; }
+.v-word .v-wz { font-size: 18px; font-weight: 800; color: #7a7397; }
 .v-box { font-size: 30px; font-weight: 900; padding: 2px 12px; background: #ffe4ec; border-radius: 12px; }
 .v-two { display: flex; align-items: center; gap: 18px; }
 .v-plus { font-size: 24px; font-weight: 900; color: var(--soft); }
@@ -520,6 +543,27 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .field.z2 .road { background: repeating-linear-gradient(#eef6fd 0 40px, #e3eef8 40px 80px); border-color: #a9c8e3; }
 .field.z2::before { content: '🌲'; position: absolute; left: 5%; top: 55%; font-size: 40px; }
 .field.z2::after { content: '⛄ 🌲'; position: absolute; right: 4%; top: 18%; font-size: 34px; letter-spacing: 24px; }
+/* 英语：字母乐园 / 颜色数字 */
+.field.z6 {
+  background:
+    radial-gradient(circle at 18% 26%, #fff 0 22px, transparent 23px),
+    radial-gradient(circle at 82% 58%, #fff 0 30px, transparent 31px),
+    linear-gradient(#d8e4ff, #a9c4f8);
+  border-bottom-color: #7c97d8;
+}
+.field.z6 .road { background: repeating-linear-gradient(#c9d8ff 0 40px, #bccdf8 40px 80px); border-color: #8fa6e0; }
+.field.z6::before { content: '🔤'; position: absolute; left: 5%; top: 52%; font-size: 40px; }
+.field.z6::after { content: 'A B C'; position: absolute; right: 5%; top: 14%; font-size: 30px; font-weight: 900; color: #fff; letter-spacing: 10px; }
+.field.z7 {
+  background:
+    radial-gradient(circle at 18% 30%, #fff6d6 0 20px, transparent 21px),
+    radial-gradient(circle at 84% 60%, #ffe1b0 0 28px, transparent 29px),
+    linear-gradient(#ffe9c7, #f7c37c);
+  border-bottom-color: #d69a4e;
+}
+.field.z7 .road { background: repeating-linear-gradient(#ffd79c 0 40px, #f8ca85 40px 80px); border-color: #d6a35f; }
+.field.z7::before { content: '🎨'; position: absolute; left: 5%; top: 52%; font-size: 40px; }
+.field.z7::after { content: '🔴 🟡 🔵'; position: absolute; right: 4%; top: 15%; font-size: 30px; letter-spacing: 12px; }
 .field::before, .field::after { pointer-events: none; z-index: 0; }
 
 .rotor { transform-origin: 50px 12px; animation: rotor .18s linear infinite; }

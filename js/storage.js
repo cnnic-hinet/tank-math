@@ -27,7 +27,7 @@
     bestStreak: 0,      // 每日任务最长连续天数
     lastBackup: null,   // 上次备份的日期
     // hide：学校还没学到、先藏起来的战区；goal：家长设的现实奖励 {text, need, start, done}
-    settings: { limitMin: 20, voice: true, hide: { z5: true, z6: true }, goal: null },
+    settings: { limitMin: 20, voice: true, hide: { z5: true, z6: true }, goal: null, subject: 'math' },
     created: U.today(),
   });
 
@@ -184,13 +184,13 @@
   };
 
   // 记下一道错题的样子，每种题型留最近 12 道，用来分析「错在哪儿」
-  S.miss = (type, { diff, prompt, answer, got, src }) => {
+  S.miss = (type, { diff, prompt, answer, got, kind, src }) => {
     const m = (S.data.mistakes = S.data.mistakes || {});
     const list = (m[type] = m[type] || []);
     list.push({
       d: diff == null ? 0 : diff, p: String(prompt == null ? '' : prompt),
       a: String(answer == null ? '' : answer), g: String(got),
-      t: U.today(), s: src || 'play',
+      k: kind || '', t: U.today(), s: src || 'play',
     });
     if (list.length > 12) list.splice(0, list.length - 12);
   };

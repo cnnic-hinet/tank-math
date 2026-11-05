@@ -1,6 +1,6 @@
 {
-  "name": "坦克数学大作战",
-  "short_name": "坦克数学",
+  "name": "坦克大作战",
+  "short_name": "坦克大作战",
   "start_url": "./index.html",
   "display": "standalone",
   "orientation": "landscape",

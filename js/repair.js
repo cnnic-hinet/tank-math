@@ -40,11 +40,13 @@
 
   // 复仇题：从维修厂挑还没修好、战区已开放、隔了至少 2 天的旧错题
   // 本关正在练的题型排最后，优先最久没回来的；最多两道，题型不重复
-  R.replayPick = (n = 1, { types = [] } = {}) => {
+  // subject：只挑同一科目的错题，数学关里不会冒出英语题
+  R.replayPick = (n = 1, { types = [], subject = null } = {}) => {
     const today = U.today(), L = TM.Levels;
     const cand = R.active().filter(x => {
       const zi = R.zoneIndex(x.type);
       if (zi < 0 || !L.zoneOpen(zi)) return false;
+      if (subject && (L.ZONES[zi].subject || 'math') !== subject) return false;
       return !(x.lastReplay && U.daysBetween(x.lastReplay, today) < REPLAY_GAP);
     }).map(x => ({
       x,
@@ -120,8 +122,11 @@
     return item.fixed;
   };
 
-  // 热身：每次出征前最多修 3 辆
-  R.warmup = () => R.due().slice(0, 3);
+  // 热身：每次出征前最多修 3 辆（只修同一科目的）
+  R.warmup = subject => R.due().filter(x => {
+    const z = R.zone(x.type);
+    return !subject || (z && (z.subject || 'math') === subject);
+  }).slice(0, 3);
 
   R.name = item => Q.names[item.type] || item.type;
 

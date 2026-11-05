@@ -46,7 +46,7 @@
     fixHint: ['用提示修好了，明天再来巩固一下！'],
     warmDone: ['热身完成，出发！'],
     garage: ['有{k}辆坦克等着修理！'],
-    welcome: ['欢迎{n}来到坦克数学大作战！先做一个入营测试吧。'],
+    welcome: ['欢迎{n}来到坦克大作战！先做一个入营测试吧。'],
     placeDone: ['测试完成！{n}答对了{k}道题。'],
     rest: ['{n}，今天已经玩了很久啦，让眼睛休息一下，明天再来吧！'],
     hello: ['{n}你好，我们一起打坦克吧！'],
@@ -77,10 +77,11 @@
   Lines.onSay = null;
   Lines.say = async (key, k, follow) => {
     const s = Lines.get(key, k);
-    if (!s) return follow ? Audio.speak(follow) : undefined;
+    const read = f => (Array.isArray(f) ? Audio.speakParts(f) : Audio.speak(f));
+    if (!s) return follow ? read(follow) : undefined;
     if (Lines.onSay) Lines.onSay(s);
     const done = await Audio.speak(s);
-    if (follow && done) await Audio.speak(follow);
+    if (follow && done) await read(follow);
   };
 
   TM.Lines = Lines;

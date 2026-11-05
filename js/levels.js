@@ -77,6 +77,32 @@
         { name: '算一算', types: ['tens100', 'seq100'] },
       ],
     },
+    // ---------- 英语 ----------
+    // subject: 'en'；第一条英语线默认开放，后面按 Boss 解锁，和数学进度互不影响
+    {
+      id: 'e1', name: '字母乐园', icon: '🔤', color: '#7c8cf8', grade: '英语', subject: 'en',
+      desc: '字母 A～Z',
+      levels: [
+        { name: '大写字母', types: ['en-upper'] },
+        { name: '小写字母', types: ['en-lower'] },
+        { name: '大小写配对', types: ['en-pair'] },
+        { name: '字母顺序', types: ['en-order'] },
+        { name: '首字母', types: ['en-first'] },
+        { name: '字母大闯关', types: ['en-upper', 'en-lower', 'en-order', 'en-first'] },
+      ],
+    },
+    {
+      id: 'e2', name: '颜色数字', icon: '🎨', color: '#ff9f43', grade: '英语', subject: 'en', after: 6,
+      desc: '颜色和数字 1～10',
+      levels: [
+        { name: '颜色', types: ['en-color'] },
+        { name: '数字', types: ['en-num'] },
+        { name: '数一数', types: ['en-count'] },
+        { name: '找不同', types: ['en-odd'] },
+        { name: '数字顺序', types: ['en-numorder'] },
+        { name: '颜色数字大闯关', types: ['en-color', 'en-num', 'en-count', 'en-numorder'] },
+      ],
+    },
   ];
   // 每个战区最后：一个小游戏关「敌机编队」，再加一个 Boss 关考所有题型
   // Boss 关 id 还是 6，和旧存档对得上
@@ -92,7 +118,7 @@
 
   // 每个战区的特殊小兵（第 2 关起，普通关第 4 题出现一个）：
   // shield 盾牌兵、flyer 飞行兵、counter 反击兵，见 battle.js
-  L.TRAIT = ['shield', 'flyer', 'counter', 'shield', 'counter', 'flyer'];
+  L.TRAIT = ['shield', 'flyer', 'counter', 'shield', 'counter', 'flyer', 'shield', 'flyer'];
 
   L.key = (zi, li) => `${ZONES[zi].id}-${ZONES[zi].levels[li].id}`;
   L.get = (zi, li) => ZONES[zi].levels[li];
@@ -176,7 +202,9 @@
   L.zoneOpen = zi => {
     const S = TM.Store.data;
     if (L.hidden(zi)) return false;
-    if (zi === 0 || S.open[ZONES[zi].id]) return true;
+    // 每一条科目线只有第一个战区没有前置（数学 z1、英语 e1），默认开放
+    if (ZONES[zi].subject === 'en' ? ZONES[zi].after == null : zi === 0) return true;
+    if (S.open[ZONES[zi].id]) return true;
     return (S.levels[L.bossKey(ZONES[zi].after)]?.stars || 0) > 0;
   };
 

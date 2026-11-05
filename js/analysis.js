@@ -19,11 +19,16 @@
     far: { name: '差得比较多', icon: '❓', tip: '可能是看错题或点错了。先读一遍题，说说是加还是减。' },
     symbol: { name: '大小号弄反', icon: '⚖️', tip: '开口朝着大的数，尖头朝着小的数。' },
     other: { name: '其他', icon: '·', tip: '' },
+    // 英语的错法
+    letter: { name: '字母记混', icon: '🔤', tip: '大小写和 b/d、p/q 这些相像的字母容易看错。一起读一读、写一写，比一比哪里不一样。' },
+    word: { name: '单词不认识', icon: '📖', tip: '把单词和图片、实物对上，边指边读。颜色和数字词可以每天过一遍。' },
+    sentence: { name: '句子没听懂', icon: '💬', tip: '先听关键词，再把整句读一遍。可以跟着语音一句一句说。' },
   };
   A.KINDS = KINDS;
 
   const num = s => (/^-?\d+$/.test(String(s).trim()) ? Number(s.trim()) : null);
   A.classify = m => {
+    if (m.k && KINDS[m.k]) return m.k;
     const a = String(m.a), g = String(m.g).trim();
     if (/^[<>=]$/.test(a)) return 'symbol';
     const av = num(a), gv = num(g);
@@ -397,7 +402,7 @@
   // ---------- 纯文字报告：复制给家长看/存档 ----------
   A.report = () => {
     const rows = A.rows(), all = A.all(rows), Ls = [];
-    Ls.push(`坦克数学学习分析　${U.today()}`);
+    Ls.push(`坦克大作战学习分析　${U.today()}`);
     Ls.push(A.summary());
     Ls.push('');
     Ls.push('【各题型】按需要加练排序');
