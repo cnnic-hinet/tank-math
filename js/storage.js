@@ -2,7 +2,7 @@
 (function (TM) {
   const U = TM.U;
   const KEY = 'tankmath.v1';
-  const SCHEMA = 2;               // 存档结构版本，改结构时 +1 并在 migrate 里补
+  const SCHEMA = 3;               // 存档结构版本，改结构时 +1 并在 migrate 里补
   const SNAP = 'tankmath.snap.';  // 自动快照：tankmath.snap.2026-11-03 / pre-migrate / pre-restore / pre-import
   const SNAP_DAYS = 7;            // 每天的快照留几天
 
@@ -36,19 +36,31 @@
   // 结构升级：只补字段，不删不改。老代码的兜底逻辑在这里写清楚，以后加字段就加一段。
   S.migrate = data => {
     const from = data.schema || 1;
-    data.schema = SCHEMA;
-    if (from >= SCHEMA) return data;
     // v1 → v2：v8 加的学习分析字段
-    data.stats = data.stats || {};
-    data.mistakes = data.mistakes || {};
-    data.mistakesBackfilled = !!data.mistakesBackfilled;
-    data.recent = data.recent || {};
-    data.daily = data.daily || {};
-    data.repair = Array.isArray(data.repair) ? data.repair : [];
-    data.repair.forEach(x => { if (!Array.isArray(x.history)) x.history = []; });
-    Object.values(data.stats).forEach(s => {
-      if (Array.isArray(s.d)) while (s.d.length < 3) s.d.push([0, 0]);
-    });
+    if (from < 2) {
+      data.stats = data.stats || {};
+      data.mistakes = data.mistakes || {};
+      data.mistakesBackfilled = !!data.mistakesBackfilled;
+      data.recent = data.recent || {};
+      data.daily = data.daily || {};
+      data.repair = Array.isArray(data.repair) ? data.repair : [];
+      data.repair.forEach(x => { if (!Array.isArray(x.history)) x.history = []; });
+      Object.values(data.stats).forEach(s => {
+        if (Array.isArray(s.d)) while (s.d.length < 3) s.d.push([0, 0]);
+      });
+    }
+    // v2 → v3：v8.8 英语不学字母了，清掉字母题型的错题和统计，免得维修厂里冒出已经不存在的题
+    if (from < 3) {
+      const gone = ['en-upper', 'en-lower', 'en-pair', 'en-order', 'en-first'];
+      data.repair = (Array.isArray(data.repair) ? data.repair : []).filter(x => !gone.includes(x.type));
+      ['stats', 'mistakes', 'recent'].forEach(k => {
+        if (data[k]) gone.forEach(t => delete data[k][t]);
+      });
+      Object.values(data.daily || {}).forEach(d => {
+        if (d && d.wrong) gone.forEach(t => delete d.wrong[t]);
+      });
+    }
+    data.schema = SCHEMA;
     return data;
   };
 

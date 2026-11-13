@@ -80,19 +80,19 @@
     // ---------- 英语 ----------
     // subject: 'en'；第一条英语线默认开放，后面按 Boss 解锁，和数学进度互不影响
     {
-      id: 'e1', name: '字母乐园', icon: '🔤', color: '#7c8cf8', grade: '英语', subject: 'en',
-      desc: '字母 A～Z',
+      id: 'e1', name: '动物朋友', icon: '🐾', color: '#7cc576', grade: '英语', subject: 'en', miniName: '敌机编队',
+      desc: '动物单词',
       levels: [
-        { name: '大写字母', types: ['en-upper'] },
-        { name: '小写字母', types: ['en-lower'] },
-        { name: '大小写配对', types: ['en-pair'] },
-        { name: '字母顺序', types: ['en-order'] },
-        { name: '首字母', types: ['en-first'] },
-        { name: '字母大闯关', types: ['en-upper', 'en-lower', 'en-order', 'en-first'] },
+        { name: '听音选图', types: ['en1-listen'] },
+        { name: '看图选词', types: ['en1-pic'] },
+        { name: '词义配对', types: ['en1-mean'] },
+        { name: '找不同', types: ['en1-odd'] },
+        { name: '听句子选图', types: ['en1-sentence'] },
+        { name: '单词大闯关', types: ['en1-listen', 'en1-pic', 'en1-mean', 'en1-sort', 'en1-sentence'] },
       ],
     },
     {
-      id: 'e2', name: '颜色数字', icon: '🎨', color: '#ff9f43', grade: '英语', subject: 'en', after: 6,
+      id: 'e2', name: '颜色数字', icon: '🎨', color: '#ff9f43', grade: '英语', subject: 'en', after: 6, miniName: '空投补给',
       desc: '颜色和数字 1～10',
       levels: [
         { name: '颜色', types: ['en-color'] },
@@ -104,12 +104,12 @@
       ],
     },
   ];
-  // 每个战区最后：一个小游戏关「敌机编队」，再加一个 Boss 关考所有题型
+  // 每个战区最后：一个小游戏关（数学和动物朋友是「敌机编队」，颜色数字是「空投补给」），再加一个 Boss 关考所有题型
   // Boss 关 id 还是 6，和旧存档对得上
   ZONES.forEach(z => {
     const all = [...new Set(z.levels.flatMap(l => l.types))];
     z.levels.forEach((l, i) => { if (l.id == null) l.id = i; });
-    z.levels.push({ id: 'm', name: '敌机编队', mini: true, types: [] });
+    z.levels.push({ id: 'm', name: z.miniName || '敌机编队', mini: true, types: [] });
     z.levels.push({ id: 6, name: 'Boss 决战', types: all, boss: true });
   });
 

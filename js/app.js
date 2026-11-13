@@ -94,7 +94,7 @@
       lock);
 
     // 科目切换：只显示当前科目的战区
-    const subjects = h('div', { class: 'subjects' }, [['math', '🔢 数学'], ['en', '🔤 英语']].map(([k, label]) =>
+    const subjects = h('div', { class: 'subjects' }, [['math', '🔢 数学'], ['en', '📖 英语']].map(([k, label]) =>
       h('button', {
         class: 'subject' + (subj === k ? ' on' : ''),
         onclick: () => {

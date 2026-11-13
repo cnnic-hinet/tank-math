@@ -318,6 +318,7 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
   transition: transform .08s;
 }
 .choice.txt { font-size: 28px; }
+.choice.pic { font-size: 58px; letter-spacing: 2px; }
 .choice:active { transform: translateY(4px); border-bottom-width: 5px; }
 .choice.right { background: #dff5d8; border-color: var(--green); animation: pop2 .4s; }
 .choice.wrong { background: #ffe1de; border-color: var(--red); animation: no .4s; }
@@ -358,6 +359,9 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .v-word .v-we { font-size: 52px; line-height: 1; }
 .v-word b { font-size: 38px; letter-spacing: 1px; color: #3b3355; }
 .v-word .v-wz { font-size: 18px; font-weight: 800; color: #7a7397; }
+.v-pic { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.v-pic .v-emoji { font-size: 76px; line-height: 1.05; filter: drop-shadow(0 4px 0 rgba(0, 0, 0, .12)); }
+.v-pic b { font-size: 22px; font-weight: 800; color: #7a7397; }
 .v-box { font-size: 30px; font-weight: 900; padding: 2px 12px; background: #ffe4ec; border-radius: 12px; }
 .v-two { display: flex; align-items: center; gap: 18px; }
 .v-plus { font-size: 24px; font-weight: 900; color: var(--soft); }
@@ -543,17 +547,17 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .field.z2 .road { background: repeating-linear-gradient(#eef6fd 0 40px, #e3eef8 40px 80px); border-color: #a9c8e3; }
 .field.z2::before { content: '🌲'; position: absolute; left: 5%; top: 55%; font-size: 40px; }
 .field.z2::after { content: '⛄ 🌲'; position: absolute; right: 4%; top: 18%; font-size: 34px; letter-spacing: 24px; }
-/* 英语：字母乐园 / 颜色数字 */
+/* 英语：动物朋友 / 颜色数字 */
 .field.z6 {
   background:
     radial-gradient(circle at 18% 26%, #fff 0 22px, transparent 23px),
     radial-gradient(circle at 82% 58%, #fff 0 30px, transparent 31px),
-    linear-gradient(#d8e4ff, #a9c4f8);
-  border-bottom-color: #7c97d8;
+    linear-gradient(#d9f2cf, #a8dc94);
+  border-bottom-color: #7bb56a;
 }
-.field.z6 .road { background: repeating-linear-gradient(#c9d8ff 0 40px, #bccdf8 40px 80px); border-color: #8fa6e0; }
-.field.z6::before { content: '🔤'; position: absolute; left: 5%; top: 52%; font-size: 40px; }
-.field.z6::after { content: 'A B C'; position: absolute; right: 5%; top: 14%; font-size: 30px; font-weight: 900; color: #fff; letter-spacing: 10px; }
+.field.z6 .road { background: repeating-linear-gradient(#cdeabf 0 40px, #bfe3ae 40px 80px); border-color: #8cc47a; }
+.field.z6::before { content: '🐾'; position: absolute; left: 5%; top: 52%; font-size: 40px; }
+.field.z6::after { content: '🐱 🐶 🐼'; position: absolute; right: 5%; top: 14%; font-size: 30px; letter-spacing: 8px; }
 .field.z7 {
   background:
     radial-gradient(circle at 18% 30%, #fff6d6 0 20px, transparent 21px),
@@ -940,11 +944,26 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 @keyframes fly { from { left: -14%; } to { left: 104%; } }
 .m-icon { font-size: 54px; line-height: 1; filter: drop-shadow(0 4px 0 rgba(0, 0, 0, .15)); }
 .m-label { background: #fff; border: 3px solid #e8645a; border-radius: 14px; padding: 2px 12px; font-size: 26px; font-weight: 900; white-space: nowrap; }
+.m-label.big { font-size: 34px; padding: 2px 10px; }
 .m-why { font-size: 16px; font-weight: 900; color: var(--red); background: #fff; border-radius: 8px; padding: 0 6px; margin-top: 2px; }
 .m-plane.wrong { animation-play-state: paused; }
 .m-plane.wrong .m-label { animation: shake .5s; border-color: var(--red); background: #ffe1de; }
 .m-plane.locked { animation-play-state: paused; }
 .m-plane.down { transition: transform .6s, opacity .6s; transform: translateY(80px) rotate(60deg); opacity: 0; }
+
+/* 小游戏：空投补给 */
+.m-drop {
+  position: absolute; top: -110px; z-index: 4; width: 140px;
+  display: flex; flex-direction: column; align-items: center;
+  animation: m-drop 20s linear forwards;
+}
+@keyframes m-drop { from { top: -110px; } to { top: calc(100% + 20px); } }
+.m-drop .m-label { border-color: #f0a04b; }
+.m-drop.wrong { animation-play-state: paused; }
+.m-drop.wrong .m-label { animation: shake .5s; border-color: var(--red); background: #ffe1de; }
+.m-drop.lost .m-label { background: #ffe1de; border-color: var(--red); }
+.m-drop.got { animation-play-state: paused; transition: transform .3s, opacity .3s; transform: scale(1.25); opacity: 0; }
+.m-drop.gone { transition: opacity .3s; opacity: 0; }
 
 /* ---------- 每日任务 ---------- */
 .tasks { background: linear-gradient(#fff4dc, #ffe6b8); }

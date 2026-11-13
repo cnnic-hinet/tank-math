@@ -71,10 +71,11 @@
     let resolve = null;
     // 有一个选项字多，就都用小一号的字，免得大小不一
     const txt = q.choices.some(c => String(c).length > 2);
+    const pic = !!q.pic;
     const btns = q.choices.map(c => {
       const s = String(c);
       const b = h('button', {
-        class: 'choice' + (txt ? ' txt' : ''),
+        class: 'choice' + (pic ? ' pic' : '') + (txt ? ' txt' : ''),
         onclick: () => {
           if (!resolve || b.classList.contains('dim')) return;
           Audio.sfx.tap();

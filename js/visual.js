@@ -224,6 +224,12 @@
       return h('div', { class: 'v-seq' }, v.items.map(x =>
         h('span', { class: x === '_' ? 'blank' : '' }, x === '_' ? '?' : x)));
     },
+    // 英语：图片 + 中文（看图选词用，不露单词）
+    pic(v) {
+      return h('div', { class: 'v-pic' },
+        h('span', { class: 'v-emoji' }, v.e),
+        v.zh ? h('b', null, v.zh) : null);
+    },
     // 英语：图片 + 单词 + 中文
     word(v) {
       return h('div', { class: 'v-word' },
@@ -467,7 +473,7 @@
     </svg>`;
   };
 
-  // 每个战区的敌人长得不一样（英语：字母乐园机器人、颜色数字飞碟）
+  // 每个战区的敌人长得不一样（英语：动物朋友机器人、颜色数字飞碟）
   const ENEMY = { 1: heli, 2: robot, 4: heli, 5: ufo, 6: robot, 7: ufo };
   V.enemy = (zi, kind) => (ENEMY[zi] || V.tank)(kind);
 
