@@ -104,16 +104,16 @@
     // Unit 1：读一句日常用语，点出对应的场景
     u1: () => {
       const SAY = [
-        { en: 'Hello!', scene: 's:greet:chen:li', zh: '见面打招呼' },
-        { en: 'Bye!', scene: 's:bye:john', zh: '说再见' },
-        { en: 'Good morning!', scene: 's:morning:miss:chen', zh: '早上问好' },
-        { en: 'Thank you!', scene: 's:thank:li:chen', zh: '道谢' },
-        { en: 'Here you are.', scene: 's:here:li', zh: '递东西' },
+        { en: 'Hello!', scene: 's:greet:chen:li', zh: '见面打招呼', said: '你好' },
+        { en: 'Bye!', scene: 's:bye:john', zh: '说再见', said: '再见' },
+        { en: 'Good morning!', scene: 's:morning:miss:chen', zh: '早上问好', said: '早上好' },
+        { en: 'Thank you!', scene: 's:thank:li:chen', zh: '道谢', said: '谢谢' },
+        { en: 'Here you are.', scene: 's:here:li', zh: '递东西', said: '给你' },
       ];
       const t = pick(SAY), k = rand(2, 3);
       const wrong = shuffle(SAY.filter(x => x.scene !== t.scene)).slice(0, N - k);
       return {
-        kind: 'plane', title: '点出听到的场景', speak: '点出听到的场景', en: t.en,
+        kind: 'plane', title: '点出听到的场景', speak: '点出听到的场景', en: t.en, zhSay: t.said,
         items: shuffle([
           ...Array.from({ length: k }, () => ({ label: t.scene, art: t.scene, ok: true })),
           ...wrong.map(x => ({ label: x.scene, art: x.scene, ok: false, why: `这是${x.zh}` })),
@@ -172,8 +172,11 @@
   const planeRound = (st, r) => new Promise(done => {
     const f = st.f;
     setBanner(st, r);
-    if (r.en) Audio.speakParts([{ text: r.speak }, { text: r.en, lang: 'en' }]);
-    else Audio.speak(r.speak);
+    if (r.en) {
+      const parts = [{ text: r.speak }, { text: r.en, lang: 'en' }];
+      if (r.zhSay) parts.push({ text: `意思是，${r.zhSay}。` });
+      Audio.speakParts(parts);
+    } else Audio.speak(r.speak);
     let left = r.items.filter(x => x.ok).length, miss = 0;
     r.items.forEach((it, i) => {
       const dur = 13 + (i % 3) * 2;
@@ -214,8 +217,11 @@
   const dropRound = (st, r) => new Promise(done => {
     const f = st.f;
     setBanner(st, r);
-    if (r.en) Audio.speakParts([{ text: r.speak }, { text: r.en, lang: 'en' }]);
-    else Audio.speak(r.speak);
+    if (r.en) {
+      const parts = [{ text: r.speak }, { text: r.en, lang: 'en' }];
+      if (r.zhSay) parts.push({ text: `意思是，${r.zhSay}。` });
+      Audio.speakParts(parts);
+    } else Audio.speak(r.speak);
     let left = r.items.filter(x => x.ok).length, miss = 0, ended = false;
     const finish = async () => {
       if (ended) return;

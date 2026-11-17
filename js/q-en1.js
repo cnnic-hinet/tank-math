@@ -128,10 +128,11 @@
         const text = d === 0 ? `It's ${/^[aeiou]/i.test(w.w) ? 'an' : 'a'} ${w.w}.` : `I like ${plural(w.w)}.`;
         const pool = d === 0 ? W.pics().filter(x => x.cat !== w.cat) : zoneWords().filter(isOnePic);
         return q({
-          prompt: d === 0 ? '听句子，选出说到的图片' : '听句子，选出说到的图片',
+          prompt: '听一听，选哪幅图？',
           subEn: text,
           scene: d === 0 ? { kind: 'card', text: '🔊', sub: '听句子' } : null,
-          speech: [ZH('听句子，选出说到的图片。'), EN(text)],
+          speech: [ZH('听一听，选哪幅图？'), EN(text)],
+          saidZh: w.zh,
           pic: true,
           choices: three(w.e, picOf(pool)),
           answer: w.e,
@@ -148,10 +149,11 @@
       const c = U.pick(pool), e = U.pick(pool.filter(x => x.e !== c.e));
       const right = a.e + b.e, r1 = a.e + c.e, r2 = b.e + e.e;
       return q({
-        prompt: '听句子，选出说到的两个',
+        prompt: '听一听，选哪两幅图？',
         subEn: text,
         scene: { kind: 'card', text: '🔊', sub: '听句子' },
-        speech: [ZH('听句子，选出说到的两个。'), EN(text)],
+        speech: [ZH('听一听，选哪两幅图？'), EN(text)],
+        saidZh: `${a.zh}和${b.zh}`,
         pic: true,
         choices: U.shuffle([right, r1, r2]),
         answer: right,

@@ -31,8 +31,9 @@
     const said = pick(p.en);
     const others = sayPool(d).filter(x => x.scene !== p.scene);
     return {
-      prompt: '听一听，这时候该说什么、做什么？',
-      speech: [ZH('听一听，是哪一幅图？'), EN(said)],
+      prompt: '听一听，选哪幅图？',
+      speech: [ZH('听一听，选哪幅图？'), EN(said)],
+      saidZh: p.zh,
       subEn: said,
       pic: 'art',
       choices: three(p.scene, others.map(x => x.scene)),
@@ -72,8 +73,8 @@
     const others = sayPool(d).filter(x => x.scene !== p.scene);
     const ans = pick(p.en);
     return {
-      prompt: '看看这幅图，这时候该说什么？',
-      speech: [ZH('看看这幅图，这时候该说什么？')],
+      prompt: '看图，该说什么？',
+      speech: [ZH('看图，该说什么？')],
       scene: art(p.scene),
       choices: three(ans, others.flatMap(x => x.en)),
       answer: ans,
@@ -89,7 +90,7 @@
     const ans = pick(pool);
     const said = pick(ans.en);
     return {
-      prompt: '听一听，是什么意思？',
+      prompt: '听一听，什么意思？',
       speech: [ZH('听一听，中文是什么意思？'), EN(said)],
       subEn: said,
       choices: three(ans.zh, pool.map(x => x.zh)),
@@ -151,8 +152,9 @@
     const ans = pick(doPool(d));
     const others = doPool(d).filter(x => x.scene !== ans.scene);
     return {
-      prompt: '听一听，该做什么？',
-      speech: [ZH('听一听，该做什么？'), EN(ans.en)],
+      prompt: '听一听，选哪幅图？',
+      speech: [ZH('听一听，选哪幅图？'), EN(ans.en)],
+      saidZh: ans.zh,
       subEn: ans.en,
       pic: 'art',
       choices: three(ans.scene, others.map(x => x.scene)),
@@ -168,8 +170,8 @@
     const ans = pick(doPool(d));
     const others = doPool(d).filter(x => x.scene !== ans.scene);
     return {
-      prompt: '看看这幅图，老师可能在说什么？',
-      speech: [ZH('看看这幅图，老师可能在说什么？')],
+      prompt: '看图，老师在说什么？',
+      speech: [ZH('看图，老师在说什么？')],
       scene: art(ans.scene),
       choices: three(ans.en, others.map(x => x.en)),
       answer: ans.en,
@@ -191,7 +193,7 @@
     const pool = d === 0 ? WORDS : d === 1 ? WORDS.concat(SENT) : SENT.concat(WORDS);
     const ans = d === 0 ? pick(WORDS) : pick(d === 1 ? pool : SENT);
     return {
-      prompt: '听一听，是什么意思？',
+      prompt: '听一听，什么意思？',
       speech: [ZH('听一听，中文是什么意思？'), EN(ans.en)],
       subEn: ans.en,
       choices: three(ans.zh, pool.map(x => x.zh)),
@@ -208,8 +210,8 @@
     const key = 'i:' + t;
     const pool = ['pencil', 'book'].concat(d === 0 ? [pick(['open', 'show'])] : ['open', 'show']);
     return {
-      prompt: '看图，选出对应的单词。',
-      speech: [ZH('看图，选出对应的单词。')],
+      prompt: '看图，选单词。',
+      speech: [ZH('看图，选单词。')],
       scene: art(key),
       choices: three(t, pool),
       answer: t,

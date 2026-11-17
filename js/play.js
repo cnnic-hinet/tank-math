@@ -59,10 +59,14 @@
     card.dataset.answer = q.answer; // 方便自动化测试
     const scene = V.render(q.scene);
     // 没听清可以点一下再读一遍。跟着题目一起排，压在题目下面，不跟题目区抢点击
-    const say = h('button', {
+    const sayBtn = (label, list) => h('button', {
       class: 'say-btn',
-      onclick: () => { Audio.sfx.tap(); Audio.speakParts(Q.speechParts(q)); },
-    }, '🔊 再读一遍');
+      onclick: () => { Audio.sfx.tap(); Audio.speakParts(list); },
+    }, label);
+    // 句子题分成「英文」「中文」两个按钮，中文按钮读的是这句话的中文意思
+    const say = q.saidZh
+      ? h('div', { class: 'say-row' }, sayBtn('🔊 英文', Q.partsOf(q, 'en')), sayBtn('🔊 中文', Q.partsOf(q, 'zh')))
+      : sayBtn('🔊 再读一遍', Q.speechParts(q));
     const body = h('div', { class: 'qbody' },
       scene,
       h('div', { class: 'prompt' + (isExpr(q.prompt) ? ' expr' : q.prompt.length > 24 ? ' long' : '') }, q.prompt),
@@ -78,7 +82,7 @@
     const btns = q.choices.map(c => {
       const s = String(c);
       const b = h('button', {
-        class: 'choice' + (pic ? ' pic' : '') + (txt ? ' txt' : ''),
+        class: 'choice' + (pic ? ' pic' : '') + (art ? ' art' : '') + (txt ? ' txt' : ''),
         'data-v': s,
         onclick: () => {
           if (!resolve || b.classList.contains('dim')) return;

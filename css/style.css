@@ -285,7 +285,7 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
   flex: 1; min-height: 0;
   display: flex; flex-direction: column; align-items: center;
   background: var(--card); border-radius: 26px; border-bottom: 8px solid #e5dcc6;
-  padding: 18px 22px 16px; position: relative;
+  padding: 18px 18px 16px; position: relative;
 }
 .qtag { position: absolute; top: 14px; left: 18px; font-size: 16px; font-weight: 800; padding: 3px 12px; border-radius: 999px; background: #eef7e9; color: var(--green-d); }
 .qtag.d1 { background: #e7f2ff; color: var(--blue-d); }
@@ -299,6 +299,8 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
   background: #eef2ff; color: var(--blue-d); border-bottom-color: #c9d6ee;
 }
 .say-btn:active { transform: translateY(3px); border-bottom-width: 2px; }
+/* 句子题的两个重念按钮：英文、中文 */
+.say-row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
 .qbody { flex: 1; min-height: 0; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; overflow-y: auto; padding-top: 26px; -webkit-overflow-scrolling: touch; }
 .qbody > :first-child { margin-top: auto; }
 .qbody > :last-child { margin-bottom: auto; }
@@ -312,7 +314,7 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .sub.en { font-size: 30px; color: #3b3355; font-weight: 900; letter-spacing: .5px;
   background: #fff; border: 3px solid #d8dcfa; border-radius: 999px;
   padding: 4px 22px; box-shadow: 0 3px 0 #e6e8fb; }
-.choices { flex: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; width: 100%; margin-top: 12px; }
+.choices { flex: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 100%; margin-top: 12px; }
 .choices.c3 { grid-template-columns: repeat(3, 1fr); }
 .choice {
   min-height: 92px; border-radius: 22px;
@@ -323,10 +325,15 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 }
 .choice.txt { font-size: 28px; }
 .choice.pic { font-size: 58px; letter-spacing: 2px; flex-direction: column; gap: 0; padding: 4px 6px 6px; }
+/* 插画选项：图铺满整个卡片，只留一圈细边框，不再有白边 */
+.choice.pic.art { padding: 0; overflow: hidden; border-width: 3px; border-bottom-width: 8px; border-radius: 20px; }
 .choice.pic .ch-art { width: 100%; display: flex; align-items: center; justify-content: center; }
+.choice.pic.art .ch-art { display: block; line-height: 0; }
 .choice.pic .ch-art svg { width: 134px; height: 134px; display: block; }
+.choice.pic.art .ch-art svg { width: 100%; height: auto; }
 /* 图片下面标这个图是什么意思 */
 .choice.pic .ch-label { font-size: 19px; font-weight: 800; color: #56688a; letter-spacing: 0; line-height: 1.2; }
+.choice.pic.art .ch-label { width: 100%; box-sizing: border-box; padding: 2px 4px 6px; font-size: 20px; }
 .choice:active { transform: translateY(4px); border-bottom-width: 5px; }
 .choice.right { background: #dff5d8; border-color: var(--green); animation: pop2 .4s; }
 .choice.wrong { background: #ffe1de; border-color: var(--red); animation: no .4s; }
