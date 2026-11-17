@@ -67,6 +67,7 @@
       scene,
       h('div', { class: 'prompt' + (isExpr(q.prompt) ? ' expr' : q.prompt.length > 24 ? ' long' : '') }, q.prompt),
       q.sub ? h('div', { class: 'sub' }, q.sub) : null,
+      q.subEn ? h('div', { class: 'sub en' }, q.subEn) : null,
       say);
     let resolve = null;
     // 选项是插画（英语新题型）时，按钮里放 SVG，不放文字
@@ -86,7 +87,8 @@
           resolve = null;
           r({ value: s, btn: b });
         },
-      }, art ? h('span', { class: 'ch-art', html: TM.Art.svg(s) }) : s);
+      }, art ? [h('span', { class: 'ch-art', html: TM.Art.svg(s) }),
+        TM.Art.mean(s) ? h('span', { class: 'ch-label' }, TM.Art.mean(s)) : null] : s);
       return b;
     });
     const choices = h('div', { class: 'choices' + (btns.length === 3 ? ' c3' : '') }, btns);

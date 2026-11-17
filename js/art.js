@@ -164,6 +164,23 @@
       <circle cx="0" cy="0" r="17" fill="#ffcf3f"/>
       <path d="M-17 0 h34 M0 -17 q10 17 0 34 M0 -17 q-10 17 0 34" stroke="#e8a91f" stroke-width="2" fill="none"/>
     </g>`,
+    door: `<g>
+      <rect x="-18" y="-33" width="36" height="66" rx="3" fill="#a9714b"/>
+      <rect x="-13" y="-28" width="26" height="60" fill="#4d3324"/>
+      <path d="M-13 -28 L7 -21 L7 27 L-13 32Z" fill="#e8c49a"/>
+      <path d="M-4 -23 L2 -21 L2 25 L-4 24Z" fill="#d8ae80"/>
+      <circle cx="2" cy="2" r="2.2" fill="#8a5a33"/>
+      <ellipse cx="0" cy="34" rx="22" ry="4.5" fill="#d8b98a"/>
+    </g>`,
+    cup: `<g>
+      <path d="M-7 -7 h14 l-1.6 12 a5.4 5.4 0 0 1 -10.8 0Z" fill="#bfe9ff" stroke="#63b8e8" stroke-width="2"/>
+      <path d="M7 -3 q6 1 0 8" fill="none" stroke="#63b8e8" stroke-width="2" stroke-linecap="round"/>
+    </g>`,
+    blocks: `<g>
+      <rect x="-10" y="-6" width="12" height="12" rx="2" fill="#ff9f43"/>
+      <rect x="4" y="-2" width="12" height="12" rx="2" fill="#7c5cff"/>
+    </g>`,
+    spill: `<ellipse cx="0" cy="0" rx="15" ry="5" fill="#bfe9ff" opacity=".9"/>`,
   };
 
   // ---------- 背景 ----------
@@ -181,51 +198,96 @@
         <path d="M-24 -16 h16 M-24 -8 h24 M-24 0 h12" stroke="#eaf4ff" stroke-width="2.4" stroke-linecap="round" opacity=".85"/>
         <path d="M-24 7 h10" stroke="#ffe066" stroke-width="2.4" stroke-linecap="round" opacity=".9"/>
       </g>`,
+    // 早上：太阳刚出来、小鸟飞、墙上的钟指着 7 点
+    morning: `<rect width="120" height="120" rx="16" fill="#ffe8cf"/>
+      <circle cx="32" cy="86" r="26" fill="#ffd15c"/>
+      <path d="M0 86 h120 v34 H0Z" fill="#bfe6a0"/>
+      <path d="M0 96 h120 v24 H0Z" fill="#a9d888"/>
+      <path d="M20 24 q6 -5 12 0 M34 17 q6 -5 12 0" stroke="#e8a91f" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+      <g transform="translate(99 21)">
+        <circle r="12" fill="#fff" stroke="#c9d6e8" stroke-width="2"/>
+        <path d="M0 0 V-7 M0 0 L-4 4" stroke="#3b3355" stroke-width="2" stroke-linecap="round"/>
+      </g>`,
   };
 
+  // 说话气泡里画个笑脸，比三个点更容易看懂「在说话」
   const bubble = (x = 60, y = 18) => `<g transform="translate(${x} ${y})">
     <path d="M-17 -10 h34 a7 7 0 0 1 7 7 v6 a7 7 0 0 1 -7 7 h-20 l-9 7 l2 -7 a7 7 0 0 1 -7 -7 v-6 a7 7 0 0 1 7 -7Z"
       fill="#fff" stroke="#c9d6e8" stroke-width="2"/>
-    <circle cx="-7" cy="0" r="2.3" fill="#8aa0bb"/><circle cx="0" cy="0" r="2.3" fill="#8aa0bb"/><circle cx="7" cy="0" r="2.3" fill="#8aa0bb"/>
+    <circle cx="-6" cy="-1" r="2.1" fill="#3b3355"/><circle cx="6" cy="-1" r="2.1" fill="#3b3355"/>
+    <path d="M-5 3 q5 5 10 0" stroke="#3b3355" stroke-width="2" fill="none" stroke-linecap="round"/>
   </g>`;
 
   // ---------- 场景 ----------
+  // 每张图都配一个能说明意思的道具：门、课桌、杯子、倒下的积木、爱心
   const SCENES = {
-    // 打招呼：两个小朋友互相挥手
-    greet: (who = 'chen', who2 = 'li') => BG.school + person(who2, 'wave', .8, -24, 2) + person(who, 'wave', .9, 24, 0) + bubble(88, 18),
-    // 道别：背着书包往画面外走
-    bye: (who = 'john') => BG.school + person(who, 'wave', .92, 8, 2) +
-      `<path d="M84 74 h18 m-5 -5 l5 5 l-5 5" stroke="#7a7397" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`,
-    // 自我介绍：指着自己
-    self: (who = 'chen') => BG.school + person(who, 'self', .96, 4, 2) + bubble(92, 24),
+    // 打招呼：两个小朋友面对面挥手，气泡里是笑脸
+    greet: (who = 'chen', who2 = 'li') =>
+      BG.school + person(who2, 'wave', .82, -26, 4) + person(who, 'wave', .88, 22, 2) + bubble(90, 14),
+    // 道别：门口，回头挥手
+    bye: (who = 'john') =>
+      BG.school + `<g transform="translate(99 74) scale(.95)">${P.door}</g>` +
+      person(who, 'wave', .86, 4, 4),
+    // 自我介绍：指着自己胸口，气泡里是笑脸
+    self: (who = 'chen') => BG.school + person(who, 'self', .94, 2, 4) + bubble(94, 18),
     // 在教室：老师指黑板
-    board: (who = 'miss') => BG.classroom + person(who, 'up', .86, 4, 10) + `<g transform="translate(60 96) scale(.85)">${P.desk}</g>`,
-    // 打开书
-    openbook: (who = 'li') => BG.classroom + person(who, 'book', .92, 4, 0) + `<g transform="translate(60 80) scale(.85)">${P.openbook}</g>`,
-    // 举起铅笔
-    showpencil: (who = 'li') => BG.classroom + person(who, 'hold', .92, 4, 0) + `<g transform="translate(84 38) scale(.75)">${P.pencil}</g>`,
-    // 老师早上好
-    morning: (who = 'miss', who2 = 'chen') => BG.classroom + person(who, 'wave', .78, -28, 4) + person(who2, 'wave', .78, 28, 4) + bubble(60, 14),
+    board: (who = 'miss') => BG.classroom + person(who, 'up', .86, 4, 10) + `<g transform="translate(60 98) scale(.85)">${P.desk}</g>`,
+    // 打开书：书摊在课桌上
+    openbook: (who = 'li') =>
+      BG.classroom + person(who, 'book', .82, 4, -6) +
+      `<g transform="translate(60 86) scale(.95)">${P.desk}</g>` +
+      `<g transform="translate(60 76) scale(.85)">${P.openbook}</g>`,
+    // 举起铅笔：在课桌边把铅笔举高，旁边加提醒线
+    showpencil: (who = 'wu') =>
+      BG.classroom + person(who, 'hold', .82, 4, -2) +
+      `<g transform="translate(60 88) scale(.95)">${P.desk}</g>` +
+      `<g transform="translate(86 40) scale(.7)">${P.pencil}</g>` +
+      `<g stroke="#ffb84d" stroke-width="2.4" fill="none" stroke-linecap="round">
+        <path d="M76 24 l-4 -7"/><path d="M96 25 l5 -6"/></g>`,
+    // 早上好：太阳刚出来，两个人在校门口挥手，墙上的钟指 7 点
+    morning: (who = 'miss', who2 = 'chen') =>
+      BG.morning + person(who, 'wave', .74, -26, 18) + person(who2, 'wave', .74, 20, 18) + bubble(58, 30),
     // 上课抱着书
-    classbook: (who = 'miss') => BG.classroom + person(who, 'book', .9, 4, 0) + `<g transform="translate(60 80) scale(.8)">${P.book}</g>` + `<g transform="translate(60 101) scale(.8)">${P.desk}</g>`,
-    // 道谢：把东西递给别人，别人双手接过来说谢谢
-    thank: (who = 'li', who2 = 'chen') => BG.school +
-      person(who, 'point', .82, -26, 2) + person(who2, 'show', .82, 24, 2) +
-      `<g transform="translate(64 56) rotate(-12) scale(.62)">${P.pencil}</g>` +
-      `<path d="M60 22 c-5 -7 -14 -5 -14 2 c0 5 7 9 14 14 c7 -5 14 -9 14 -14 c0 -7 -9 -9 -14 -2Z" fill="#ff5f7e"/>`,
-    // 给你：把铅笔递过去
-    here: (who = 'li') => BG.school + person(who, 'point', .94, -12, 2) +
-      `<g transform="translate(88 54) rotate(16) scale(.72)">${P.pencil}</g>`,
-    // 对不起：一只手举起来，低着头
-    sorry: (who = 'wu') => BG.school + person(who, 'hold', .94, -8, 2, 'sad') +
-      `<path d="M80 30 q4 8 0 13 q-4 -5 0 -13Z" fill="#7cc4ff"/>`,
-    // 听我说：手放在耳朵边
-    listen: (who = 'miss') => BG.classroom + person(who, 'listen', .9, 6, 6) +
+    classbook: (who = 'miss') =>
+      BG.classroom + person(who, 'book', .88, 4, 0) +
+      `<g transform="translate(60 80) scale(.8)">${P.book}</g>` +
+      `<g transform="translate(60 101) scale(.8)">${P.desk}</g>`,
+    // 道谢：一个把书递过去，接的人双手捧着，头顶两颗小心
+    thank: (who = 'li', who2 = 'chen') =>
+      BG.school + person(who, 'point', .78, -28, 6) + person(who2, 'show', .78, 26, 6) +
+      `<g transform="translate(60 64) scale(.85)">${P.book}</g>` +
+      `<circle cx="46" cy="70" r="4.8" fill="#ffd9b8"/><circle cx="74" cy="70" r="4.8" fill="#ffd9b8"/>` +
+      `<path d="M56 24 c-4 -5 -10 -4 -10 1 c0 4 5 7 10 11 c5 -4 10 -7 10 -11 c0 -5 -6 -6 -10 -1Z" fill="#ff5f7e"/>` +
+      `<path d="M72 18 c-3 -4 -8 -3 -8 1 c0 3 4 6 8 9 c4 -3 8 -6 8 -9 c0 -4 -5 -5 -8 -1Z" fill="#ff9eb5"/>`,
+    // 给你：把铅笔递出去，另一只手从旁边接
+    here: (who = 'li') =>
+      BG.classroom + person(who, 'point', .86, -16, 2) +
+      `<g transform="translate(90 52) rotate(14) scale(.66)">${P.pencil}</g>` +
+      `<path d="M120 70 q-16 -4 -24 4" stroke="#ffd9b8" stroke-width="7" fill="none" stroke-linecap="round"/>` +
+      `<circle cx="95" cy="73" r="5.2" fill="#ffd9b8"/>`,
+    // 对不起：地上倒了杯子、撒了水，积木也倒了，低头举手
+    sorry: (who = 'wu') =>
+      BG.classroom +
+      `<g transform="translate(26 92)">${P.spill}</g>` +
+      `<g transform="translate(22 86) rotate(-68) scale(.9)">${P.cup}</g>` +
+      `<g transform="translate(34 91)">${P.blocks}</g>` +
+      person(who, 'show', .9, 10, 2, 'sad') +
+      `<path d="M90 32 q4 8 0 13 q-4 -5 0 -13Z" fill="#7cc4ff"/>`,
+    // 听我说：老师手放在耳朵边，旁边是声音波纹
+    listen: (who = 'miss') =>
+      BG.classroom + person(who, 'listen', .86, 2, 6) +
+      `<g transform="translate(60 98) scale(.8)">${P.desk}</g>` +
       `<g stroke="#8aa0bb" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".9">
-        <path d="M90 33 q8 7 0 14"/><path d="M98 28 q13 12 0 24"/></g>`,
+        <path d="M88 30 q8 7 0 14"/><path d="M96 25 q13 12 0 24"/></g>`,
   };
 
   const wrap = inner => `<svg viewBox="0 0 120 120" class="art-svg" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
+
+  // 单个道具画多大：宽的东西缩小一点，免得贴边被裁掉
+  const ITEM_K = {
+    book: 2.1, openbook: 1.9, pencil: 1.7, pencilcase: 1.8, bag: 2.0, bottle: 2.1,
+    cap: 2.1, desk: 1.6, board: 1.45, apple: 2.2, ball: 2.2, door: 1.5, cup: 2.2, blocks: 2.2,
+  };
 
   // key 的写法：
   //   p:人物:姿势      一个人，比如 p:chen:wave
@@ -234,8 +296,27 @@
   A.svg = key => {
     const [t, a, b, c] = String(key || '').split(':');
     if (t === 'p') return wrap(BG.plain + person(a, b || 'stand', 1.16, 0, 0));
-    if (t === 'i') return wrap(BG.plain + `<g transform="translate(60 60) scale(2)">${P[a] || P.book}</g>`);
+    if (t === 'i') return wrap(BG.plain + `<g transform="translate(60 60) scale(${ITEM_K[a] || 1.8})">${P[a] || P.book}</g>`);
     if (t === 's' && SCENES[a]) return wrap(SCENES[a](b, c));
+    return '';
+  };
+
+  // 图片的简单意思，显示在选项图片下面
+  const SCENE_ZH = {
+    greet: '打招呼', bye: '说再见', self: '介绍自己', board: '看黑板', openbook: '打开书',
+    showpencil: '举起铅笔', morning: '早上好', classbook: '抱着书', thank: '说谢谢',
+    here: '递东西', sorry: '说对不起', listen: '听我说',
+  };
+  const ITEM_ZH = {
+    book: '书', openbook: '打开的书', pencil: '铅笔', pencilcase: '笔袋', bag: '书包',
+    bottle: '水壶', cap: '帽子', desk: '桌子', board: '黑板', apple: '苹果', ball: '皮球',
+    door: '门', cup: '杯子', blocks: '积木',
+  };
+  A.mean = key => {
+    const [t, a] = String(key || '').split(':');
+    if (t === 'i') return ITEM_ZH[a] || '';
+    if (t === 's') return SCENE_ZH[a] || '';
+    if (t === 'p') return '小朋友';
     return '';
   };
 

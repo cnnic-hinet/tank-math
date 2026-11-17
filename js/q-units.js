@@ -33,6 +33,7 @@
     return {
       prompt: '听一听，这时候该说什么、做什么？',
       speech: [ZH('听一听，是哪一幅图？'), EN(said)],
+      subEn: said,
       pic: 'art',
       choices: three(p.scene, others.map(x => x.scene)),
       answer: p.scene,
@@ -90,6 +91,7 @@
     return {
       prompt: '听一听，是什么意思？',
       speech: [ZH('听一听，中文是什么意思？'), EN(said)],
+      subEn: said,
       choices: three(ans.zh, pool.map(x => x.zh)),
       answer: ans.zh,
       topic: 'word',
@@ -151,6 +153,7 @@
     return {
       prompt: '听一听，该做什么？',
       speech: [ZH('听一听，该做什么？'), EN(ans.en)],
+      subEn: ans.en,
       pic: 'art',
       choices: three(ans.scene, others.map(x => x.scene)),
       answer: ans.scene,
@@ -190,6 +193,7 @@
     return {
       prompt: '听一听，是什么意思？',
       speech: [ZH('听一听，中文是什么意思？'), EN(ans.en)],
+      subEn: ans.en,
       choices: three(ans.zh, pool.map(x => x.zh)),
       answer: ans.zh,
       topic: 'sentence',

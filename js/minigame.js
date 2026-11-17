@@ -171,7 +171,7 @@
   // 一轮：敌机分三条航线慢慢飞过，点中所有对的才进入下一轮。返回点错的次数
   const planeRound = (st, r) => new Promise(done => {
     const f = st.f;
-    st.banner.textContent = r.title;
+    setBanner(st, r);
     if (r.en) Audio.speakParts([{ text: r.speak }, { text: r.en, lang: 'en' }]);
     else Audio.speak(r.speak);
     let left = r.items.filter(x => x.ok).length, miss = 0;
@@ -180,7 +180,8 @@
       const p = h('button', { class: 'm-plane', 'data-ok': it.ok ? '1' : '0', style: { top: 16 + (i % 3) * 21 + '%', animationDuration: dur + 's', animationDelay: -(Math.floor(i / 3) * dur / 2 + (i % 3) * 2) + 's' } },
         h('span', { class: 'm-icon' }, '🛩️'),
         h('span', { class: 'm-label' + (it.pic ? ' big' : '') + (it.art ? ' art' : '') },
-          it.art ? h('span', { html: TM.Art.svg(it.art) }) : it.label));
+          it.art ? [h('span', { html: TM.Art.svg(it.art) }),
+            TM.Art.mean(it.art) ? h('span', { class: 'm-zh' }, TM.Art.mean(it.art)) : null] : it.label));
       p.onclick = async () => {
         if (p.disabled || st.dead) return;
         if (!it.ok) {
@@ -212,7 +213,7 @@
   // 空投补给：补给箱从天上慢慢落下来，点中所有对的。落地前没点到的算漏掉
   const dropRound = (st, r) => new Promise(done => {
     const f = st.f;
-    st.banner.textContent = r.title;
+    setBanner(st, r);
     if (r.en) Audio.speakParts([{ text: r.speak }, { text: r.en, lang: 'en' }]);
     else Audio.speak(r.speak);
     let left = r.items.filter(x => x.ok).length, miss = 0, ended = false;
@@ -266,6 +267,12 @@
       f.layer.append(p);
     });
   });
+  // 横幅：中文玩法 + 读出来的英文
+  const setBanner = (st, r) => {
+    st.banner.innerHTML = '';
+    st.banner.append(h('span', { class: 'm-title' }, r.title));
+    if (r.en) st.banner.append(h('span', { class: 'm-en' }, r.en));
+  };
   const round = (st, r) => (r.kind === 'drop' ? dropRound(st, r) : planeRound(st, r));
 
   M.run = async (zi, li) => {

@@ -308,6 +308,10 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .prompt.long { font-size: 28px; }
 .prompt.expr { font-size: 56px; letter-spacing: 2px; }
 .sub { font-size: 20px; color: var(--soft); font-weight: 700; }
+/* 题目里读出来的英文，摆在中文题干下面 */
+.sub.en { font-size: 30px; color: #3b3355; font-weight: 900; letter-spacing: .5px;
+  background: #fff; border: 3px solid #d8dcfa; border-radius: 999px;
+  padding: 4px 22px; box-shadow: 0 3px 0 #e6e8fb; }
 .choices { flex: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; width: 100%; margin-top: 12px; }
 .choices.c3 { grid-template-columns: repeat(3, 1fr); }
 .choice {
@@ -318,9 +322,11 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
   transition: transform .08s;
 }
 .choice.txt { font-size: 28px; }
-.choice.pic { font-size: 58px; letter-spacing: 2px; }
+.choice.pic { font-size: 58px; letter-spacing: 2px; flex-direction: column; gap: 0; padding: 4px 6px 6px; }
 .choice.pic .ch-art { width: 100%; display: flex; align-items: center; justify-content: center; }
-.choice.pic .ch-art svg { width: 116px; height: 116px; display: block; }
+.choice.pic .ch-art svg { width: 104px; height: 104px; display: block; }
+/* 图片下面标这个图是什么意思 */
+.choice.pic .ch-label { font-size: 19px; font-weight: 800; color: #56688a; letter-spacing: 0; line-height: 1.2; }
 .choice:active { transform: translateY(4px); border-bottom-width: 5px; }
 .choice.right { background: #dff5d8; border-color: var(--green); animation: pop2 .4s; }
 .choice.wrong { background: #ffe1de; border-color: var(--red); animation: no .4s; }
@@ -961,9 +967,11 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .m-field { flex: 1; position: relative; display: flex; min-height: 0; }
 .m-banner {
   position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 5;
-  background: #fff; padding: 8px 26px; border-radius: 999px; font-size: 30px; font-weight: 900;
+  background: #fff; padding: 8px 26px; border-radius: 24px; font-size: 30px; font-weight: 900;
   box-shadow: 0 4px 0 #c9c3dc; white-space: nowrap;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
 }
+.m-banner .m-en { font-size: 22px; color: #3b3355; background: #eef2ff; border-radius: 999px; padding: 0 14px; }
 .m-plane {
   position: absolute; left: -14%; z-index: 4;
   display: flex; flex-direction: column; align-items: center;
@@ -973,8 +981,9 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .m-icon { font-size: 54px; line-height: 1; filter: drop-shadow(0 4px 0 rgba(0, 0, 0, .15)); }
 .m-label { background: #fff; border: 3px solid #e8645a; border-radius: 14px; padding: 2px 12px; font-size: 26px; font-weight: 900; white-space: nowrap; }
 .m-label.big { font-size: 34px; padding: 2px 10px; }
-.m-label.art { padding: 0; border-width: 2px; border-radius: 12px; }
+.m-label.art { padding: 0 0 2px; border-width: 2px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; }
 .m-label.art svg { width: 68px; height: 68px; display: block; }
+.m-label.art .m-zh { font-size: 14px; font-weight: 800; color: #56688a; line-height: 1.2; }
 .m-why { font-size: 16px; font-weight: 900; color: var(--red); background: #fff; border-radius: 8px; padding: 0 6px; margin-top: 2px; }
 .m-plane.wrong { animation-play-state: paused; }
 .m-plane.wrong .m-label { animation: shake .5s; border-color: var(--red); background: #ffe1de; }
