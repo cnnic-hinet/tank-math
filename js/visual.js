@@ -237,6 +237,10 @@
         h('b', null, v.w),
         v.zh ? h('span', { class: 'v-wz' }, v.zh) : null);
     },
+    // 英语：SVG 插画（课本人物、道具、场景）
+    art(v) {
+      return h('div', { class: 'v-art' }, h('span', { html: TM.Art.svg(v.key) }));
+    },
   };
 
   V.render = v => (v && renderers[v.kind] ? h('div', { class: 'visual' }, renderers[v.kind](v)) : null);
@@ -474,7 +478,7 @@
   };
 
   // 每个战区的敌人长得不一样（英语：动物朋友机器人、颜色数字飞碟）
-  const ENEMY = { 1: heli, 2: robot, 4: heli, 5: ufo, 6: robot, 7: ufo };
+  const ENEMY = { 1: heli, 2: robot, 4: heli, 5: ufo, 6: robot, 7: robot, 8: robot, 9: ufo };
   V.enemy = (zi, kind) => (ENEMY[zi] || V.tank)(kind);
 
   TM.V = V;

@@ -79,9 +79,34 @@
     },
     // ---------- 英语 ----------
     // subject: 'en'；第一条英语线默认开放，后面按 Boss 解锁，和数学进度互不影响
+    // Unit 1、2 按人教 PEP 新版一年级上册的课本顺序排在最前
     {
-      id: 'e1', name: '动物朋友', icon: '🐾', color: '#7cc576', grade: '英语', subject: 'en', miniName: '敌机编队',
-      desc: '动物单词',
+      id: 'u1', name: 'Hello!', icon: '👋', color: '#ffb84d', grade: '英语', subject: 'en',
+      desc: '打招呼、我是谁',
+      levels: [
+        { name: '听音选人', types: ['u1-who'] },
+        { name: '听音选词', types: ['u1-word'] },
+        { name: '听句子选图', types: ['u1-say'] },
+        { name: '名字配对', types: ['u1-name'] },
+        { name: '找不同', types: ['u1-odd'] },
+        { name: '第一单元闯关', types: ['u1-who', 'u1-word', 'u1-say', 'u1-name', 'u1-odd'] },
+      ],
+    },
+    {
+      id: 'u2', name: 'My first class', icon: '📚', color: '#5bb6e8', grade: '英语', subject: 'en', after: 6,
+      desc: '学习用品、课堂指令',
+      levels: [
+        { name: '听音选物', types: ['u2-item'] },
+        { name: '老师的指令', types: ['u2-cmd'] },
+        { name: '听句子选中文', types: ['u2-mean'] },
+        { name: '看图选词', types: ['u2-word'] },
+        { name: '找不同', types: ['u2-odd'] },
+        { name: '第二单元闯关', types: ['u2-item', 'u2-cmd', 'u2-mean', 'u2-word', 'u2-odd'] },
+      ],
+    },
+    {
+      id: 'e1', name: '动物朋友', icon: '🐾', color: '#7cc576', grade: '英语', subject: 'en', miniName: '敌机编队', after: 7,
+      desc: '动物单词（拓展）',
       levels: [
         { name: '听音选图', types: ['en1-listen'] },
         { name: '看图选词', types: ['en1-pic'] },
@@ -92,8 +117,8 @@
       ],
     },
     {
-      id: 'e2', name: '颜色数字', icon: '🎨', color: '#ff9f43', grade: '英语', subject: 'en', after: 6, miniName: '空投补给',
-      desc: '颜色和数字 1～10',
+      id: 'e2', name: '颜色数字', icon: '🎨', color: '#ff9f43', grade: '英语', subject: 'en', after: 8, miniName: '空投补给',
+      desc: '颜色和数字 1～10（拓展）',
       levels: [
         { name: '颜色', types: ['en-color'] },
         { name: '数字', types: ['en-num'] },
@@ -118,7 +143,7 @@
 
   // 每个战区的特殊小兵（第 2 关起，普通关第 4 题出现一个）：
   // shield 盾牌兵、flyer 飞行兵、counter 反击兵，见 battle.js
-  L.TRAIT = ['shield', 'flyer', 'counter', 'shield', 'counter', 'flyer', 'shield', 'flyer'];
+  L.TRAIT = ['shield', 'flyer', 'counter', 'shield', 'counter', 'flyer', 'shield', 'flyer', 'shield', 'flyer'];
 
   L.key = (zi, li) => `${ZONES[zi].id}-${ZONES[zi].levels[li].id}`;
   L.get = (zi, li) => ZONES[zi].levels[li];

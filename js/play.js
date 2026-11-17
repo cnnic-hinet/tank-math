@@ -69,13 +69,16 @@
       q.sub ? h('div', { class: 'sub' }, q.sub) : null,
       say);
     let resolve = null;
+    // 选项是插画（英语新题型）时，按钮里放 SVG，不放文字
+    const art = q.pic === 'art';
     // 有一个选项字多，就都用小一号的字，免得大小不一
-    const txt = q.choices.some(c => String(c).length > 2);
+    const txt = !art && q.choices.some(c => String(c).length > 2);
     const pic = !!q.pic;
     const btns = q.choices.map(c => {
       const s = String(c);
       const b = h('button', {
         class: 'choice' + (pic ? ' pic' : '') + (txt ? ' txt' : ''),
+        'data-v': s,
         onclick: () => {
           if (!resolve || b.classList.contains('dim')) return;
           Audio.sfx.tap();
@@ -83,7 +86,7 @@
           resolve = null;
           r({ value: s, btn: b });
         },
-      }, s);
+      }, art ? h('span', { class: 'ch-art', html: TM.Art.svg(s) }) : s);
       return b;
     });
     const choices = h('div', { class: 'choices' + (btns.length === 3 ? ' c3' : '') }, btns);

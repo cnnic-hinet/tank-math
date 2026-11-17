@@ -319,6 +319,8 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 }
 .choice.txt { font-size: 28px; }
 .choice.pic { font-size: 58px; letter-spacing: 2px; }
+.choice.pic .ch-art { width: 100%; display: flex; align-items: center; justify-content: center; }
+.choice.pic .ch-art svg { width: 116px; height: 116px; display: block; }
 .choice:active { transform: translateY(4px); border-bottom-width: 5px; }
 .choice.right { background: #dff5d8; border-color: var(--green); animation: pop2 .4s; }
 .choice.wrong { background: #ffe1de; border-color: var(--red); animation: no .4s; }
@@ -362,6 +364,9 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .v-pic { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .v-pic .v-emoji { font-size: 76px; line-height: 1.05; filter: drop-shadow(0 4px 0 rgba(0, 0, 0, .12)); }
 .v-pic b { font-size: 22px; font-weight: 800; color: #7a7397; }
+.v-art { display: flex; align-items: center; justify-content: center; }
+.v-art > span { display: block; }
+.v-art svg { width: 168px; height: 168px; display: block; filter: drop-shadow(0 4px 0 rgba(0, 0, 0, .08)); }
 .v-box { font-size: 30px; font-weight: 900; padding: 2px 12px; background: #ffe4ec; border-radius: 12px; }
 .v-two { display: flex; align-items: center; gap: 18px; }
 .v-plus { font-size: 24px; font-weight: 900; color: var(--soft); }
@@ -547,27 +552,50 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .field.z2 .road { background: repeating-linear-gradient(#eef6fd 0 40px, #e3eef8 40px 80px); border-color: #a9c8e3; }
 .field.z2::before { content: '🌲'; position: absolute; left: 5%; top: 55%; font-size: 40px; }
 .field.z2::after { content: '⛄ 🌲'; position: absolute; right: 4%; top: 18%; font-size: 34px; letter-spacing: 24px; }
-/* 英语：动物朋友 / 颜色数字 */
+/* 英语 Unit 1 打招呼：校门口的天空和草地 */
 .field.z6 {
+  background:
+    radial-gradient(circle at 20% 26%, #fff 0 20px, transparent 21px),
+    radial-gradient(circle at 84% 58%, #fff 0 26px, transparent 27px),
+    linear-gradient(#d6f0ff, #bfe8f7);
+  border-bottom-color: #8fc7dc;
+}
+.field.z6 .road { background: repeating-linear-gradient(#cfe9f7 0 40px, #c3e1f2 40px 80px); border-color: #9ec9dd; }
+.field.z6::before { content: '🏫'; position: absolute; left: 5%; top: 50%; font-size: 40px; }
+.field.z6::after { content: '☁️ ☁️'; position: absolute; right: 5%; top: 14%; font-size: 32px; letter-spacing: 26px; }
+/* 英语 Unit 2 我的第一节课：教室 */
+.field.z7 {
+  background:
+    radial-gradient(circle at 18% 28%, #fff 0 22px, transparent 23px),
+    radial-gradient(circle at 84% 60%, #fff 0 26px, transparent 27px),
+    linear-gradient(#fdf6e3, #f2dfba);
+  border-bottom-color: #d6b98a;
+}
+.field.z7 .road { background: repeating-linear-gradient(#fbeccd 0 40px, #f6e3bd 40px 80px); border-color: #dcc296; }
+.field.z7::before { content: '📚'; position: absolute; left: 5%; top: 52%; font-size: 40px; }
+.field.z7::after { content: '✏️ 🖍️'; position: absolute; right: 5%; top: 15%; font-size: 32px; letter-spacing: 24px; }
+/* 英语拓展：动物朋友 */
+.field.z8 {
   background:
     radial-gradient(circle at 18% 26%, #fff 0 22px, transparent 23px),
     radial-gradient(circle at 82% 58%, #fff 0 30px, transparent 31px),
     linear-gradient(#d9f2cf, #a8dc94);
   border-bottom-color: #7bb56a;
 }
-.field.z6 .road { background: repeating-linear-gradient(#cdeabf 0 40px, #bfe3ae 40px 80px); border-color: #8cc47a; }
-.field.z6::before { content: '🐾'; position: absolute; left: 5%; top: 52%; font-size: 40px; }
-.field.z6::after { content: '🐱 🐶 🐼'; position: absolute; right: 5%; top: 14%; font-size: 30px; letter-spacing: 8px; }
-.field.z7 {
+.field.z8 .road { background: repeating-linear-gradient(#cdeabf 0 40px, #bfe3ae 40px 80px); border-color: #8cc47a; }
+.field.z8::before { content: '🐾'; position: absolute; left: 5%; top: 52%; font-size: 40px; }
+.field.z8::after { content: '🐱 🐶 🐼'; position: absolute; right: 5%; top: 14%; font-size: 30px; letter-spacing: 8px; }
+/* 英语拓展：颜色数字 */
+.field.z9 {
   background:
     radial-gradient(circle at 18% 30%, #fff6d6 0 20px, transparent 21px),
     radial-gradient(circle at 84% 60%, #ffe1b0 0 28px, transparent 29px),
     linear-gradient(#ffe9c7, #f7c37c);
   border-bottom-color: #d69a4e;
 }
-.field.z7 .road { background: repeating-linear-gradient(#ffd79c 0 40px, #f8ca85 40px 80px); border-color: #d6a35f; }
-.field.z7::before { content: '🎨'; position: absolute; left: 5%; top: 52%; font-size: 40px; }
-.field.z7::after { content: '🔴 🟡 🔵'; position: absolute; right: 4%; top: 15%; font-size: 30px; letter-spacing: 12px; }
+.field.z9 .road { background: repeating-linear-gradient(#ffd79c 0 40px, #f8ca85 40px 80px); border-color: #d6a35f; }
+.field.z9::before { content: '🎨'; position: absolute; left: 5%; top: 52%; font-size: 40px; }
+.field.z9::after { content: '🔴 🟡 🔵'; position: absolute; right: 4%; top: 15%; font-size: 30px; letter-spacing: 12px; }
 .field::before, .field::after { pointer-events: none; z-index: 0; }
 
 .rotor { transform-origin: 50px 12px; animation: rotor .18s linear infinite; }
@@ -945,6 +973,8 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .m-icon { font-size: 54px; line-height: 1; filter: drop-shadow(0 4px 0 rgba(0, 0, 0, .15)); }
 .m-label { background: #fff; border: 3px solid #e8645a; border-radius: 14px; padding: 2px 12px; font-size: 26px; font-weight: 900; white-space: nowrap; }
 .m-label.big { font-size: 34px; padding: 2px 10px; }
+.m-label.art { padding: 0; border-width: 2px; border-radius: 12px; }
+.m-label.art svg { width: 68px; height: 68px; display: block; }
 .m-why { font-size: 16px; font-weight: 900; color: var(--red); background: #fff; border-radius: 8px; padding: 0 6px; margin-top: 2px; }
 .m-plane.wrong { animation-play-state: paused; }
 .m-plane.wrong .m-label { animation: shake .5s; border-color: var(--red); background: #ffe1de; }

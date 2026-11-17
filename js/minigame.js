@@ -87,6 +87,14 @@
   const NUMW = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
   const COLORW = ['red', 'yellow', 'blue', 'green', 'black', 'white', 'pink', 'orange', 'purple', 'brown'];
   const ANIMALS = TM.Words.zoneWords('e1');
+  const KIDS = [
+    ['chen', 'Chen Jie', '陈杰'],
+    ['li', 'Li Dong', '李东'],
+    ['wu', 'Wu Binbin', '吴斌斌'],
+    ['john', 'John', 'John'],
+    ['sarah', 'Sarah', 'Sarah'],
+  ];
+  const THINGS = { pencil: '铅笔', book: '书', desk: '桌子', board: '黑板', bag: '书包', apple: '苹果' };
   const EN_GENS = {
     e1: () => {
       // 读一个动物单词，飞机上挂着动物图片，点中所有这个动物
@@ -97,6 +105,32 @@
         items: shuffle([
           ...Array.from({ length: k }, () => ({ label: t.e, ok: true, pic: true })),
           ...wrong.map(x => ({ label: x.e, ok: false, pic: true, why: `这是${x.zh}` })),
+        ]),
+      };
+    },
+    // Unit 1：听到 “I'm Chen Jie.”，点出所有陈杰
+    u1: () => {
+      const t = pick(KIDS), k = rand(2, 3);
+      const wrong = shuffle(KIDS.filter(x => x[0] !== t[0])).slice(0, N - k);
+      const key = k2 => 'p:' + k2 + ':wave';
+      return {
+        kind: 'plane', title: '点出听到的那个人', speak: '点出听到的那个人', en: `Hello! I'm ${t[1]}.`,
+        items: shuffle([
+          ...Array.from({ length: k }, () => ({ label: key(t[0]), art: key(t[0]), ok: true })),
+          ...wrong.map(x => ({ label: key(x[0]), art: key(x[0]), ok: false, why: `这是${x[2]}` })),
+        ]),
+      };
+    },
+    // Unit 2：听到 pencil / book，点出所有这个东西
+    u2: () => {
+      const t = pick(['pencil', 'book']), k = rand(2, 3);
+      const pool = ['i:pencil', 'i:book', 'i:desk', 'i:board', 'i:bag', 'i:apple'];
+      const wrong = shuffle(pool.filter(x => x !== 'i:' + t)).slice(0, N - k);
+      return {
+        kind: 'plane', title: '点出听到的东西', speak: '点出听到的东西', en: t,
+        items: shuffle([
+          ...Array.from({ length: k }, () => ({ label: 'i:' + t, art: 'i:' + t, ok: true })),
+          ...wrong.map(x => ({ label: x, art: x, ok: false, why: `这是${THINGS[x.slice(2)] || '别的东西'}` })),
         ]),
       };
     },
@@ -144,8 +178,10 @@
     let left = r.items.filter(x => x.ok).length, miss = 0;
     r.items.forEach((it, i) => {
       const dur = 13 + (i % 3) * 2;
-      const p = h('button', { class: 'm-plane', style: { top: 16 + (i % 3) * 21 + '%', animationDuration: dur + 's', animationDelay: -(Math.floor(i / 3) * dur / 2 + (i % 3) * 2) + 's' } },
-        h('span', { class: 'm-icon' }, '🛩️'), h('span', { class: 'm-label' + (it.pic ? ' big' : '') }, it.label));
+      const p = h('button', { class: 'm-plane', 'data-ok': it.ok ? '1' : '0', style: { top: 16 + (i % 3) * 21 + '%', animationDuration: dur + 's', animationDelay: -(Math.floor(i / 3) * dur / 2 + (i % 3) * 2) + 's' } },
+        h('span', { class: 'm-icon' }, '🛩️'),
+        h('span', { class: 'm-label' + (it.pic ? ' big' : '') + (it.art ? ' art' : '') },
+          it.art ? h('span', { html: TM.Art.svg(it.art) }) : it.label));
       p.onclick = async () => {
         if (p.disabled || st.dead) return;
         if (!it.ok) {
