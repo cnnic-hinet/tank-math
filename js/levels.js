@@ -82,14 +82,14 @@
     // Unit 1、2 按人教 PEP 新版一年级上册的课本顺序排在最前
     {
       id: 'u1', name: 'Hello!', icon: '👋', color: '#ffb84d', grade: '英语', subject: 'en',
-      desc: '打招呼、我是谁',
+      desc: '见面、道别、谢谢、对不起',
       levels: [
-        { name: '听音选人', types: ['u1-who'] },
+        { name: '听句子选场景', types: ['u1-say'] },
         { name: '听音选词', types: ['u1-word'] },
-        { name: '听句子选图', types: ['u1-say'] },
-        { name: '名字配对', types: ['u1-name'] },
+        { name: '场景选话', types: ['u1-pick'] },
+        { name: '意思配对', types: ['u1-mean'] },
         { name: '找不同', types: ['u1-odd'] },
-        { name: '第一单元闯关', types: ['u1-who', 'u1-word', 'u1-say', 'u1-name', 'u1-odd'] },
+        { name: '第一单元闯关', types: ['u1-say', 'u1-word', 'u1-pick', 'u1-mean', 'u1-odd'] },
       ],
     },
     {
@@ -98,10 +98,10 @@
       levels: [
         { name: '听音选物', types: ['u2-item'] },
         { name: '老师的指令', types: ['u2-cmd'] },
-        { name: '听句子选中文', types: ['u2-mean'] },
         { name: '看图选词', types: ['u2-word'] },
         { name: '找不同', types: ['u2-odd'] },
-        { name: '第二单元闯关', types: ['u2-item', 'u2-cmd', 'u2-mean', 'u2-word', 'u2-odd'] },
+        { id: 7, name: '看画面选指令', types: ['u2-pick'] },
+        { id: 5, name: '第二单元闯关', types: ['u2-item', 'u2-cmd', 'u2-pick', 'u2-mean', 'u2-word', 'u2-odd'] },
       ],
     },
     {

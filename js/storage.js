@@ -2,7 +2,7 @@
 (function (TM) {
   const U = TM.U;
   const KEY = 'tankmath.v1';
-  const SCHEMA = 3;               // 存档结构版本，改结构时 +1 并在 migrate 里补
+  const SCHEMA = 4;               // 存档结构版本，改结构时 +1 并在 migrate 里补
   const SNAP = 'tankmath.snap.';  // 自动快照：tankmath.snap.2026-11-03 / pre-migrate / pre-restore / pre-import
   const SNAP_DAYS = 7;            // 每天的快照留几天
 
@@ -59,6 +59,19 @@
       Object.values(data.daily || {}).forEach(d => {
         if (d && d.wrong) gone.forEach(t => delete d.wrong[t]);
       });
+    }
+    // v3 → v4：v8.10 Unit 1 不再考课本人物是谁、叫什么名字
+    if (from < 4) {
+      const gone = ['u1-who', 'u1-name'];
+      data.repair = (Array.isArray(data.repair) ? data.repair : []).filter(x => !gone.includes(x.type));
+      ['stats', 'mistakes', 'recent'].forEach(k => {
+        if (data[k]) gone.forEach(t => delete data[k][t]);
+      });
+      Object.values(data.daily || {}).forEach(d => {
+        if (d && d.wrong) gone.forEach(t => delete d.wrong[t]);
+      });
+      // 这两个位置原来放的是「听音选人」「名字配对」，星星不带到新关卡
+      if (data.levels) ['u1-0', 'u1-3'].forEach(k => delete data.levels[k]);
     }
     data.schema = SCHEMA;
     return data;

@@ -19,6 +19,7 @@
     wave: [['M45 64 Q41 76 44 84'], ['M75 64 Q87 55 89 41', 89, 40]],
     wave2: [['M45 64 Q33 55 31 41', 31, 40], ['M75 64 Q87 55 89 41', 89, 40]],
     point: [['M45 64 Q41 76 44 84'], ['M75 63 Q90 61 99 57', 100, 57]],
+    up: [['M45 64 Q41 76 44 84'], ['M75 64 Q89 54 94 30', 95, 28]],
     hold: [['M45 64 Q41 76 44 84'], ['M75 64 Q84 53 86 41', 86, 39]],
     show: [['M45 64 Q33 53 31 39', 31, 38], ['M75 64 Q87 53 89 39', 89, 38]],
     book: [['M45 64 Q52 71 55 77'], ['M75 64 Q68 71 65 77']],
@@ -27,12 +28,15 @@
     run: [['M45 64 Q37 71 33 79'], ['M75 64 Q83 71 87 79']],
   };
 
-  const face = w => {
+  const face = (w, mood) => {
     const c = w.glasses ? '#2b2b33' : '#3b3355';
+    const mouth = mood === 'sad'
+      ? `<path d="M55 49 q5 -5 10 0" stroke="#b5574a" stroke-width="2" fill="none" stroke-linecap="round"/>`
+      : `<path d="M55 47 q5 5 10 0" stroke="#b5574a" stroke-width="2" fill="none" stroke-linecap="round"/>`;
     return `
       <circle cx="54" cy="39" r="2.4" fill="${c}"/>
       <circle cx="66" cy="39" r="2.4" fill="${c}"/>
-      <path d="M55 47 q5 5 10 0" stroke="#b5574a" stroke-width="2" fill="none" stroke-linecap="round"/>
+      ${mouth}
       <circle cx="48" cy="45" r="3" fill="#ffb0a0" opacity=".5"/>
       <circle cx="72" cy="45" r="3" fill="#ffb0a0" opacity=".5"/>
       ${w.glasses ? `<circle cx="54" cy="39" r="6.5" fill="none" stroke="#3b3355" stroke-width="1.6"/>
@@ -70,8 +74,8 @@
     return s;
   };
 
-  // 一个人：who 是人物，pose 是姿势，k 是大小，dx/dy 是整体挪动
-  const person = (who, pose = 'stand', k = 1, dx = 0, dy = 0) => {
+  // 一个人：who 是人物，pose 是姿势，k 是大小，dx/dy 是整体挪动，mood 是表情
+  const person = (who, pose = 'stand', k = 1, dx = 0, dy = 0, mood) => {
     const w = WHO[who] || WHO.li;
     const arms = POSE[pose] || POSE.stand;
     const arm = ([d, hx, hy]) => `<path d="${d}" stroke="${w.skin}" stroke-width="7" fill="none" stroke-linecap="round"/>
@@ -90,7 +94,7 @@
       <rect x="55" y="49" width="10" height="9" rx="2" fill="${w.skin}"/>
       <circle cx="60" cy="38" r="16" fill="${w.skin}"/>
       ${bangs(w)}
-      ${face(w)}
+      ${face(w, mood)}
       ${w.bow ? `<path d="M71 24 l9 -6 v12Z" fill="${w.bow}"/><circle cx="80" cy="24" r="2.4" fill="${w.bow}"/>` : ''}
     </g>`;
   };
@@ -172,8 +176,11 @@
       <circle cx="100" cy="22" r="11" fill="#ffe066"/>`,
     classroom: `<rect width="120" height="120" rx="16" fill="#f2f0ff"/>
       <path d="M0 90 h120 v30 H0Z" fill="#e7dcc5"/>
-      <rect x="-40" y="-28" width="80" height="42" rx="4" fill="#2f6b4f" stroke="#d8a26a" stroke-width="5"/>
-      <path d="M-26 -17 h18 M-26 -9 h26 M-26 -1 h14" stroke="#eaf4ff" stroke-width="2.4" stroke-linecap="round" opacity=".8"/>`,
+      <g transform="translate(64 12) scale(.95)">
+        <rect x="-36" y="-28" width="72" height="42" rx="4" fill="#2f6b4f" stroke="#d8a26a" stroke-width="5"/>
+        <path d="M-24 -16 h16 M-24 -8 h24 M-24 0 h12" stroke="#eaf4ff" stroke-width="2.4" stroke-linecap="round" opacity=".85"/>
+        <path d="M-24 7 h10" stroke="#ffe066" stroke-width="2.4" stroke-linecap="round" opacity=".9"/>
+      </g>`,
   };
 
   const bubble = (x = 60, y = 18) => `<g transform="translate(${x} ${y})">
@@ -192,7 +199,7 @@
     // 自我介绍：指着自己
     self: (who = 'chen') => BG.school + person(who, 'self', .96, 4, 2) + bubble(92, 24),
     // 在教室：老师指黑板
-    board: (who = 'miss') => BG.classroom + person(who, 'point', .86, 4, 10) + `<g transform="translate(60 96) scale(.85)">${P.desk}</g>`,
+    board: (who = 'miss') => BG.classroom + person(who, 'up', .86, 4, 10) + `<g transform="translate(60 96) scale(.85)">${P.desk}</g>`,
     // 打开书
     openbook: (who = 'li') => BG.classroom + person(who, 'book', .92, 4, 0) + `<g transform="translate(60 80) scale(.85)">${P.openbook}</g>`,
     // 举起铅笔
@@ -201,6 +208,21 @@
     morning: (who = 'miss', who2 = 'chen') => BG.classroom + person(who, 'wave', .78, -28, 4) + person(who2, 'wave', .78, 28, 4) + bubble(60, 14),
     // 上课抱着书
     classbook: (who = 'miss') => BG.classroom + person(who, 'book', .9, 4, 0) + `<g transform="translate(60 80) scale(.8)">${P.book}</g>` + `<g transform="translate(60 101) scale(.8)">${P.desk}</g>`,
+    // 道谢：把东西递给别人，别人双手接过来说谢谢
+    thank: (who = 'li', who2 = 'chen') => BG.school +
+      person(who, 'point', .82, -26, 2) + person(who2, 'show', .82, 24, 2) +
+      `<g transform="translate(64 56) rotate(-12) scale(.62)">${P.pencil}</g>` +
+      `<path d="M60 22 c-5 -7 -14 -5 -14 2 c0 5 7 9 14 14 c7 -5 14 -9 14 -14 c0 -7 -9 -9 -14 -2Z" fill="#ff5f7e"/>`,
+    // 给你：把铅笔递过去
+    here: (who = 'li') => BG.school + person(who, 'point', .94, -12, 2) +
+      `<g transform="translate(88 54) rotate(16) scale(.72)">${P.pencil}</g>`,
+    // 对不起：一只手举起来，低着头
+    sorry: (who = 'wu') => BG.school + person(who, 'hold', .94, -8, 2, 'sad') +
+      `<path d="M80 30 q4 8 0 13 q-4 -5 0 -13Z" fill="#7cc4ff"/>`,
+    // 听我说：手放在耳朵边
+    listen: (who = 'miss') => BG.classroom + person(who, 'listen', .9, 6, 6) +
+      `<g stroke="#8aa0bb" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".9">
+        <path d="M90 33 q8 7 0 14"/><path d="M98 28 q13 12 0 24"/></g>`,
   };
 
   const wrap = inner => `<svg viewBox="0 0 120 120" class="art-svg" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;

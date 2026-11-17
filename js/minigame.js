@@ -87,13 +87,6 @@
   const NUMW = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
   const COLORW = ['red', 'yellow', 'blue', 'green', 'black', 'white', 'pink', 'orange', 'purple', 'brown'];
   const ANIMALS = TM.Words.zoneWords('e1');
-  const KIDS = [
-    ['chen', 'Chen Jie', '陈杰'],
-    ['li', 'Li Dong', '李东'],
-    ['wu', 'Wu Binbin', '吴斌斌'],
-    ['john', 'John', 'John'],
-    ['sarah', 'Sarah', 'Sarah'],
-  ];
   const THINGS = { pencil: '铅笔', book: '书', desk: '桌子', board: '黑板', bag: '书包', apple: '苹果' };
   const EN_GENS = {
     e1: () => {
@@ -108,16 +101,22 @@
         ]),
       };
     },
-    // Unit 1：听到 “I'm Chen Jie.”，点出所有陈杰
+    // Unit 1：读一句日常用语，点出对应的场景
     u1: () => {
-      const t = pick(KIDS), k = rand(2, 3);
-      const wrong = shuffle(KIDS.filter(x => x[0] !== t[0])).slice(0, N - k);
-      const key = k2 => 'p:' + k2 + ':wave';
+      const SAY = [
+        { en: 'Hello!', scene: 's:greet:chen:li', zh: '见面打招呼' },
+        { en: 'Bye!', scene: 's:bye:john', zh: '说再见' },
+        { en: 'Good morning!', scene: 's:morning:miss:chen', zh: '早上问好' },
+        { en: 'Thank you!', scene: 's:thank:li:chen', zh: '道谢' },
+        { en: 'Here you are.', scene: 's:here:li', zh: '递东西' },
+      ];
+      const t = pick(SAY), k = rand(2, 3);
+      const wrong = shuffle(SAY.filter(x => x.scene !== t.scene)).slice(0, N - k);
       return {
-        kind: 'plane', title: '点出听到的那个人', speak: '点出听到的那个人', en: `Hello! I'm ${t[1]}.`,
+        kind: 'plane', title: '点出听到的场景', speak: '点出听到的场景', en: t.en,
         items: shuffle([
-          ...Array.from({ length: k }, () => ({ label: key(t[0]), art: key(t[0]), ok: true })),
-          ...wrong.map(x => ({ label: key(x[0]), art: key(x[0]), ok: false, why: `这是${x[2]}` })),
+          ...Array.from({ length: k }, () => ({ label: t.scene, art: t.scene, ok: true })),
+          ...wrong.map(x => ({ label: x.scene, art: x.scene, ok: false, why: `这是${x.zh}` })),
         ]),
       };
     },
