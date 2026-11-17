@@ -87,7 +87,15 @@
   const NUMW = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
   const COLORW = ['red', 'yellow', 'blue', 'green', 'black', 'white', 'pink', 'orange', 'purple', 'brown'];
   const ANIMALS = TM.Words.zoneWords('e1');
-  const THINGS = { pencil: '铅笔', book: '书', desk: '桌子', board: '黑板', bag: '书包', apple: '苹果' };
+  // Unit 2 的学习用品：和题目里共用同一组，一局三轮不容易撞
+  const SCHOOL = [
+    { key: 'pencil', en: 'pencil', zh: '铅笔' },
+    { key: 'book', en: 'book', zh: '书' },
+    { key: 'bag', en: 'bag', zh: '书包' },
+    { key: 'pencilcase', en: 'pencil box', zh: '铅笔盒' },
+    { key: 'ruler', en: 'ruler', zh: '尺子' },
+    { key: 'eraser', en: 'eraser', zh: '橡皮' },
+  ];
   const EN_GENS = {
     e1: () => {
       // 读一个动物单词，飞机上挂着动物图片，点中所有这个动物
@@ -120,16 +128,15 @@
         ]),
       };
     },
-    // Unit 2：听到 pencil / book，点出所有这个东西
+    // Unit 2：听到学习用品的单词，点出所有这个东西
     u2: () => {
-      const t = pick(['pencil', 'book']), k = rand(2, 3);
-      const pool = ['i:pencil', 'i:book', 'i:desk', 'i:board', 'i:bag', 'i:apple'];
-      const wrong = shuffle(pool.filter(x => x !== 'i:' + t)).slice(0, N - k);
+      const t = pick(SCHOOL), k = rand(2, 3);
+      const wrong = shuffle(SCHOOL.filter(x => x.key !== t.key)).slice(0, N - k);
       return {
-        kind: 'plane', title: '点出听到的东西', speak: '点出听到的东西', en: t,
+        kind: 'plane', title: '点出听到的东西', speak: '点出听到的东西', en: t.en,
         items: shuffle([
-          ...Array.from({ length: k }, () => ({ label: 'i:' + t, art: 'i:' + t, ok: true })),
-          ...wrong.map(x => ({ label: x, art: x, ok: false, why: `这是${THINGS[x.slice(2)] || '别的东西'}` })),
+          ...Array.from({ length: k }, () => ({ label: 'i:' + t.key, art: 'i:' + t.key, ok: true })),
+          ...wrong.map(x => ({ label: 'i:' + x.key, art: 'i:' + x.key, ok: false, why: `这是${x.zh}` })),
         ]),
       };
     },

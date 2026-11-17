@@ -20,7 +20,7 @@
 
   // 颜色：看色块选单词
   const color = d => {
-    const pool = d === 0 ? COLORS.slice(0, 4) : d === 2 ? COLORS.filter(c => ['red', 'blue', 'green', 'black', 'pink', 'purple', 'brown', 'white'].includes(c.w)) : COLORS;
+    const pool = d === 0 ? COLORS.slice(0, 6) : d === 2 ? COLORS.filter(c => ['red', 'blue', 'green', 'black', 'pink', 'purple', 'brown', 'white'].includes(c.w)) : COLORS;
     const c = U.pick(pool);
     return q({
       prompt: '这个颜色用英语怎么说？',

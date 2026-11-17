@@ -18,8 +18,8 @@
     { en: ['Hello!', 'Hi!'], zh: '你好', scene: 's:greet:chen:li', lv: 0, what: '见面打招呼' },
     { en: ['Bye!', 'Goodbye!'], zh: '再见', scene: 's:bye:john', lv: 0, what: '说再见' },
     { en: ['Good morning!'], zh: '早上好', scene: 's:morning:miss:chen', lv: 0, what: '早上问好' },
-    { en: ['Thank you!'], zh: '谢谢', scene: 's:thank:li:chen', lv: 1, what: '道谢' },
-    { en: ['Here you are.'], zh: '给你', scene: 's:here:li', lv: 2, what: '把东西递给别人' },
+    { en: ['Thank you!'], zh: '谢谢', scene: 's:thank:li:chen', lv: 0, what: '道谢' },
+    { en: ['Here you are.'], zh: '给你', scene: 's:here:li', lv: 1, what: '把东西递给别人' },
     { en: ["I'm sorry."], zh: '对不起', scene: 's:sorry:wu', lv: 2, what: '道歉' },
   ];
   const sayPool = d => SAY.filter(x => x.lv <= d);
@@ -50,7 +50,7 @@
       { en: 'hello', zh: '你好', lv: 0 },
       { en: 'hi', zh: '嗨', lv: 0 },
       { en: 'bye', zh: '再见', lv: 0 },
-      { en: 'good morning', zh: '早上好', lv: 1 },
+      { en: 'good morning', zh: '早上好', lv: 0 },
       { en: 'thank you', zh: '谢谢', lv: 1 },
       { en: 'please', zh: '请', lv: 2 },
     ];
@@ -101,13 +101,25 @@
     };
   }, '意思抓得准');
 
-  // 找不同：哪一句是道别、道谢、道歉
+  // 找不同：哪一句是道别、道谢、道歉。每档多备几个问法，同一关不重样
   Q.register('u1-odd', '找不同', d => {
     const MD = [
-      [{ q: '哪一个是「再见」？', a: 'Bye!', pool: ['Hello!', 'Hi!', 'Bye!'], h: 'Bye 是再见，Hello 和 Hi 都是见面打招呼。' }],
-      [{ q: '哪一个是「谢谢」？', a: 'Thank you!', pool: ['Good morning!', 'Thank you!', 'Bye!'], h: 'Thank you 是谢谢，别人给你东西的时候说。' }],
-      [{ q: '哪一个是「对不起」？', a: "I'm sorry.", pool: ['Here you are.', "I'm sorry.", 'Thank you!'], h: 'I\'m sorry 是对不起，做错事的时候说。' },
-       { q: '哪一个是「给你」？', a: 'Here you are.', pool: ['Here you are.', 'Good morning!', 'Thank you!'], h: 'Here you are 是给你，把东西递过去的时候说。' }],
+      [
+        { q: '哪一个是「你好」？', a: 'Hello!', pool: ['Hello!', 'Bye!', 'Thank you!'], h: 'Hello 是你好，见面打招呼的时候说。' },
+        { q: '哪一个是「再见」？', a: 'Bye!', pool: ['Hello!', 'Hi!', 'Bye!'], h: 'Bye 是再见，Hello 和 Hi 都是见面打招呼。' },
+        { q: '哪一个是「早上好」？', a: 'Good morning!', pool: ['Good morning!', 'Hello!', 'Bye!'], h: 'Good morning 是早上好，只有早上才说。' },
+        { q: '哪一个是「谢谢」？', a: 'Thank you!', pool: ['Thank you!', 'Hello!', 'Bye!'], h: 'Thank you 是谢谢，别人给你东西的时候说。' },
+      ],
+      [
+        { q: '哪一个是「谢谢」？', a: 'Thank you!', pool: ['Thank you!', 'I\'m sorry.', 'Bye!'], h: 'Thank you 是谢谢，别人帮了你的时候说。' },
+        { q: '哪一个是「对不起」？', a: "I'm sorry.", pool: ['Here you are.', "I'm sorry.", 'Thank you!'], h: 'I\'m sorry 是对不起，做错事的时候说。' },
+        { q: '哪一个是「早上好」？', a: 'Good morning!', pool: ['Good morning!', 'Thank you!', 'Bye!'], h: 'Good morning 是早上好，早上见到人时说。' },
+      ],
+      [
+        { q: '哪一个是「对不起」？', a: "I'm sorry.", pool: ['Here you are.', "I'm sorry.", 'Thank you!'], h: 'I\'m sorry 是对不起，做错事的时候说。' },
+        { q: '哪一个是「给你」？', a: 'Here you are.', pool: ['Here you are.', 'Good morning!', 'Thank you!'], h: 'Here you are 是给你，把东西递过去的时候说。' },
+        { q: '哪一个是「谢谢」？', a: 'Thank you!', pool: ['Thank you!', "I'm sorry.", 'Bye!'], h: 'Thank you 是谢谢，别人给你东西的时候说。' },
+      ],
     ];
     const m = pick(MD[d]);
     return {
@@ -122,10 +134,20 @@
   }, '分得真清楚');
 
   // ---------- Unit 2：课堂和学校生活 ----------
+  // 学习用品：听音选物、看图选词共用这一组答案，一关 6 题能全不重样
+  const ITEMS = [
+    { key: 'pencil', en: 'pencil', zh: '铅笔' },
+    { key: 'book', en: 'book', zh: '书' },
+    { key: 'bag', en: 'bag', zh: '书包' },
+    { key: 'pencilcase', en: 'pencil box', zh: '铅笔盒' },
+    { key: 'ruler', en: 'ruler', zh: '尺子' },
+    { key: 'eraser', en: 'eraser', zh: '橡皮' },
+  ];
   const DO = [
     { en: 'Open your book, please.', zh: '请打开你的书', scene: 's:openbook:li', lv: 0 },
     { en: 'Show me your pencil, please.', zh: '请把你的铅笔给我看看', scene: 's:showpencil:wu', lv: 0 },
     { en: 'Look at the board.', zh: '看黑板', scene: 's:board:miss', lv: 0 },
+    { en: 'Close your book, please.', zh: '请合上你的书', scene: 's:closebook:wu', lv: 0 },
     { en: 'Good morning!', zh: '早上好', scene: 's:morning:miss:chen', lv: 1 },
     { en: 'Listen to me.', zh: '听我说', scene: 's:listen:miss', lv: 2 },
   ];
@@ -133,17 +155,17 @@
 
   // 听 pencil / book，选东西
   Q.register('u2-item', '听音选物', d => {
-    const t = pick(['pencil', 'book']);
-    const pool = ['i:pencil', 'i:book', 'i:desk', 'i:board', 'i:bag', 'i:apple'];
+    const t = pick(ITEMS);
+    const pool = ITEMS.map(x => 'i:' + x.key).concat(['i:desk', 'i:board', 'i:apple']);
     return {
       prompt: '听一听，是哪一个？',
-      speech: [ZH('听一听，是哪一个？'), EN(t)],
+      speech: [ZH('听一听，是哪一个？'), EN(t.en)],
       pic: 'art',
-      choices: three('i:' + t, pool),
-      answer: 'i:' + t,
+      choices: three('i:' + t.key, pool),
+      answer: 'i:' + t.key,
       topic: 'listen',
-      hint: { text: 'pencil 是铅笔，长长的；book 是书，方方的。', visual: art('i:' + t) },
-      explain: [`刚才读的是 “${t}”。`, t === 'pencil' ? 'pencil 是铅笔。' : 'book 是书。'],
+      hint: { text: `${t.en} 是${t.zh}。`, visual: art('i:' + t.key) },
+      explain: [`刚才读的是 “${t.en}”。`, `${t.en} 是${t.zh}。`],
     };
   }, '学习用品认得快');
 
@@ -206,44 +228,51 @@
 
   // 看图选词
   Q.register('u2-word', '看图选词', d => {
-    const t = pick(['pencil', 'book']);
-    const key = 'i:' + t;
-    const pool = ['pencil', 'book'].concat(d === 0 ? [pick(['open', 'show'])] : ['open', 'show']);
+    const t = pick(ITEMS);
+    const key = 'i:' + t.key;
+    const pool = ITEMS.map(x => x.en).concat(d === 0 ? [pick(['open', 'show'])] : ['open', 'show']);
     return {
       prompt: '看图，选单词。',
       speech: [ZH('看图，选单词。')],
       scene: art(key),
-      choices: three(t, pool),
-      answer: t,
+      choices: three(t.en, pool),
+      answer: t.en,
       topic: 'word',
-      hint: { text: `图上是${t === 'pencil' ? '铅笔' : '书'}，英文是 ${t}。` },
-      explain: [`图上是${t === 'pencil' ? '铅笔' : '一本书'}。`, `英文是 ${t}。`],
+      hint: { text: `图上是${t.zh}，英文是 ${t.en}。` },
+      explain: [`图上是${t.zh}。`, `英文是 ${t.en}。`],
     };
   }, '单词和图片对得上');
 
-  // 找不同：哪个不是上学要带的
+  // 找不同：混一个不是学习用品的东西。每档多备几个问法，同一关不重样
   Q.register('u2-odd', '找不同', d => {
-    if (d === 2) {
-      return {
-        prompt: '哪一个是上学要带的？',
-        speech: [ZH('哪一个是上学要带的？')],
-        pic: 'art',
-        choices: shuffle(['i:pencil', 'i:apple', 'i:ball']),
-        answer: 'i:pencil',
-        topic: 'word',
-        hint: { text: '铅笔是学习用品，苹果和皮球不是。' },
-        explain: ['铅笔是上学要带的。', '苹果是吃的，皮球是玩的。'],
-      };
-    }
+    const MD = [
+      [
+        { q: '哪一个不是上学要带的？', a: 'i:apple', pool: ['i:pencil', 'i:book', 'i:apple'], h: '铅笔和书都是学习用品，苹果是吃的。' },
+        { q: '哪一个不是学习用品？', a: 'i:ball', pool: ['i:bag', 'i:ruler', 'i:ball'], h: '书包和尺子是学习用品，皮球是玩的。' },
+        { q: '哪一个是上学要带的？', a: 'i:pencil', pool: ['i:pencil', 'i:apple', 'i:ball'], h: '铅笔是学习用品，苹果和皮球不是。' },
+        { q: '哪一个是吃的？', a: 'i:apple', pool: ['i:apple', 'i:book', 'i:ruler'], h: '苹果是吃的，书和尺子是学习用品。' },
+      ],
+      [
+        { q: '哪一个不是学习用品？', a: 'i:cup', pool: ['i:pencilcase', 'i:eraser', 'i:cup'], h: '铅笔盒和橡皮是学习用品，杯子不是。' },
+        { q: '哪一个是学习用品？', a: 'i:ruler', pool: ['i:ruler', 'i:apple', 'i:cup'], h: '尺子是学习用品，苹果和杯子不是。' },
+        { q: '哪一个不是上学要带的？', a: 'i:cap', pool: ['i:book', 'i:ruler', 'i:cap'], h: '书和尺子是上学用的，帽子不是。' },
+      ],
+      [
+        { q: '哪一个是学习用品？', a: 'i:eraser', pool: ['i:eraser', 'i:apple', 'i:ball'], h: '橡皮是学习用品，苹果和皮球不是。' },
+        { q: '哪一个不是学习用品？', a: 'i:cup', pool: ['i:pencilcase', 'i:bag', 'i:cup'], h: '铅笔盒和书包是学习用品，杯子不是。' },
+        { q: '哪一个是上学要带的？', a: 'i:bag', pool: ['i:bag', 'i:apple', 'i:cup'], h: '书包是上学要带的，苹果和杯子不是。' },
+      ],
+    ];
+    const m = pick(MD[d]);
     return {
-      prompt: '哪一个不是上学要带的？',
-      speech: [ZH('哪一个不是上学要带的？')],
+      prompt: m.q,
+      speech: [ZH(m.q)],
       pic: 'art',
-      choices: shuffle(['i:pencil', 'i:book', 'i:apple']),
-      answer: 'i:apple',
+      choices: shuffle(m.pool.slice()),
+      answer: m.a,
       topic: 'word',
-      hint: { text: '铅笔和书都是学习用品，苹果是吃的。' },
-      explain: ['铅笔和书都是上学要用的。', '苹果是吃的，不是学习用品。'],
+      hint: { text: m.h },
+      explain: [m.h],
     };
   }, '学习用品分得清');
 })(window.TM);

@@ -51,6 +51,8 @@
     run: { a: [['M45 64 Q38 70 34 76', 33, 77], ['M75 64 Q84 68 88 74', 89, 75]], legs: 'run', tilt: 6 },
     // 一边走一边挥手（道别）
     bye: { a: [REST_L, ['M75 64 Q87 55 89 41', 89, 40]], legs: 'walk', tilt: 2 },
+    // 伸懒腰：两只手举到头顶两边
+    stretch: { a: [['M45 64 Q34 46 30 26', 29, 24], ['M75 64 Q86 46 90 26', 91, 24]], tilt: -2 },
     // 走
     walk: { a: [['M45 64 Q39 72 36 78', 35, 79], ['M75 64 Q82 70 85 74', 86, 75]], legs: 'walk', tilt: 3 },
     // 跳
@@ -218,6 +220,18 @@
       <circle cx="16" cy="2" r="2.6" fill="#fff" stroke="#e07c2a" stroke-width="1.4"/>
       <rect x="-24" y="-6" width="4" height="12" rx="2" fill="#e07c2a"/>
     </g>`,
+    // 尺子
+    ruler: `<g transform="rotate(-18)">
+      <rect x="-26" y="-6" width="52" height="12" rx="2.5" fill="#ffe08a" stroke="#dfae35" stroke-width="1.6"/>
+      <path d="M-20 -6 v4 M-14 -6 v6 M-8 -6 v4 M-2 -6 v6 M4 -6 v4 M10 -6 v6 M16 -6 v4"
+        stroke="#c99a2e" stroke-width="1.4"/>
+    </g>`,
+    // 橡皮
+    eraser: `<g transform="rotate(-12)">
+      <rect x="-18" y="-9" width="36" height="18" rx="4" fill="#ff9eb5"/>
+      <rect x="-18" y="-9" width="36" height="8" rx="4" fill="#ffd0dc"/>
+      <rect x="2" y="-9" width="16" height="18" rx="4" fill="#ff7fa0"/>
+    </g>`,
     bag: `<g>
       <rect x="-16" y="-12" width="32" height="34" rx="8" fill="#5bb6e8"/>
       <path d="M-16 -2 h32" stroke="#3c8fc0" stroke-width="2"/>
@@ -290,9 +304,11 @@
   const BG = {
     plain: `<rect width="120" height="120" rx="16" fill="#f6f9ff"/>
       <circle cx="60" cy="56" r="42" fill="#e8f1ff"/>`,
-    // 校门口：草地、远处的小树、太阳
+    // 校门口：草地、远处的小树、白云（太阳留给「早上好」那张图）
     school: `<rect width="120" height="120" rx="16" fill="#dff1ff"/>
-      <circle cx="104" cy="15" r="9" fill="#ffe066"/>
+      <g fill="#fff" opacity=".95">
+        <circle cx="96" cy="18" r="7"/><circle cx="105" cy="16" r="9"/><circle cx="113" cy="19" r="6"/>
+      </g>
       <path d="M0 88 h120 v32 H0Z" fill="#bfe6a0"/>
       <path d="M0 98 h120 v22 H0Z" fill="#a9d888"/>
       <g transform="translate(8 88)">
@@ -317,18 +333,19 @@
         <path d="M-20 8 h14 M-20 15 h21 M-20 21 h10" stroke="#eaf4ff" stroke-width="2.2" stroke-linecap="round" opacity=".85"/>
         <path d="M2 21 h9" stroke="#ffe066" stroke-width="2.2" stroke-linecap="round" opacity=".9"/>
       </g>`,
-    // 早上：太阳刚出来、小鸟飞
-    morning: `<rect width="120" height="120" rx="16" fill="#ffe8cf"/>
-      <g transform="translate(22 21)">
-        <circle r="11" fill="#ffd15c"/>
-        <g stroke="#ffd15c" stroke-width="2.6" stroke-linecap="round">
-          <path d="M0 -16 v-4"/><path d="M11 -11 l3 -3"/><path d="M16 0 h4"/><path d="M-11 -11 l-3 -3"/><path d="M-16 0 h-4"/>
-        </g>
+    // 早上：太阳刚从地平线升起来，暖色天，小鸟飞
+    morning: `<rect width="120" height="120" rx="16" fill="#ffe6c9"/>
+      <rect y="50" width="120" height="40" fill="#ffd9b0"/>
+      <circle cx="17" cy="78" r="14" fill="#ffb84d"/>
+      <circle cx="17" cy="78" r="10" fill="#ffd15c"/>
+      <g stroke="#ffb84d" stroke-width="2.4" stroke-linecap="round">
+        <path d="M17 58 v-5"/><path d="M28 62 l3 -4"/><path d="M6 62 l-3 -4"/>
+        <path d="M35 73 h5"/><path d="M-1 73 h-5"/>
       </g>
-      <path d="M18 22 q5 -5 10 0 M32 16 q5 -5 10 0" stroke="#e8a91f" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+      <path d="M52 22 q4 -4 8 0 q4 -4 8 0" stroke="#e8a91f" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+      <path d="M84 30 q3.5 -3.5 7 0 q3.5 -3.5 7 0" stroke="#e8a91f" stroke-width="2" fill="none" stroke-linecap="round"/>
       <path d="M0 88 h120 v32 H0Z" fill="#bfe6a0"/>
-      <path d="M0 98 h120 v22 H0Z" fill="#a9d888"/>
-      <path d="M74 14 q4 -4 8 0 q4 -4 8 0" stroke="#e8a91f" stroke-width="2.2" fill="none" stroke-linecap="round"/>`,
+      <path d="M0 98 h120 v22 H0Z" fill="#a9d888"/>`,
   };
 
   // 说话气泡：画个笑脸，比三个点更容易看懂「在说话」
@@ -407,12 +424,24 @@
       `<g transform="translate(80 94) scale(.55)">${P.pencilcase}</g>` +
       `<g transform="translate(74 42) scale(.72)">${P.pencil}</g>` +
       sparkle(62, 24, .9) + sparkle(92, 34, .7),
-    // 早上好：日出、墙上钟指 7 点，老师和学生在校门口问好
+    // 合上书：小朋友在桌前把书合上，老师伸手示意，书上有一个向下的箭头
+    closebook: (who = 'wu') =>
+      BG.classroom +
+      person('miss', 'push', .82, 32, 4, 'talk', true) +
+      `<g transform="translate(46 96) scale(.92)">${P.desk}</g>` +
+      person(who, 'book', .88, -16, -2, 'smile') +
+      `<g transform="translate(46 82) scale(.8)">${P.book}</g>` +
+      `<g stroke="#e5534b" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M46 57 v10"/><path d="M40 63 l6 6 6 -6"/></g>` +
+      `<g stroke="#8aa0bb" stroke-width="2.2" fill="none" stroke-linecap="round" opacity=".85">
+        <path d="M30 70 q-5 -4 -8 0"/><path d="M62 70 q5 -4 8 0"/></g>`,
+    // 早上好：太阳刚从地平线升起，小朋友背着书包走进校门，老师挥手问好
     morning: (who = 'miss', who2 = 'chen') =>
       BG.morning +
-      person(who, 'wave', .82, -28, 10, 'happy', true) +
-      person(who2, 'wave2', .86, 28, 6, 'happy') +
-      bubble(52, 22),
+      person(who, 'wave', .8, -20, 8, 'happy', true) +
+      person(who2, 'walk', .86, 20, 6, 'smile', true) +
+      `<g transform="translate(101 78) scale(.56) rotate(-8)">${P.bag}</g>` +
+      bubble(52, 14),
     // 抱着书：老师抱着一摞书走
     classbook: (who = 'miss') =>
       BG.classroom +
@@ -457,7 +486,7 @@
   const ITEM_K = {
     book: 2.6, stack: 1.8, openbook: 2.3, pencil: 2.2, pencilcase: 2.3, bag: 2.3, bottle: 2.6,
     cap: 2.6, desk: 1.9, chair: 1.7, board: 1.55, apple: 2.4, ball: 2.4, door: 1.45,
-    cup: 2.6, blocks: 2.4, spill: 2.2, star: 3,
+    cup: 2.6, blocks: 2.4, spill: 2.2, star: 3, ruler: 1.8, eraser: 2.2,
   };
 
   // key 的写法：
@@ -476,12 +505,13 @@
   const SCENE_ZH = {
     greet: '打招呼', bye: '说再见', self: '介绍自己', board: '看黑板', openbook: '打开书',
     showpencil: '举起铅笔', morning: '早上好', classbook: '抱着书', thank: '说谢谢',
-    here: '递东西', sorry: '说对不起', listen: '听我说',
+    here: '递东西', sorry: '说对不起', listen: '听我说', closebook: '合上书',
   };
   const ITEM_ZH = {
-    book: '书', stack: '一摞书', openbook: '打开的书', pencil: '铅笔', pencilcase: '笔袋',
+    book: '书', stack: '一摞书', openbook: '打开的书', pencil: '铅笔', pencilcase: '铅笔盒',
     bag: '书包', bottle: '水壶', cap: '帽子', desk: '桌子', chair: '椅子', board: '黑板',
     apple: '苹果', ball: '皮球', door: '门', cup: '杯子', blocks: '积木',
+    ruler: '尺子', eraser: '橡皮',
   };
   A.mean = key => {
     const [t, a] = String(key || '').split(':');

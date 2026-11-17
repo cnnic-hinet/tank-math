@@ -173,6 +173,15 @@
     // 本战区前面学过的题型，普通关里偶尔复习一题
     const prev = zone.levels.slice(0, li).filter(l => !l.boss && !l.mini).flatMap(l => l.types);
     let pool = lv.types.slice();
+    // 混合关按题型轮流出，尽量每种都轮到，不会连着三题都是同一类
+    let bag = [], last = null;
+    const nextType = () => {
+      if (!bag.length) bag = U.shuffle(lv.types.slice());
+      let t = bag.shift();
+      if (bag.length && t === last) { bag.push(t); t = bag.shift(); }
+      last = t;
+      return t;
+    };
     const qs = diffs.map((d, i) => {
       let type;
       if (lv.boss) {
@@ -181,20 +190,46 @@
       } else if (prev.length && d === 0 && i === 2) {
         type = U.pick(prev);
       } else {
-        type = U.pick(lv.types);
+        type = nextType();
       }
       return Q.make(type, d);
     });
     // 基础题在前，挑战题压轴
-    return dedupe(qs);
+    return dedupe(qs, zone.subject === 'en');
   };
 
   // 同一关里尽量不出现一模一样的题
-  const dedupe = qs => {
+  // 英语句子题的题干都一样，只比题干等于没比，所以按「听到的英文 / 答案」比；
+  // 数学题按题干里的数字和答案比
+  const norm = s => {
+    const x = String(s).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    return x || String(s);
+  };
+  const sceneKey = s => {
+    if (!s) return '';
+    if (typeof s === 'string') return s;
+    if (s.kind === 'art') return s.key;
+    if (s.kind === 'color') return s.hex;
+    if (s.kind === 'card') return s.text;
+    if (s.kind === 'emoji') return `${s.e}${s.n}`;
+    if (s.kind === 'seq') return (s.items || []).join(',');
+    return '';
+  };
+  const enKey = q => {
+    const raw = String(q.subEn || q.answer);
+    // 答案是中文（归类题之类）时，光比答案区分不开，再带上题面
+    return /[a-z0-9]/i.test(raw) ? norm(raw) : `${raw}|${sceneKey(q.scene)}`;
+  };
+  const qKey = (q, en) => en ? `en|${enKey(q)}` : `${q.type}|${q.prompt}|${q.answer}`;
+  const dedupe = (qs, en) => {
     const seen = new Set();
     return qs.map(q => {
-      for (let t = 0; t < 8 && seen.has(q.prompt); t++) q = Q.make(q.type, q.diff);
-      seen.add(q.prompt);
+      let key = qKey(q, en);
+      for (let t = 0; t < 40 && seen.has(key); t++) {
+        q = Q.make(q.type, q.diff);
+        key = qKey(q, en);
+      }
+      seen.add(key);
       return q;
     });
   };
