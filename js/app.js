@@ -90,6 +90,7 @@
         '🔧 维修厂', due ? h('span', { class: 'badge' }, String(due)) : null),
       h('button', { class: 'btn small gray', onclick: () => { Audio.sfx.tap(); TM.Hangar.show(); } },
         h('span', { class: 'top-tank', html: TM.V.tank('me') }), '装备库', canBuy ? h('span', { class: 'badge ok' }, '🛒') : null),
+      h('button', { class: 'btn small gray', onclick: () => { Audio.sfx.tap(); TM.Sudoku.show(); } }, '🧩 数独'),
       lock);
 
     const zones = h('div', { class: 'zones' }, L.ZONES.map((z, zi) => [z, zi])

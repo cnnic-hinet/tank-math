@@ -197,6 +197,71 @@
       return h('div', { class: 'v-shapes' }, Object.keys(S).map(k => h('div', { class: 'v-shape' + (v.hl === k ? ' hl' : '') },
         h('span', { html: `<svg viewBox="0 0 80 80">${S[k]}</svg>` }), h('b', null, k))));
     },
+    // 一根绳子分成 segs 段；cuts 时在接口处画剪刀（提示图才画，题目图不画答案）
+    rope(v) {
+      // 有剪刀的位置留宽一点，没剪刀时留个窄缝，绳子的分段才连得起来
+      const gapCls = v.cuts ? 'rope-cut' : 'rope-gap';
+      const row = h('div', { class: 'rope-row' });
+      for (let i = 0; i < v.segs; i++) {
+        row.append(h('span', { class: 'rope-seg' }));
+        if (i < v.segs - 1) row.append(h('span', { class: gapCls }, v.cuts ? '✂' : ''));
+      }
+      const nums = h('div', { class: 'rope-row rope-nums' });
+      for (let i = 0; i < v.segs; i++) {
+        nums.append(h('span', null, String(i + 1)));
+        if (i < v.segs - 1) nums.append(h('span', { class: gapCls }));
+      }
+      return h('div', { class: 'v-rope' }, row, nums);
+    },
+    // 晾衣绳：n 块手帕；pegs 时把夹子也画出来（两头各一个）
+    hang(v) {
+      // 手帕多了就缩一号，9 块加夹子也能挤在一行里
+      const row = h('div', { class: 'hang-row' + (v.n >= 8 ? ' tiny' : v.n > 5 ? ' small' : '') });
+      const cloths = ['🌸', '⭐', '🍓', '🌻'];
+      for (let i = 0; i < v.n; i++) {
+        if (v.pegs) row.append(h('span', { class: 'hang-peg' }, '📌'));
+        row.append(h('span', { class: 'hang-cloth' }, cloths[i % cloths.length]));
+      }
+      if (v.pegs) row.append(h('span', { class: 'hang-peg' }, '📌'));
+      return h('div', { class: 'v-hang' }, h('div', { class: 'hang-line' }), row,
+        h('div', { class: 'v-label' }, `${v.n} 块手帕`));
+    },
+    // 一排树，benches 时在两棵树之间画长椅
+    lineup(v) {
+      const row = h('div', { class: 'lineup-row' + (v.trees > 6 ? ' small' : '') });
+      for (let i = 0; i < v.trees; i++) {
+        row.append(h('span', { class: 'lu-tree' }, '🌳'));
+        if (v.benches && i < v.trees - 1) row.append(h('span', { class: 'lu-bench' }, '🪑'));
+      }
+      return h('div', { class: 'v-lineup' }, row,
+        h('div', { class: 'v-label' }, `一排 ${v.trees} 棵树`));
+    },
+    // 围成一圈：n 个小朋友/树，between 时在两人之间画球
+    ring(v) {
+      const n = v.n, box = 250, R = n > 7 ? 98 : 88;
+      const wrap = h('div', { class: 'v-ring', style: `width:${box}px;height:${box}px` });
+      const put = (ang, text, cls) => wrap.append(h('span', {
+        class: 'ring-item' + (cls ? ' ' + cls : ''),
+        style: `left:50%;top:50%;transform:translate(-50%,-50%) translate(${Math.round(Math.cos(ang) * R)}px,${Math.round(Math.sin(ang) * R)}px)`,
+      }, text));
+      for (let i = 0; i < n; i++) put(-Math.PI / 2 + i * Math.PI * 2 / n, v.e || '🙂');
+      if (v.between) for (let i = 0; i < n; i++) put(-Math.PI / 2 + (i + .5) * Math.PI * 2 / n, v.between, 'between');
+      return h('div', { class: 'v-ringwrap' }, wrap, h('div', { class: 'v-label' }, v.label || `${n} 个围成一圈`));
+    },
+    // 几位同学的方法卡片：只写名字和做法，不标对错
+    cards(v) {
+      return h('div', { class: 'v-cards' }, v.cards.map(c => h('div', { class: 'v-card' },
+        h('b', { class: 'c-name' }, c.name), h('div', { class: 'c-text' }, c.text))));
+    },
+    // 左图 → 右图，配一句算式（看图说算式的意思）
+    picpair(v) {
+      const box = s => h('div', { class: 'pp-box' },
+        h('div', { class: 'pp-scene' }, Array.from({ length: Math.max(1, s.n || 1) }, () => h('span', { class: 'em' }, s.e))),
+        s.cap ? h('div', { class: 'pp-cap' }, s.cap) : null);
+      return h('div', { class: 'v-picpair' },
+        box(v.left), h('span', { class: 'pp-arrow' }, '➡'), box(v.right),
+        v.eq ? h('div', { class: 'pp-eq' }, v.eq) : null);
+    },
     // 破十法：从 10 里减，再加上个位
     borrow(v) {
       const ones = v.a - 10;
@@ -445,7 +510,7 @@
   };
 
   // 每个战区的敌人长得不一样
-  const ENEMY = { 1: heli, 2: robot, 4: heli, 5: ufo };
+  const ENEMY = { 1: heli, 2: robot, 4: heli, 5: ufo, 6: robot };
   V.enemy = (zi, kind) => (ENEMY[zi] || V.tank)(kind);
 
   TM.V = V;

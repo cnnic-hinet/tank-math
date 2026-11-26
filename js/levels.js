@@ -27,6 +27,7 @@
         { name: '连加连减', types: ['chain'] },
         { name: '算式比大小', types: ['cmpexp'] },
         { name: '看图解题', types: ['word10'] },
+        { id: 'pick', name: '选一选', types: ['method', 'picmean'] },
       ],
     },
     {
@@ -77,6 +78,18 @@
         { name: '算一算', types: ['tens100', 'seq100'] },
       ],
     },
+    {
+      id: 'z7', name: '智慧营', icon: '🧠', color: '#9b7ede', grade: '上册', after: 2,
+      desc: '间隔问题（思考题）',
+      levels: [
+        { name: '剪一剪', types: ['cut'] },
+        { name: '夹一夹', types: ['peg'] },
+        { name: '种树摆椅', types: ['bench'] },
+        { name: '找规律', types: ['rule'] },
+        { name: '间隔综合', types: ['cut', 'peg', 'bench', 'rule'] },
+        { name: '动脑筋', types: ['peg', 'bench', 'rule', 'cut'] },
+      ],
+    },
   ];
   // 每个战区最后：一个小游戏关（数学和动物朋友是「敌机编队」，颜色数字是「空投补给」），再加一个 Boss 关考所有题型
   // Boss 关 id 还是 6，和旧存档对得上
@@ -92,7 +105,7 @@
 
   // 每个战区的特殊小兵（第 2 关起，普通关第 4 题出现一个）：
   // shield 盾牌兵、flyer 飞行兵、counter 反击兵，见 battle.js
-  L.TRAIT = ['shield', 'flyer', 'counter', 'shield', 'counter', 'flyer'];
+  L.TRAIT = ['shield', 'flyer', 'counter', 'shield', 'counter', 'flyer', 'shield'];
 
   L.key = (zi, li) => `${ZONES[zi].id}-${ZONES[zi].levels[li].id}`;
   L.get = (zi, li) => ZONES[zi].levels[li];

@@ -2,7 +2,7 @@
 (function (TM) {
   const U = TM.U;
   const KEY = 'tankmath.v1';
-  const SCHEMA = 5;               // 存档结构版本，改结构时 +1 并在 migrate 里补
+  const SCHEMA = 7;               // 存档结构版本，改结构时 +1 并在 migrate 里补
   const SNAP = 'tankmath.snap.';  // 自动快照：tankmath.snap.2026-11-03 / pre-migrate / pre-restore / pre-import
   const SNAP_DAYS = 7;            // 每天的快照留几天
 
@@ -26,6 +26,7 @@
     recent: {},         // 每个题型最近 10 次首次作答 {type: [true, false...]}，用来调难度
     bestStreak: 0,      // 每日任务最长连续天数
     lastBackup: null,   // 上次备份的日期
+    sudoku: { done: {}, saves: {} }, // 数独训练营：每盘的星级，saves 是各盘没做完的进度
     // hide：学校还没学到、先藏起来的战区；goal：家长设的现实奖励 {text, need, start, done}
     settings: { limitMin: 20, voice: true, hide: { z5: true, z6: true }, goal: null },
     created: U.today(),
@@ -97,6 +98,19 @@
         delete data.settings.subject;
         if (data.settings.hide) ['u1', 'u2', 'e1', 'e2'].forEach(k => delete data.settings.hide[k]);
       }
+    }
+    // v5 → v6：v8.17 加数独训练营（只加字段，老数据不动）
+    if (from < 6) {
+      data.sudoku = data.sudoku && typeof data.sudoku === 'object' ? data.sudoku : {};
+      data.sudoku.done = data.sudoku.done && typeof data.sudoku.done === 'object' ? data.sudoku.done : {};
+    }
+    // v6 → v7：数独从「只留一盘进度」改成每盘各留一份，中途换盘不会丢
+    if (from < 7) {
+      const sd = data.sudoku = data.sudoku && typeof data.sudoku === 'object' ? data.sudoku : {};
+      sd.done = sd.done && typeof sd.done === 'object' ? sd.done : {};
+      sd.saves = sd.saves && typeof sd.saves === 'object' ? sd.saves : {};
+      if (sd.save && sd.save.id) sd.saves[sd.save.id] = sd.save;
+      delete sd.save;
     }
     data.schema = SCHEMA;
     return data;

@@ -9,6 +9,7 @@
     { id: 'three', label: '拿一次 3 颗星', need: 1 },
     { id: 'combo', label: '连续答对 5 道题', need: 5 },
     { id: 'super', label: '放 1 次空中支援 ✈️', need: 1 },
+    { id: 'sudoku', label: '完成 1 盘数独 🧩', need: 1 },
   ];
 
   // 今天的任务：第一次打开时生成

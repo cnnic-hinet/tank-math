@@ -508,4 +508,168 @@
       },
     ],
   ], '解决问题想得很清楚');
+  // ---------- 选一选：谁的算法对 ----------
+  // 卷子上的题型：三位同学各写一种算法，其中有的多算一步、有的少数一个，选出对的人
+  const KIDS = ['皮皮', '奇奇', '思思'];
+  const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i);
+  const optName = (idx, total) => {
+    if (!idx.length) return total === 2 ? '两个都不对' : '三个人都不对';
+    if (idx.length === total) return total === 2 ? '两个都对' : '三个人都对';
+    const ns = idx.map(i => KIDS[i]);
+    return '只有' + (ns.length === 1 ? ns[0] : ns.join('和'));
+  };
+  // 每种算法写成一句孩子看得懂的话；ok 为 false 时故意错一步
+  const methodText = (style, a, b, ok) => {
+    if (style === 'count') {
+      const seq = ok ? range(a + 1, a + b) : range(a, a + b - 1);
+      return `从 ${a} 往后数 ${b} 个数：${seq.join('，')}，得数是 ${seq[seq.length - 1]}。`;
+    }
+    if (style === 'counter') {
+      return `摆了 ${a} 个 ●，又摆了 ${b} 个 ●，数一数一共 ${ok ? a + b : a + b + 1} 个。`;
+    }
+    const steps = ok ? b : b + 1, path = range(a + 1, a + steps);
+    return `从 ${a} 开始往后跳，每次跳 1 格，跳 ${steps} 格：${path.join('、')}，得数是 ${a + steps}。`;
+  };
+  const METHOD_STYLES = {
+    2: ['count', 'counter'],          // 两个同学
+    3: ['count', 'counter', 'line'],  // 三个同学
+  };
+  reg('method', '谁的算法对', [
+    [
+      () => {
+        const a = rand(2, 5), b = rand(1, 10 - a), n = 2;
+        const wrong = rand(0, 1);
+        return makeMethod(a, b, n, [wrong]);
+      },
+    ],
+    [
+      () => {
+        const a = rand(2, 6), b = rand(1, 10 - a), n = 3;
+        const wrong = pick([[0], [1], [2]]);
+        return makeMethod(a, b, n, wrong);
+      },
+      () => {
+        // 三个人都对：仔细看每一种
+        const a = rand(2, 5), b = rand(1, 10 - a), n = 3;
+        return makeMethod(a, b, n, []);
+      },
+    ],
+    [
+      () => {
+        const a = rand(3, 6), b = rand(1, 10 - a), n = 3;
+        let wrong = [];
+        while (wrong.length < 2) wrong = [pick([0, 1, 2]), pick([0, 1, 2])].filter((v, i, arr) => arr.indexOf(v) === i);
+        return makeMethod(a, b, n, wrong);
+      },
+      () => {
+        const a = rand(2, 6), b = rand(1, 10 - a), n = 3;
+        return makeMethod(a, b, n, pick([[0], [1], [2]]));
+      },
+    ],
+  ], '会判断哪种算法是对的');
+
+  function makeMethod(a, b, n, wrongIdx) {
+    const styles = METHOD_STYLES[n];
+    const cards = styles.map((s, i) => ({ name: KIDS[i], text: methodText(s, a, b, !wrongIdx.includes(i)) }));
+    const right = styles.map((_, i) => i).filter(i => !wrongIdx.includes(i));
+    const all = Array.from({ length: n }, (_, i) => i);
+    const subsets = [];
+    for (let m = 0; m < (1 << n); m++) subsets.push(all.filter(i => m & (1 << i)));
+    const ans = optName(right, n);
+    const others = subsets.map(s => optName(s, n)).filter(x => x !== ans);
+    const speech = [{ text: `${KIDS.slice(0, n).join('、')}${n === 2 ? '两' : '三'}位同学在算 ${a} 加 ${b}，谁算得对呢？` }]
+      .concat(cards.map(c => ({ text: `${c.name}说：${c.text.replace(/●/g, '圆片')}` })));
+    return Q.pick({
+      prompt: `下面是${n === 2 ? '两' : '三'}位同学计算 ${a} + ${b} 的方法，正确的有谁？`,
+      speech,
+      scene: { kind: 'cards', cards },
+      choices: uniq(ans, others, 4), answer: ans,
+      hint: { text: '一种一种看：数数要从这个数的后面开始数，数几步就走几格。', visual: null },
+      explain: [`正确的：${ans}`, `怎么算都是 ${a} + ${b} = ${a + b}`, '数的时候多数一个或者少数一个，得数就错了'],
+      topic: 'reason',
+    });
+  }
+  // ---------- 看图说算式的意思 ----------
+  reg('picmean', '算式表示什么', [
+    [
+      () => {
+        const a = rand(1, 4), b = rand(1, 6 - a);
+        const ans = `把两边合起来，一共有 ${a + b} 只小鸡`;
+        return Q.pick({
+          prompt: `图可以用 ${a} + ${b} = ${a + b} 表示。这个算式表示什么？`,
+          scene: { kind: 'emoji2', e: '🐤', a, b },
+          choices: uniq(ans, [`飞走了 ${b} 只小鸡`, `还剩 ${a + b} 只小鸡`, `一共有 ${a} 只小鸡`], 4), answer: ans,
+          hint: Q.addHint(a, b),
+          explain: [`加法表示把两边合起来`, `${a} + ${b} = ${a + b}`, ans],
+          topic: 'mean',
+        });
+      },
+      () => {
+        const a = rand(3, 6), b = rand(1, a - 1);
+        const ans = `一共有 ${a} 个，拿走 ${b} 个，还剩 ${a - b} 个`;
+        return Q.pick({
+          prompt: `图可以用 ${a} − ${b} = ${a - b} 表示。这个算式表示什么？`,
+          scene: { kind: 'emoji', e: '🎈', n: a, cross: b },
+          choices: uniq(ans, [`一共有 ${a} 个，又拿来了 ${b} 个`, `还剩 ${a} 个`, `一共有 ${a - b} 个`], 4), answer: ans,
+          hint: Q.subHint(a, b),
+          explain: [`减法表示从一共的里面去掉一些`, `${a} − ${b} = ${a - b}`, ans],
+          topic: 'mean',
+        });
+      },
+    ],
+    [
+      () => {
+        const a = rand(4, 8), b = rand(2, a - 2), c = a - b;
+        const ans = `原来有 ${a} 个，飞走了 ${b} 个，现在还剩 ${c} 个`;
+        return Q.pick({
+          prompt: `图可以用 ${a} − ${b} = ${c} 表示。这个算式表示什么？`,
+          scene: { kind: 'emoji', e: '🎈', n: a, cross: b },
+          choices: uniq(ans, [`原来有 ${a} 个，又飞来了 ${b} 个`, `现在还剩 ${a} 个`, `飞走了 ${c} 个，还剩 ${b} 个`], 4), answer: ans,
+          hint: { text: `箭头后面飞走的是拿走的，剩下的才是得数。`, visual: { kind: 'cross', n: a, cross: b } },
+          explain: [`去掉 ${b} 个，剩下 ${c} 个`, `${a} − ${b} = ${c}`, ans],
+          topic: 'mean',
+        });
+      },
+      () => {
+        const a = rand(2, 5), b = rand(1, 10 - a);
+        const ans = `一共有 ${a + b} 个`;
+        return Q.pick({
+          prompt: `图可以用 ${a} + ${b} = ${a + b} 表示。这个算式表示什么？`,
+          scene: { kind: 'dots', groups: [a, b] },
+          choices: uniq(ans, [`一共有 ${a} 个`, `还剩 ${a + b} 个`, `${a} 个比 ${b} 个多 ${b} 个`], 4), answer: ans,
+          hint: { text: '两组合在一起，求一共，用加法。', visual: { kind: 'dots', groups: [a, b] } },
+          explain: [`${a} 个和 ${b} 个合起来`, `${a} + ${b} = ${a + b}`, ans],
+          topic: 'mean',
+        });
+      },
+    ],
+    [
+      () => {
+        // 卷子上的题：鸟窝里 3 只鸟全飞走了，3 − 3 = 0
+        const n = rand(3, 5);
+        const ans = '现在鸟窝里一只小鸟也没有了';
+        return Q.pick({
+          prompt: `左图可以用 ${n} − ${n} = 0 表示。这个算式表示什么？`,
+          speech: `左边鸟窝里有 ${n} 只小鸟，后来 ${n} 只全飞走了。${n} 减 ${n} 等于 0，这个算式表示什么？`,
+          scene: { kind: 'picpair', left: { e: '🐤', n, cap: `原来有 ${n} 只` }, right: { e: '🪹', n: 1, cap: '现在空了' } },
+          choices: uniq(ans, [`原来鸟窝里有 ${n} 只小鸟`, `${n - 1} 只小鸟飞走了`, `鸟窝里还剩 ${n} 只小鸟`], 4), answer: ans,
+          hint: { text: '得数是 0，表示一只也没有剩下。', visual: null },
+          explain: [`${n} 只小鸟全飞走了`, `${n} − ${n} = 0`, `0 表示现在鸟窝里一只也没有`],
+          topic: 'mean',
+        });
+      },
+      () => {
+        const n = rand(2, 4), m = rand(n + 1, n + 4);
+        const ans = `原来有 ${m} 只，飞走了 ${n} 只，现在还剩 ${m - n} 只`;
+        return Q.pick({
+          prompt: `左图可以用 ${m} − ${n} = ${m - n} 表示。这个算式表示什么？`,
+          scene: { kind: 'picpair', left: { e: '🐦', n: m, cap: `原来有 ${m} 只` }, right: { e: '🐦', n: m - n, cap: `还剩 ${m - n} 只` } },
+          choices: uniq(ans, [`原来有 ${m} 只，又飞来了 ${n} 只`, `还剩 ${m} 只`, `飞走了 ${m - n} 只`], 4), answer: ans,
+          hint: Q.subHint(m, n),
+          explain: [`飞走 ${n} 只，剩下 ${m - n} 只`, `${m} − ${n} = ${m - n}`, ans],
+          topic: 'mean',
+        });
+      },
+    ],
+  ], '看懂了算式表示的意思');
 })(window.TM);

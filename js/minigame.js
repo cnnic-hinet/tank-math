@@ -82,6 +82,21 @@
         }),
       };
     },
+    () => {
+      // 智慧营：点出剪成 n 段要剪的次数（用不同的算式表示同一个数）
+      const n = rand(4, 8), t = n - 1;
+      const okExpr = [String(t), `1+${t - 1}`, `2+${t - 2}`, `${t + 1}−1`, `${t + 2}−2`];
+      const bad = [
+        { label: String(t + 1), val: t + 1 }, { label: String(t - 1), val: t - 1 },
+        { label: String(t + 2), val: t + 2 }, { label: `1+${t}`, val: t + 1 }, { label: `${t + 2}−1`, val: t + 1 },
+      ];
+      return {
+        title: `点出剪成 ${n} 段要剪的次数`, speak: `点出剪成${n}段要剪的次数`,
+        items: fill(rand(2, 3), want => want
+          ? { label: pick(okExpr), ok: true }
+          : (b => ({ label: b.label, ok: false, why: `= ${b.val}` }))(pick(bad))),
+      };
+    },
   ];
   M.gen = zi => GENS[zi % GENS.length]();
   // 一轮：敌机分三条航线慢慢飞过，点中所有对的才进入下一轮。返回点错的次数
