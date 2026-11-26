@@ -2,7 +2,7 @@
 (function (TM) {
   const U = TM.U;
   const KEY = 'tankmath.v1';
-  const SCHEMA = 4;               // 存档结构版本，改结构时 +1 并在 migrate 里补
+  const SCHEMA = 5;               // 存档结构版本，改结构时 +1 并在 migrate 里补
   const SNAP = 'tankmath.snap.';  // 自动快照：tankmath.snap.2026-11-03 / pre-migrate / pre-restore / pre-import
   const SNAP_DAYS = 7;            // 每天的快照留几天
 
@@ -27,7 +27,7 @@
     bestStreak: 0,      // 每日任务最长连续天数
     lastBackup: null,   // 上次备份的日期
     // hide：学校还没学到、先藏起来的战区；goal：家长设的现实奖励 {text, need, start, done}
-    settings: { limitMin: 20, voice: true, hide: { z5: true, z6: true }, goal: null, subject: 'math' },
+    settings: { limitMin: 20, voice: true, hide: { z5: true, z6: true }, goal: null },
     created: U.today(),
   });
 
@@ -72,6 +72,31 @@
       });
       // 这两个位置原来放的是「听音选人」「名字配对」，星星不带到新关卡
       if (data.levels) ['u1-0', 'u1-3'].forEach(k => delete data.levels[k]);
+    }
+    // v4 → v5：v8.16 删掉英语栏目，清掉所有英语题型的记录和关卡星
+    if (from < 5) {
+      const gone = [
+        'u1-say', 'u1-word', 'u1-pick', 'u1-mean', 'u1-odd',
+        'u2-item', 'u2-cmd', 'u2-pick', 'u2-mean', 'u2-word', 'u2-odd',
+        'en1-listen', 'en1-pic', 'en1-mean', 'en1-sort', 'en1-sentence', 'en1-odd',
+        'en-color', 'en-num', 'en-count', 'en-odd', 'en-numorder',
+      ];
+      data.repair = (Array.isArray(data.repair) ? data.repair : []).filter(x => !gone.includes(x.type));
+      ['stats', 'mistakes', 'recent'].forEach(k => {
+        if (data[k]) gone.forEach(t => delete data[k][t]);
+      });
+      Object.values(data.daily || {}).forEach(d => {
+        if (d && d.wrong) gone.forEach(t => delete d.wrong[t]);
+      });
+      // 英语的关卡星、整区开放标记也一起清掉
+      if (data.levels) Object.keys(data.levels).forEach(k => {
+        if (/^(u1|u2|e1|e2)-/.test(k)) delete data.levels[k];
+      });
+      if (data.open) ['u1', 'u2', 'e1', 'e2'].forEach(k => delete data.open[k]);
+      if (data.settings) {
+        delete data.settings.subject;
+        if (data.settings.hide) ['u1', 'u2', 'e1', 'e2'].forEach(k => delete data.settings.hide[k]);
+      }
     }
     data.schema = SCHEMA;
     return data;

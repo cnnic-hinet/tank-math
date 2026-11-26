@@ -83,115 +83,18 @@
       };
     },
   ];
-  // 英语战区的玩法：动物朋友是听音打飞机，颜色数字是空投补给
-  const NUMW = ['one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
-  const COLORW = ['red', 'yellow', 'blue', 'green', 'black', 'white', 'pink', 'orange', 'purple', 'brown'];
-  const ANIMALS = TM.Words.zoneWords('e1');
-  // Unit 2 的学习用品：和题目里共用同一组，一局三轮不容易撞
-  const SCHOOL = [
-    { key: 'pencil', en: 'pencil', zh: '铅笔' },
-    { key: 'book', en: 'book', zh: '书' },
-    { key: 'bag', en: 'bag', zh: '书包' },
-    { key: 'pencilcase', en: 'pencil box', zh: '铅笔盒' },
-    { key: 'ruler', en: 'ruler', zh: '尺子' },
-    { key: 'eraser', en: 'eraser', zh: '橡皮' },
-  ];
-  const EN_GENS = {
-    e1: () => {
-      // 读一个动物单词，飞机上挂着动物图片，点中所有这个动物
-      const t = pick(ANIMALS), k = rand(2, 3);
-      const wrong = shuffle(ANIMALS.filter(x => x.w !== t.w)).slice(0, N - k);
-      return {
-        kind: 'plane', title: `点出听到的动物`, speak: '点出听到的动物', en: t.w,
-        items: shuffle([
-          ...Array.from({ length: k }, () => ({ label: t.e, ok: true, pic: true })),
-          ...wrong.map(x => ({ label: x.e, ok: false, pic: true, why: `这是${x.zh}` })),
-        ]),
-      };
-    },
-    // Unit 1：读一句日常用语，点出对应的场景
-    u1: () => {
-      const SAY = [
-        { en: 'Hello!', scene: 's:greet:chen:li', zh: '见面打招呼', said: '你好' },
-        { en: 'Bye!', scene: 's:bye:john', zh: '说再见', said: '再见' },
-        { en: 'Good morning!', scene: 's:morning:miss:chen', zh: '早上问好', said: '早上好' },
-        { en: 'Thank you!', scene: 's:thank:li:chen', zh: '道谢', said: '谢谢' },
-        { en: 'Here you are.', scene: 's:here:li', zh: '递东西', said: '给你' },
-      ];
-      const t = pick(SAY), k = rand(2, 3);
-      const wrong = shuffle(SAY.filter(x => x.scene !== t.scene)).slice(0, N - k);
-      return {
-        kind: 'plane', title: '点出听到的场景', speak: '点出听到的场景', en: t.en, zhSay: t.said,
-        items: shuffle([
-          ...Array.from({ length: k }, () => ({ label: t.scene, art: t.scene, ok: true })),
-          ...wrong.map(x => ({ label: x.scene, art: x.scene, ok: false, why: `这是${x.zh}` })),
-        ]),
-      };
-    },
-    // Unit 2：听到学习用品的单词，点出所有这个东西
-    u2: () => {
-      const t = pick(SCHOOL), k = rand(2, 3);
-      const wrong = shuffle(SCHOOL.filter(x => x.key !== t.key)).slice(0, N - k);
-      return {
-        kind: 'plane', title: '点出听到的东西', speak: '点出听到的东西', en: t.en,
-        items: shuffle([
-          ...Array.from({ length: k }, () => ({ label: 'i:' + t.key, art: 'i:' + t.key, ok: true })),
-          ...wrong.map(x => ({ label: 'i:' + x.key, art: 'i:' + x.key, ok: false, why: `这是${x.zh}` })),
-        ]),
-      };
-    },
-    e2: [
-      () => ({
-        kind: 'drop', title: '点出表示颜色的补给', speak: '点出表示颜色的补给',
-        items: fill(3, want => want ? { label: pick(COLORW), ok: true } : { label: pick(NUMW), ok: false, why: '这是数字' }),
-      }),
-      () => ({
-        kind: 'drop', title: '点出表示数字的补给', speak: '点出表示数字的补给',
-        items: fill(3, want => want ? { label: pick(NUMW), ok: true } : { label: pick(COLORW), ok: false, why: '这是颜色' }),
-      }),
-      () => {
-        const t = rand(2, 9);
-        return {
-          kind: 'drop', title: `点出比 ${NUMW[t - 1]} 大的数字`, speak: `点出比`, en: NUMW[t - 1],
-          items: fill(3, want => {
-            const n = want ? rand(t + 1, 10) : rand(1, t);
-            return { label: NUMW[n - 1], ok: n > t, why: n === t ? '一样大' : '比它小' };
-          }),
-        };
-      },
-    ],
-  };
-  const pickGen = z => {
-    const g = EN_GENS[z.id] || EN_GENS.e1;
-    return (Array.isArray(g) ? pick(g) : g)();
-  };
-  M.gen = zi => {
-    const z = L.ZONES[zi];
-    if (z && z.subject === 'en') return pickGen(z);
-    return GENS[zi % GENS.length]();
-  };
-  // 补给箱这个关卡用哪种玩法（台词和战报标题跟着变）
-  M.mode = zi => {
-    const z = L.ZONES[zi];
-    return z && z.id === 'e2' ? 'drop' : 'plane';
-  };
+  M.gen = zi => GENS[zi % GENS.length]();
   // 一轮：敌机分三条航线慢慢飞过，点中所有对的才进入下一轮。返回点错的次数
   const planeRound = (st, r) => new Promise(done => {
     const f = st.f;
     setBanner(st, r);
-    if (r.en) {
-      const parts = [{ text: r.speak }, { text: r.en, lang: 'en' }];
-      if (r.zhSay) parts.push({ text: `意思是，${r.zhSay}。` });
-      Audio.speakParts(parts);
-    } else Audio.speak(r.speak);
+    Audio.speak(r.speak);
     let left = r.items.filter(x => x.ok).length, miss = 0;
     r.items.forEach((it, i) => {
       const dur = 13 + (i % 3) * 2;
       const p = h('button', { class: 'm-plane', 'data-ok': it.ok ? '1' : '0', style: { top: 16 + (i % 3) * 21 + '%', animationDuration: dur + 's', animationDelay: -(Math.floor(i / 3) * dur / 2 + (i % 3) * 2) + 's' } },
         h('span', { class: 'm-icon' }, '🛩️'),
-        h('span', { class: 'm-label' + (it.pic ? ' big' : '') + (it.art ? ' art' : '') },
-          it.art ? [h('span', { html: TM.Art.svg(it.art) }),
-            TM.Art.mean(it.art) ? h('span', { class: 'm-zh' }, TM.Art.mean(it.art)) : null] : it.label));
+        h('span', { class: 'm-label' }, it.label));
       p.onclick = async () => {
         if (p.disabled || st.dead) return;
         if (!it.ok) {
@@ -220,73 +123,12 @@
     });
   });
 
-  // 空投补给：补给箱从天上慢慢落下来，点中所有对的。落地前没点到的算漏掉
-  const dropRound = (st, r) => new Promise(done => {
-    const f = st.f;
-    setBanner(st, r);
-    if (r.en) {
-      const parts = [{ text: r.speak }, { text: r.en, lang: 'en' }];
-      if (r.zhSay) parts.push({ text: `意思是，${r.zhSay}。` });
-      Audio.speakParts(parts);
-    } else Audio.speak(r.speak);
-    let left = r.items.filter(x => x.ok).length, miss = 0, ended = false;
-    const finish = async () => {
-      if (ended) return;
-      ended = true;
-      await wait(600);
-      f.layer.innerHTML = '';
-      done(miss);
-    };
-    const land = (p, it) => {
-      if (p.dataset.done) return;
-      p.dataset.done = '1';
-      if (it.ok) {
-        miss++;
-        Audio.sfx.bad();
-        p.classList.add('lost');
-        setTimeout(() => p.remove(), 300);
-        if (--left === 0) finish();
-      } else {
-        p.classList.add('gone');
-        setTimeout(() => p.remove(), 300);
-      }
-    };
-    r.items.forEach((it, i) => {
-      const p = h('button', {
-        class: 'm-drop',
-        style: {
-          left: 8 + (i % 3) * 29 + '%',
-          animationDelay: (i % 3) * 0.8 + Math.floor(i / 3) * 3.5 + 's',
-        },
-      }, h('span', { class: 'm-icon' }, '📦'), h('span', { class: 'm-label' }, it.label));
-      p.onclick = () => {
-        if (p.dataset.done || st.dead) return;
-        if (!it.ok) {
-          miss++;
-          Audio.sfx.bad();
-          p.classList.add('wrong');
-          if (it.why) p.append(h('span', { class: 'm-why' }, it.why));
-          setTimeout(() => p.classList.remove('wrong'), 500);
-          return;
-        }
-        p.dataset.done = '1';
-        p.disabled = true;
-        Audio.sfx.coin();
-        p.classList.add('got');
-        setTimeout(() => p.remove(), 350);
-        if (--left === 0) finish();
-      };
-      p.addEventListener('animationend', () => land(p, it));
-      f.layer.append(p);
-    });
-  });
-  // 横幅：中文玩法 + 读出来的英文
+  // 横幅：这一轮的玩法
   const setBanner = (st, r) => {
     st.banner.innerHTML = '';
     st.banner.append(h('span', { class: 'm-title' }, r.title));
-    if (r.en) st.banner.append(h('span', { class: 'm-en' }, r.en));
   };
-  const round = (st, r) => (r.kind === 'drop' ? dropRound(st, r) : planeRound(st, r));
+  const round = (st, r) => planeRound(st, r);
 
   M.run = async (zi, li) => {
     const lv = L.get(zi, li), zone = L.ZONES[zi], key = L.key(zi, li);
@@ -315,8 +157,7 @@
     Lines.onSay = t => st.f.say(t);
     await Audio.wait();
     if (st.dead) return;
-    const drop = M.mode(zi) === 'drop';
-    Lines.say(drop ? 'miniDrop' : 'mini');
+    Lines.say('mini');
     await wait(1200);
     let miss = 0;
     const marks = [];
@@ -339,13 +180,13 @@
     if (stars === 3) TM.Tasks.bump('three');
     // 发星星：这次拿到几颗星就给几颗，新拿到的关卡星每颗再给 2 颗
     const gain = Math.max(0, stars - old.stars);
-    const pay = TM.Rewards.pay([[`${drop ? '收到补给拿到' : '击落敌机拿到'} ${stars} 颗星`, stars], [`新拿到 ${gain} 颗关卡星`, gain * 2]]);
+    const pay = TM.Rewards.pay([[`击落敌机拿到 ${stars} 颗星`, stars], [`新拿到 ${gain} 颗关卡星`, gain * 2]]);
     Audio.sfx.win();
     const v = await TM.App.ask({
-      cls: 'report', title: drop ? '补给全部收好啦！' : '敌机编队全部击落！',
+      cls: 'report', title: '敌机编队全部击落！',
       text: [
         h('div', { class: 'stars' }, [0, 1, 2].map(k => h('span', { class: k < stars ? '' : 'off' }, '⭐'))),
-        h('div', { class: 'praise' }, miss ? `点错了 ${miss} 次，下次看准了再${drop ? '点' : '开炮'}！` : `${drop ? '一个' : '一架'}都没点错，眼睛真亮！`),
+        h('div', { class: 'praise' }, miss ? `点错了 ${miss} 次，下次看准了再开炮！` : '一架都没点错，眼睛真亮！'),
         TM.Hangar.payEl(pay),
       ],
       buttons: [

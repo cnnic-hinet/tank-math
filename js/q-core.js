@@ -18,17 +18,9 @@
     return Object.assign(q, { type, diff, id: U.uid() });
   };
 
-  // 一道题怎么读：英语题可以自己给 speech（按顺序的几段，en: true 用英文声音）
-  // 没给的沿用原来的 speak（中文）；带 en 的题在后面补一段英文
-  // 句子题带 saidZh（这句话的中文意思）时，英文读完再读一遍中文意思
-  Q.speechParts = q => {
-    const out = Array.isArray(q.speech) ? q.speech.slice()
-      : [...(q.speak ? [{ text: q.speak }] : []), ...(q.en ? [{ text: q.en, lang: 'en' }] : [])];
-    if (q.saidZh) out.push({ text: `意思是，${q.saidZh}。` });
-    return out;
-  };
-  // 只要英文或只要中文那几段（「英文」「中文」两个重念按钮用）
-  Q.partsOf = (q, lang) => Q.speechParts(q).filter(p => (p.lang === 'en') === (lang === 'en'));
+  // 一道题怎么读：默认读题干，题型也可以自己给 speech（按顺序的几段）
+  Q.speechParts = q => Array.isArray(q.speech) ? q.speech.slice()
+    : (q.speak ? [{ text: q.speak }] : []);
 
   // 把算式变成朗读文字：8 + 5 = □ → 8加5等于几。问号留着，读起来才是问句的语气
   Q.say = s => String(s)

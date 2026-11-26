@@ -77,57 +77,6 @@
         { name: '算一算', types: ['tens100', 'seq100'] },
       ],
     },
-    // ---------- 英语 ----------
-    // subject: 'en'；第一条英语线默认开放，后面按 Boss 解锁，和数学进度互不影响
-    // Unit 1、2 按人教 PEP 新版一年级上册的课本顺序排在最前
-    {
-      id: 'u1', name: 'Hello!', icon: '👋', color: '#ffb84d', grade: '英语', subject: 'en',
-      desc: '见面、道别、谢谢、对不起',
-      levels: [
-        { name: '听句子选场景', types: ['u1-say'] },
-        { name: '听音选词', types: ['u1-word'] },
-        { name: '场景选话', types: ['u1-pick'] },
-        { name: '意思配对', types: ['u1-mean'] },
-        { name: '找不同', types: ['u1-odd'] },
-        { name: '第一单元闯关', types: ['u1-say', 'u1-word', 'u1-pick', 'u1-mean', 'u1-odd'] },
-      ],
-    },
-    {
-      id: 'u2', name: 'My first class', icon: '📚', color: '#5bb6e8', grade: '英语', subject: 'en', after: 6,
-      desc: '学习用品、课堂指令',
-      levels: [
-        { name: '听音选物', types: ['u2-item'] },
-        { name: '老师的指令', types: ['u2-cmd'] },
-        { name: '看图选词', types: ['u2-word'] },
-        { name: '找不同', types: ['u2-odd'] },
-        { id: 7, name: '看画面选指令', types: ['u2-pick'] },
-        { id: 5, name: '第二单元闯关', types: ['u2-item', 'u2-cmd', 'u2-pick', 'u2-mean', 'u2-word', 'u2-odd'] },
-      ],
-    },
-    {
-      id: 'e1', name: '动物朋友', icon: '🐾', color: '#7cc576', grade: '英语', subject: 'en', miniName: '敌机编队', after: 7,
-      desc: '动物单词（拓展）',
-      levels: [
-        { name: '听音选图', types: ['en1-listen'] },
-        { name: '看图选词', types: ['en1-pic'] },
-        { name: '词义配对', types: ['en1-mean'] },
-        { name: '找不同', types: ['en1-odd'] },
-        { name: '听句子选图', types: ['en1-sentence'] },
-        { name: '单词大闯关', types: ['en1-listen', 'en1-pic', 'en1-mean', 'en1-sort', 'en1-sentence'] },
-      ],
-    },
-    {
-      id: 'e2', name: '颜色数字', icon: '🎨', color: '#ff9f43', grade: '英语', subject: 'en', after: 8, miniName: '空投补给',
-      desc: '颜色和数字 1～10（拓展）',
-      levels: [
-        { name: '颜色', types: ['en-color'] },
-        { name: '数字', types: ['en-num'] },
-        { name: '数一数', types: ['en-count'] },
-        { name: '找不同', types: ['en-odd'] },
-        { name: '数字顺序', types: ['en-numorder'] },
-        { name: '颜色数字大闯关', types: ['en-color', 'en-num', 'en-count', 'en-numorder'] },
-      ],
-    },
   ];
   // 每个战区最后：一个小游戏关（数学和动物朋友是「敌机编队」，颜色数字是「空投补给」），再加一个 Boss 关考所有题型
   // Boss 关 id 还是 6，和旧存档对得上
@@ -143,7 +92,7 @@
 
   // 每个战区的特殊小兵（第 2 关起，普通关第 4 题出现一个）：
   // shield 盾牌兵、flyer 飞行兵、counter 反击兵，见 battle.js
-  L.TRAIT = ['shield', 'flyer', 'counter', 'shield', 'counter', 'flyer', 'shield', 'flyer', 'shield', 'flyer'];
+  L.TRAIT = ['shield', 'flyer', 'counter', 'shield', 'counter', 'flyer'];
 
   L.key = (zi, li) => `${ZONES[zi].id}-${ZONES[zi].levels[li].id}`;
   L.get = (zi, li) => ZONES[zi].levels[li];
@@ -195,39 +144,18 @@
       return Q.make(type, d);
     });
     // 基础题在前，挑战题压轴
-    return dedupe(qs, zone.subject === 'en');
+    return dedupe(qs);
   };
 
-  // 同一关里尽量不出现一模一样的题
-  // 英语句子题的题干都一样，只比题干等于没比，所以按「听到的英文 / 答案」比；
-  // 数学题按题干里的数字和答案比
-  const norm = s => {
-    const x = String(s).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-    return x || String(s);
-  };
-  const sceneKey = s => {
-    if (!s) return '';
-    if (typeof s === 'string') return s;
-    if (s.kind === 'art') return s.key;
-    if (s.kind === 'color') return s.hex;
-    if (s.kind === 'card') return s.text;
-    if (s.kind === 'emoji') return `${s.e}${s.n}`;
-    if (s.kind === 'seq') return (s.items || []).join(',');
-    return '';
-  };
-  const enKey = q => {
-    const raw = String(q.subEn || q.answer);
-    // 答案是中文（归类题之类）时，光比答案区分不开，再带上题面
-    return /[a-z0-9]/i.test(raw) ? norm(raw) : `${raw}|${sceneKey(q.scene)}`;
-  };
-  const qKey = (q, en) => en ? `en|${enKey(q)}` : `${q.type}|${q.prompt}|${q.answer}`;
-  const dedupe = (qs, en) => {
+  // 同一关里尽量不出现一模一样的题：按题型、题干和答案去重
+  const qKey = q => `${q.type}|${q.prompt}|${q.answer}`;
+  const dedupe = qs => {
     const seen = new Set();
     return qs.map(q => {
-      let key = qKey(q, en);
+      let key = qKey(q);
       for (let t = 0; t < 40 && seen.has(key); t++) {
         q = Q.make(q.type, q.diff);
-        key = qKey(q, en);
+        key = qKey(q);
       }
       seen.add(key);
       return q;
@@ -262,8 +190,8 @@
   L.zoneOpen = zi => {
     const S = TM.Store.data;
     if (L.hidden(zi)) return false;
-    // 每一条科目线只有第一个战区没有前置（数学 z1、英语 e1），默认开放
-    if (ZONES[zi].subject === 'en' ? ZONES[zi].after == null : zi === 0) return true;
+    // 第一个战区默认开放，后面的要打过前一个战区的 Boss
+    if (zi === 0) return true;
     if (S.open[ZONES[zi].id]) return true;
     return (S.levels[L.bossKey(ZONES[zi].after)]?.stars || 0) > 0;
   };

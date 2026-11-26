@@ -80,7 +80,6 @@
     if (App.backupOld()) lock.append(h('span', { class: 'dot-red' }));
     const left = TM.Tasks.left(), g = TM.Tasks.goal(), RW = TM.Rewards;
     const canBuy = [...RW.MODELS, ...RW.SKINS, ...RW.WEAPONS].some(RW.canBuy);
-    const subj = S.settings.subject === 'en' ? 'en' : 'math';
     const top = h('div', { class: 'topbar' },
       h('div', { class: 'brand' }, '🪖 坦克大作战'),
       h('div', { class: 'pill', title: '可以花的星星' }, '⭐ ', String(RW.wallet())),
@@ -93,22 +92,7 @@
         h('span', { class: 'top-tank', html: TM.V.tank('me') }), '装备库', canBuy ? h('span', { class: 'badge ok' }, '🛒') : null),
       lock);
 
-    // 科目切换：只显示当前科目的战区
-    const subjects = h('div', { class: 'subjects' }, [['math', '🔢 数学'], ['en', '📖 英语']].map(([k, label]) =>
-      h('button', {
-        class: 'subject' + (subj === k ? ' on' : ''),
-        onclick: () => {
-          if (subj === k) return;
-          Audio.sfx.tap();
-          Store.data.settings.subject = k;
-          Store.save();
-          Audio.speak(k === 'en' ? '英语' : '数学');
-          App.map();
-        },
-      }, label)));
-
     const zones = h('div', { class: 'zones' }, L.ZONES.map((z, zi) => [z, zi])
-      .filter(([z]) => (z.subject || 'math') === subj)
       .map(([z, zi]) => {
         const open = L.zoneOpen(zi);
         const got = z.levels.reduce((s, _, li) => s + (S.levels[L.key(zi, li)]?.stars || 0), 0);
@@ -136,11 +120,11 @@
             L.hidden(zi) ? `${z.grade}的内容，学校学到了再来` : `打败「${L.ZONES[z.after].name}」的 Boss 就能解锁`));
       }));
 
-    App.show(h('div', { class: 'screen map' }, top, subjects, zones));
+    App.show(h('div', { class: 'screen map' }, top, zones));
     // 滚到正在打的战区
     const cur = zones.querySelector('.node.next');
     if (cur) zones.scrollLeft = Math.max(0, cur.closest('.zone').offsetLeft - 20);
-    if (!S.placed && subj === 'math') App.welcome();
+    if (!S.placed) App.welcome();
     else TM.Tasks.celebrate();
   };
 

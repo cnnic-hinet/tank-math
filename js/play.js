@@ -63,26 +63,19 @@
       class: 'say-btn',
       onclick: () => { Audio.sfx.tap(); Audio.speakParts(list); },
     }, label);
-    // 句子题分成「英文」「中文」两个按钮，中文按钮读的是这句话的中文意思
-    const say = q.saidZh
-      ? h('div', { class: 'say-row' }, sayBtn('🔊 英文', Q.partsOf(q, 'en')), sayBtn('🔊 中文', Q.partsOf(q, 'zh')))
-      : sayBtn('🔊 再读一遍', Q.speechParts(q));
+    const say = sayBtn('🔊 再读一遍', Q.speechParts(q));
     const body = h('div', { class: 'qbody' },
       scene,
       h('div', { class: 'prompt' + (isExpr(q.prompt) ? ' expr' : q.prompt.length > 24 ? ' long' : '') }, q.prompt),
       q.sub ? h('div', { class: 'sub' }, q.sub) : null,
-      q.subEn ? h('div', { class: 'sub en' }, q.subEn) : null,
       say);
     let resolve = null;
-    // 选项是插画（英语新题型）时，按钮里放 SVG，不放文字
-    const art = q.pic === 'art';
     // 有一个选项字多，就都用小一号的字，免得大小不一
-    const txt = !art && q.choices.some(c => String(c).length > 2);
-    const pic = !!q.pic;
+    const txt = q.choices.some(c => String(c).length > 2);
     const btns = q.choices.map(c => {
       const s = String(c);
       const b = h('button', {
-        class: 'choice' + (pic ? ' pic' : '') + (art ? ' art' : '') + (txt ? ' txt' : ''),
+        class: 'choice' + (txt ? ' txt' : ''),
         'data-v': s,
         onclick: () => {
           if (!resolve || b.classList.contains('dim')) return;
@@ -91,8 +84,7 @@
           resolve = null;
           r({ value: s, btn: b });
         },
-      }, art ? [h('span', { class: 'ch-art', html: TM.Art.svg(s) }),
-        TM.Art.mean(s) ? h('span', { class: 'ch-label' }, TM.Art.mean(s)) : null] : s);
+      }, s);
       return b;
     });
     const choices = h('div', { class: 'choices' + (btns.length === 3 ? ' c3' : '') }, btns);
@@ -218,9 +210,9 @@
 
   // 复仇题：把维修厂里的旧错题混进这一关，最多两道
   // 位置避开特殊兵占的题和挑战题，不改这一关的题数
-  const attachReplay = (qs, lv, subject) => {
+  const attachReplay = (qs, lv) => {
     if (lv.boss || lv.mini) return [];
-    const picks = Repair.replayPick(2, { types: lv.types, subject });
+    const picks = Repair.replayPick(2, { types: lv.types });
     if (!picks.length) return [];
     const span = TM.Battle.TRAIT_SPAN, blocked = new Set();
     qs.forEach((q, i) => {
@@ -246,9 +238,8 @@
   // 每个战区的 Boss 技能（Boss 血量掉到一半时放一次）
   const SKILLS = ['smoke', 'minion', 'shield', 'shuffle', 'minion', 'shield', 'shuffle', 'minion'];
 
-  // 下一关只在同一科目里走，数学最后一关不会跳进英语
-  const subjectOf = zi => L.ZONES[zi].subject || 'math';
-  const nextZone = zi => (zi + 1 < L.ZONES.length && subjectOf(zi + 1) === subjectOf(zi) ? zi + 1 : -1);
+  // 下一关：先本战区下一关，打完最后一个战区就没有了
+  const nextZone = zi => (zi + 1 < L.ZONES.length ? zi + 1 : -1);
   const nextOf = (zi, li) => {
     if (li + 1 < L.ZONES[zi].levels.length) return L.levelOpen(zi, li + 1) ? [zi, li + 1] : null;
     const nz = nextZone(zi);
@@ -259,7 +250,7 @@
   P.level = async (zi, li) => {
     if (TM.App.restIfOver()) return;
     if (L.get(zi, li).mini) return TM.Mini.run(zi, li);
-    const warm = Repair.warmup(L.ZONES[zi].subject || 'math');
+    const warm = Repair.warmup();
     let fixed = 0;
     if (warm.length) {
       await Audio.wait();
@@ -282,7 +273,7 @@
     const trait = !lv.boss && li >= 1 ? L.TRAIT[zi] : null;
     if (trait && qs.length > 3) qs[3].trait = trait;
     // 把维修厂里的旧错题混进来（复仇兵）
-    attachReplay(qs, lv, zone.subject || 'math');
+    attachReplay(qs, lv);
     const bossAt = lv.boss ? 3 : Infinity;
     const st = stage({ title: `${zone.icon} ${lv.name}`, zi });
     const f = st.field;
