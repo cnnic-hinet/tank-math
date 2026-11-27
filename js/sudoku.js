@@ -6,6 +6,53 @@
   const S = {};
 
   let live = null;   // 当前这一盘的计时器，换页时要停掉
+  let run = 0;       // 换页就 +1，结尾动画播完时用它判断还在不在这一盘
+
+  // ---------- 坦克组装：每填对一格就多装一点，全部填完发起致命一击 ----------
+  const { V } = TM;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const pal = () => TM.Rewards.skin().pal;
+  const foeOf = n => (n <= 4 ? 'enemy' : n <= 6 ? 'elite' : 'boss');
+  const bump = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
+  const arenaOf = (n, mini) => {
+    const me = h('div', { class: 'sd-me', html: V.buildTank(0, pal()) });
+    const foe = h('div', { class: 'sd-foe s' + n, html: V.sideFoe(foeOf(n)) });
+    const el = h('div', { class: 'sd-arena' + (mini ? ' mini' : '') }, me, foe);
+    return { el, me, foe, n };
+  };
+  // 一颗星从填对的格子飞进坦克
+  const flyStar = (from, to, done) => {
+    if (!from || !to || !from.isConnected) return done();
+    const a = from.getBoundingClientRect(), b = to.getBoundingClientRect();
+    const ax = a.left + a.width / 2, ay = a.top + a.height / 2;
+    const s = h('span', { class: 'sd-star' }, '⭐');
+    s.style.left = ax - 15 + 'px';
+    s.style.top = ay - 18 + 'px';
+    document.body.append(s);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      s.style.transform = `translate(${b.left + b.width / 2 - ax}px, ${b.top + b.height / 2 - ay}px) scale(.6)`;
+    }));
+    setTimeout(() => { s.remove(); done(); }, 580);
+  };
+  // 致命一击：坦克蓄力，一道炮光打过去，敌方坦克变成冒烟的废铁
+  const strike = async ar => {
+    bump(ar.me, 'charge');
+    await wait(900);
+    const box = ar.el.getBoundingClientRect(), m = ar.me.getBoundingClientRect(), f = ar.foe.getBoundingClientRect();
+    const x0 = m.left - box.left + m.width * 1.02, y = m.top - box.top + m.height * 0.42;
+    const x1 = f.left - box.left + f.width * 0.45, fy = f.top - box.top + f.height * 0.55;
+    const beam = h('span', { class: 'sd-beam', style: `left:${x0}px;top:${y - 6}px;width:${Math.max(24, x1 - x0)}px` });
+    ar.el.append(beam);
+    Audio.sfx.laser();
+    await wait(380);
+    beam.remove();
+    Audio.sfx.boom();
+    ar.el.append(h('span', { class: 'sd-bang', style: `left:${x1}px;top:${fy}px` }, '💥'));
+    ar.foe.innerHTML = V.sideFoe(foeOf(ar.n || 4), true);
+    bump(ar.foe, 'hit');
+    ar.me.classList.remove('charge');
+    await wait(1000);
+  };
 
   const starsOf = id => (Store.data.sudoku.done[id] || {}).stars || 0;
   const saves = () => (Store.data.sudoku.saves = Store.data.sudoku.saves || {});
@@ -30,6 +77,7 @@
 
   // ---------- 训练营首页：和地图一样，一种大小一列，从上到下越来越难 ----------
   S.show = () => {
+    run++;
     if (live) { live.stop(); live = null; }
     const total = allPuzzles().length;
     const done = allPuzzles().filter(x => starsOf(x.p.id)).length;
@@ -123,6 +171,7 @@
     }
     const keyEls = Array.from({ length: n }, (_, k) => h('span', { class: 'sd-key' }, symOf(g, k + 1)));
     const cap = h('div', { class: 'sd-demo-cap' });
+    const dar = arenaOf(n, true);
     const hand = h('span', { class: 'sd-hand' }, '👆');
     const fx = h('span', { class: 'sd-demo-fx' });
     let stopped = false;
@@ -140,7 +189,7 @@
         h('button', { class: 'btn small gray', onclick: () => { Audio.sfx.tap(); end(); } }, '跳过 ⏭')),
       h('div', { class: 'sd-demo-body' },
         h('div', { class: 'sd-gridwrap' }, grid),
-        h('div', { class: 'sd-demo-side' }, cap,
+        h('div', { class: 'sd-demo-side' }, dar.el, cap,
           h('div', { class: 'sd-keys', style: `--kcols:${n <= 4 ? 2 : 3}` }, keyEls), doneBtn)),
       hand, fx);
     const ov = h('div', { class: 'overlay sd-demo-ov' }, box);
@@ -211,10 +260,12 @@
       els[target].classList.remove('sel');
       els[target].classList.add('filled');
       els[target].textContent = symOf(g, sol[target]);
-      Audio.sfx.shoot();
-      boom(els[target], '💥');
+      Audio.sfx.magic();
+      boom(els[target], '⭐');
+      dar.me.innerHTML = V.buildTank(1, pal());
+      bump(dar.me, 'pop');
       hl(unit.row(tr), 'hl2');
-      await say('再点下面的' + thing(sol[target]) + '，填对啦！一整行填满，坦克就会开炮。');
+      await say('再点下面的' + thing(sol[target]) + '，填对啦！每填对一格，你的坦克就多一个零件。');
       if (wrongAt >= 0) {
         hl(unit.row(rowOf(wrongAt)));
         await tap(els[wrongAt]);
@@ -224,12 +275,25 @@
         els[wrongAt].classList.remove('sel');
         els[wrongAt].classList.add('wrong');
         els[wrongAt].textContent = symOf(g, wrongV);
-        await say(`如果填${thing(wrongV)}，格子会变红。因为这一行已经有${thing(wrongV)}了。`);
+        bump(dar.foe, 'taunt');
+        await say(`如果填${thing(wrongV)}，格子会变红，敌人会笑你。因为这一行已经有${thing(wrongV)}了。`);
         els[wrongAt].classList.remove('wrong');
         els[wrongAt].textContent = '';
       }
       hl(null);
       hand.style.opacity = '0';
+      cap.textContent = '一格一格填，坦克越来越厉害……';
+      for (let k = 2; k <= 10; k++) {
+        guard();
+        dar.me.innerHTML = V.buildTank(k, pal());
+        bump(dar.me, 'pop');
+        Audio.sfx.tap();
+        await wait(320);
+      }
+      guard();
+      cap.textContent = '全部填完，就变成超级坦克，发起致命一击！';
+      await strike(dar);
+      await say('全部填完，就变成超级坦克，发起致命一击，打败敌人！');
       await say(n <= 4 ? '做不出来的时候，先找只空一格的行、列或小宫。'
         : '格子多也不怕：先找快填满的行、列或小宫，一格一格填。');
       cap.textContent = '现在轮到你啦！';
@@ -260,12 +324,44 @@
       t0 += Date.now() - a;
     };
     const st = { g, p, n, sol, cells, given, wrong, tips, sel: null, done: false, dead: false, fired: new Set() };
+    const myRun = ++run;
 
     const timeEl = h('div', { class: 'pill' }, '⏱ 0:00');
     const status = h('div', { class: 'sd-status' });
     const posEl = h('div', { class: 'sd-pos' }, '点一个空格开始');
     const grid = h('div', { class: 'sd-grid' });
-    const fx = h('div', { class: 'sd-fx' });
+
+    // 战场：填对的格数 → 装了几个零件。格子比零件多时，下一个零件要先充满能量
+    const E = given.filter(x => !x).length;
+    const ar = arenaOf(n);
+    const meter = h('div', { class: 'sd-meter' }, h('i', null), h('span', null));
+    ar.el.append(meter);
+    const fillCount = () => st.cells.filter((v, i) => !given[i] && v === sol[i]).length;
+    let peak = 0, shown = -1;          // 擦掉格子不拆零件，按填到过的最多格算
+    const stageOf = () => Math.min(10, Math.floor(peak * 10 / E + 1e-9));
+    const drawTank = () => {
+      const s = stageOf(), pr = peak * 10 / E;
+      if (s !== shown) { ar.me.innerHTML = V.buildTank(s, pal()); shown = s; }
+      const bar = s >= 10 ? 1 : E > 10 ? pr - s : s / 10;
+      meter.firstChild.style.width = Math.round(bar * 100) + '%';
+      meter.lastChild.textContent = s >= 10 ? '超级坦克 ✨ 准备致命一击！'
+        : `零件 ${s}/10 · 下一个：${V.BUILD_PARTS[s]}${E > 10 ? ' ⚡' : ''}`;
+    };
+    peak = fillCount();
+    drawTank();
+    const grow = i => {
+      const before = stageOf();
+      peak = Math.max(peak, fillCount());
+      const after = stageOf();
+      flyStar(grid.querySelectorAll('.sd-cell')[i], ar.me, () => {
+        drawTank();
+        if (after > before) {
+          bump(ar.me, 'pop');
+          Audio.sfx.magic();
+          if (after < 10) Audio.speak(after === 8 ? '坦克变大啦！' : `装上${V.BUILD_PARTS[after - 1]}啦！`);
+        } else Audio.sfx.coin();
+      });
+    };
 
     const elapsed = () => Math.round((Date.now() - t0) / 1000);
     const fmt = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
@@ -277,7 +373,7 @@
     };
 
     // 键盘
-    const keys = h('div', { class: 'sd-keys', style: `--kcols:${n <= 4 ? 2 : 3}` },
+    const keys = h('div', { class: 'sd-keys' + (n > 6 ? ' k9' : ''), style: `--kcols:${n <= 4 ? 2 : 3}` },
       Array.from({ length: n }, (_, k) => h('button', {
         class: 'sd-key', onclick: () => { Audio.sfx.tap(); place(k + 1); },
       }, symOf(g, k + 1))));
@@ -327,14 +423,10 @@
       setTimeout(() => el.classList.remove('bad'), 600);
     };
 
-    // 一整行 / 一整列 / 一个宫填满：坦克开一炮
-    const blast = text => {
-      const shell = h('span', { class: 'sd-shell' }, '🚀');
-      const plane = h('span', { class: 'sd-plane' }, '🛩️');
-      fx.append(shell, plane);
-      setTimeout(() => { shell.remove(); plane.remove(); }, 1000);
-      Audio.sfx.shoot();
-      setTimeout(() => Audio.sfx.boom(), 350);
+    // 一整行 / 一整列 / 一个宫填满：坦克闪一下光
+    const cheer = text => {
+      bump(ar.me, 'glow');
+      Audio.sfx.ok();
       TM.App.toast(text, 1400);
     };
 
@@ -346,12 +438,12 @@
       const r0 = Math.floor(r / g.br) * g.br, c0 = Math.floor(c / g.bc) * g.bc;
       for (let y = 0; y < g.br; y++) for (let x = 0; x < g.bc; x++) box.push((r0 + y) * n + c0 + x);
       const full = set => set.every(k => st.cells[k] === sol[k]);
-      if (full(row) && !st.fired.has('r' + r)) { st.fired.add('r' + r); blast(`第 ${r + 1} 行填满啦，开炮！`); }
-      if (full(col) && !st.fired.has('c' + c)) { st.fired.add('c' + c); blast(`第 ${c + 1} 列填满啦，开炮！`); }
-      if (full(box) && !st.fired.has('b' + r0 + ',' + c0)) { st.fired.add('b' + r0 + ',' + c0); blast('一整宫填满啦，开炮！'); }
+      if (full(row) && !st.fired.has('r' + r)) { st.fired.add('r' + r); cheer(`第 ${r + 1} 行完成啦！`); }
+      if (full(col) && !st.fired.has('c' + c)) { st.fired.add('c' + c); cheer(`第 ${c + 1} 列完成啦！`); }
+      if (full(box) && !st.fired.has('b' + r0 + ',' + c0)) { st.fired.add('b' + r0 + ',' + c0); cheer('这一宫完成啦！'); }
     };
 
-    const finish = () => {
+    const finish = async () => {
       st.done = true;
       if (live) { live.stop(); live = null; }
       const used = elapsed();
@@ -372,6 +464,12 @@
       const rows = [[`完成一盘${g.name}数独`, base]];
       if (gain) rows.push([`新拿到 ${gain} 颗关卡星`, gain * 2]);
       const pay = TM.Rewards.pay(rows);
+      // 最后一颗星飞到、坦克变成金色，再发起致命一击；中途离开这一页就不弹完成框
+      await wait(700);
+      if (run !== myRun) return;
+      Audio.speak('超级坦克，致命一击！');
+      await strike(ar);
+      if (run !== myRun) return;
       Audio.sfx.win();
       TM.App.ask({
         cls: 'report', title: '数独完成！',
@@ -407,8 +505,8 @@
       }
       if (v === st.sol[i]) {
         st.cells[i] = v;
-        Audio.sfx.shoot();
         paint(); store();
+        grow(i);
         checkUnits(i);
         if (st.cells.every((x, k) => x === st.sol[k])) return finish();
       } else {
@@ -416,6 +514,7 @@
         Audio.sfx.bad();
         paint();
         flashBad(i);
+        bump(ar.foe, 'taunt');
         store();
       }
     }
@@ -431,6 +530,7 @@
       st.tips++;
       Audio.sfx.tap();
       paint(); store();
+      grow(i);
       checkUnits(i);
       if (st.cells.every((x, k) => x === st.sol[k])) return finish();
     };
@@ -462,8 +562,9 @@
 
     TM.App.show(h('div', { class: 'screen sudoku-play' }, top,
       h('div', { class: 'sd-main' },
-        h('div', { class: 'sd-left' }, h('div', { class: 'sd-gridwrap' }, grid, fx), status),
+        h('div', { class: 'sd-left' }, h('div', { class: 'sd-gridwrap' }, grid), status),
         h('div', { class: 'sd-side' },
+          ar.el,
           posEl,
           keys,
           h('div', { class: 'sd-acts' },
@@ -475,7 +576,7 @@
 
     paint();
     store();
-    Audio.speak(saved ? '接着上次继续填吧。' : `数独：每一行、每一列、每一个小宫，${n === 4 && g.sym ? '4 种水果' : `1 到 ${n}`}都不能重复。点一个空格，再点下面的数字。`);
+    Audio.speak(saved ? '接着上次继续填吧。' : `数独：每一行、每一列、每一个小宫，${n === 4 && g.sym ? '4 种水果' : `1 到 ${n}`}都不能重复。点一个空格，再点下面的数字。每填对一格，坦克就多一个零件。`);
 
     live = {
       stop() {

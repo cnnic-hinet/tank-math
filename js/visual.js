@@ -513,5 +513,61 @@
   const ENEMY = { 1: heli, 2: robot, 4: heli, 5: ufo, 6: robot };
   V.enemy = (zi, kind) => (ENEMY[zi] || V.tank)(kind);
 
+  // ---------- 数独：一边填一边组装的侧面坦克（车头朝右） ----------
+  // stage = 已经装上几个零件（0 是木板小车，10 是金色超级坦克）；下一个零件画成半透明虚影
+  V.BUILD_PARTS = ['履带', '装甲车身', '炮塔', '主炮', '机枪', '天线雷达', '加厚装甲', '变大', '火箭推进器', '金色涂装'];
+  const GOLD = ['#f2c230', '#ffe27a', '#b8860b'];
+  const sideEyes = (x, y, angry) => `<circle cx="${x - 7}" cy="${y}" r="5" fill="#fff"/><circle cx="${x + 7}" cy="${y}" r="5" fill="#fff"/>
+    <circle cx="${x - 6}" cy="${y + 1}" r="2.6" fill="#222"/><circle cx="${x + 8}" cy="${y + 1}" r="2.6" fill="#222"/>
+    ${angry ? `<path d="M${x - 12} ${y - 8} l9 3 M${x + 12} ${y - 8} l-9 3" stroke="#333" stroke-width="2.6" stroke-linecap="round"/>`
+    : `<path d="M${x - 4} ${y + 8} q4 3 8 0" stroke="#333" stroke-width="2" fill="none" stroke-linecap="round"/>`}`;
+  const SP = {
+    wheels: () => '<g fill="#6b4a2b"><circle cx="56" cy="92" r="8"/><circle cx="104" cy="92" r="8"/></g><g fill="#c9a27a"><circle cx="56" cy="92" r="3"/><circle cx="104" cy="92" r="3"/></g>',
+    cart: () => `<rect x="40" y="78" width="80" height="8" rx="2" fill="#b07a45"/><path d="M60 78 v8 M80 78 v8 M100 78 v8" stroke="#8a5a2e" stroke-width="1.5"/>
+      <rect x="62" y="58" width="36" height="20" rx="3" fill="#d9a86c" stroke="#a8763d" stroke-width="2"/>`,
+    tracks: () => `<rect x="36" y="83" width="90" height="17" rx="8.5" fill="#4a4a55"/><g fill="#8a8a96">${[45, 59, 73, 87, 101, 115].map(x => `<circle cx="${x}" cy="91.5" r="5"/>`).join('')}</g>`,
+    hull: c => `<path d="M34 84 L40 66 H120 L130 76 L126 84Z" fill="${c.b}" stroke="${c.d}" stroke-width="2" stroke-linejoin="round"/>`,
+    armor: c => `<path d="M39 66 H120 L123 70 H38Z" fill="${c.l}" stroke="${c.d}" stroke-width="1.5"/>
+      <g fill="${c.d}"><rect x="38" y="80" width="28" height="8" rx="2"/><rect x="68" y="80" width="28" height="8" rx="2"/><rect x="98" y="80" width="28" height="8" rx="2"/></g>
+      <g fill="${c.l}">${[43, 61, 73, 91, 103, 121].map(x => `<circle cx="${x}" cy="84" r="1.6"/>`).join('')}</g>`,
+    turret: c => `<path d="M58 66 Q60 47 80 46 H92 Q106 47 108 66Z" fill="${c.l}" stroke="${c.d}" stroke-width="2"/>`,
+    gun: c => `<rect x="104" y="52" width="44" height="7" rx="3" fill="${c.d}"/><rect x="144" y="49.5" width="8" height="12" rx="2" fill="${c.d}"/>`,
+    mg: () => '<rect x="76" y="39" width="11" height="8" rx="2" fill="#555"/><rect x="85" y="40.5" width="20" height="3.5" rx="1.5" fill="#333"/>',
+    radar: () => `<path d="M66 48 L60 16" stroke="#555" stroke-width="2.5" stroke-linecap="round"/><circle cx="60" cy="15" r="3.5" fill="#ff5252" class="blink"/>
+      <path d="M48 66 v-8" stroke="#555" stroke-width="2.5"/><path d="M40 53 q8 9 17 -1z" fill="#d8dde3" stroke="#555" stroke-width="2"/>`,
+    booster: () => `<g class="bt-flame"><path d="M24 66 L6 71 L24 76Z" fill="#ff9800"/><path d="M24 68.5 L14 71 L24 73.5Z" fill="#ffe14d"/></g>
+      <rect x="22" y="64" width="26" height="13" rx="6" fill="#e9edf2" stroke="#555" stroke-width="2"/><path d="M34 64 v13" stroke="#ff5252" stroke-width="3"/>`,
+    sparkle: () => '<g fill="#fffbd0" class="blink"><path d="M50 40 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z"/><path d="M118 40 l1.5 4 4 1.5 -4 1.5 -1.5 4 -1.5 -4 -4 -1.5 4 -1.5z"/><path d="M96 70 l1.5 3.5 3.5 1.5 -3.5 1.5 -1.5 3.5 -1.5 -3.5 -3.5 -1.5 3.5 -1.5z"/></g>',
+  };
+  V.buildTank = (stage, pal) => {
+    const p = stage >= 10 ? GOLD : pal;
+    const c = { b: p[0], l: p[1], d: p[2] };
+    const has = k => stage >= k;
+    const ghost = (k, svg) => (stage === k - 1 ? `<g class="bt-ghost">${svg}</g>` : '');
+    const part = (k, f) => (has(k) ? f(c) : ghost(k, f(c)));
+    const body = [
+      part(9, SP.booster),
+      has(1) ? SP.tracks() : SP.wheels() + ghost(1, SP.tracks()),
+      has(2) ? '' : SP.cart(),
+      part(2, SP.hull), part(7, SP.armor), part(3, SP.turret), part(6, SP.radar), part(5, SP.mg), part(4, SP.gun),
+      has(2) ? sideEyes(110, 75) : sideEyes(80, 68),
+      has(10) ? SP.sparkle() : '',
+    ].join('');
+    const big = has(8) ? 'transform="translate(78 100) scale(1.2) translate(-78 -100)"' : '';
+    return `<svg viewBox="0 0 160 110" class="bt-svg"><ellipse cx="80" cy="102" rx="${has(8) ? 56 : 46}" ry="5" fill="#000" opacity=".12"/><g ${big}>${body}</g></svg>`;
+  };
+  // 对面的敌方坦克（车头朝左）。broken = 被打败后冒烟的样子
+  V.sideFoe = (kind = 'enemy', broken) => {
+    const [b, l, d] = PAL[broken ? 'broken' : kind];
+    const c = { b, l, d };
+    const top = broken ? '' : kind === 'elite' ? crown(84, 34) : kind === 'boss' ? horns(68, 100, 52) : '';
+    const gun = broken ? `<path d="M106 58 L140 74" stroke="${d}" stroke-width="7" stroke-linecap="round"/>` : SP.gun(c);
+    const eyes = broken ? '<path d="M99 71 l8 8 M107 71 l-8 8 M113 71 l8 8 M121 71 l-8 8" stroke="#333" stroke-width="2.6" stroke-linecap="round"/>'
+      : sideEyes(110, 75, true);
+    const smoke = broken ? '<g class="bt-smoke" fill="#8a8f96"><circle cx="76" cy="40" r="8"/><circle cx="88" cy="30" r="6"/><circle cx="70" cy="24" r="5"/></g>' : '';
+    return `<svg viewBox="0 0 160 110" class="bt-svg"><ellipse cx="80" cy="102" rx="46" ry="5" fill="#000" opacity=".12"/>
+      <g transform="translate(160 0) scale(-1 1)">${SP.tracks()}${SP.hull(c)}${kind === 'boss' ? SP.armor(c) : ''}${SP.turret(c)}${top}${gun}${eyes}</g>${smoke}</svg>`;
+  };
+
   TM.V = V;
 })(window.TM);
