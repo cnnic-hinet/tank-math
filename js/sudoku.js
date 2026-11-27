@@ -13,6 +13,13 @@
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const pal = () => TM.Rewards.skin().pal;
   const foeOf = n => (n <= 4 ? 'enemy' : n <= 6 ? 'elite' : 'boss');
+  // 格子大小跟着屏幕算：让棋盘差不多占满剩下的高度，但不要大得夸张。
+  // side 是右栏宽度（和 CSS 里 .sd-side 的 clamp 一致），extraH 是棋盘上下要留的高度
+  const fitCell = (n, { side, extraH, max, min }) => {
+    const w = innerWidth - 40 - 24 - side - 46, hgt = innerHeight - extraH;
+    return Math.round(Math.max(min, Math.min(max, Math.min(w, hgt) / n)));
+  };
+  const SIDE_W = () => Math.min(400, Math.max(320, innerWidth * .34));
   const bump = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
   const arenaOf = (n, mini) => {
     const me = h('div', { class: 'sd-me', html: V.buildTank(0, pal()) });
@@ -153,7 +160,7 @@
     const all = g.names ? g.names.join('、') : `1 到 ${n}`;
 
     // 棋盘
-    const cellPx = n <= 4 ? 70 : n <= 6 ? 54 : 40;
+    const cellPx = fitCell(n, { side: 320, extraH: 300, max: n <= 4 ? 100 : n <= 6 ? 72 : 50, min: n <= 4 ? 70 : n <= 6 ? 54 : 40 });
     const grid = h('div', { class: 'sd-grid', style: `--n:${n};--cell:${cellPx}px` });
     grid.append(h('span', { class: 'sd-corner' }));
     for (let c = 0; c < n; c++) grid.append(h('span', { class: 'sd-lab' }, String(c + 1)));
@@ -380,7 +387,8 @@
 
     const paint = () => {
       grid.innerHTML = '';
-      const cellSize = n <= 4 ? 96 : n <= 6 ? 74 : 56;
+      const cellSize = fitCell(n, { side: SIDE_W(), extraH: 76 + 18 + 36 + 26 + 16 + 10,
+        max: n <= 4 ? 128 : n <= 6 ? 96 : 66, min: n <= 4 ? 90 : n <= 6 ? 70 : 52 });
       grid.style.setProperty('--n', n);
       grid.style.setProperty('--cell', cellSize + 'px');
       grid.style.setProperty('--br', g.br);
@@ -578,6 +586,9 @@
 
     paint();
     store();
+    // 转屏、窗口变大变小时重新算格子大小；换页以后自己取消
+    const onResize = () => { if (myRun !== run) return removeEventListener('resize', onResize); paint(); };
+    addEventListener('resize', onResize);
     Audio.speak(saved ? '接着上次继续填吧。' : `数独：每一行、每一列、每一个小宫，${n === 4 && g.sym ? '4 种水果' : `1 到 ${n}`}都不能重复。点一个空格，再点下面的数字。每填对一格，坦克就多一个零件。`);
 
     live = {

@@ -1184,27 +1184,29 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .sd-cell.br { border-right: 4px solid #7a7397; }
 .sd-cell.bb { border-bottom: 4px solid #7a7397; }
 .sd-status { font-size: 16px; font-weight: 800; color: var(--soft); }
-.sd-side { width: 300px; flex: none; display: flex; flex-direction: column; gap: 12px; padding-top: 6px; }
+.sd-side { width: clamp(320px, 34vw, 400px); flex: none; display: flex; flex-direction: column; gap: 12px; padding-top: 6px; }
 .sd-pos { font-size: 20px; font-weight: 900; text-align: center; background: #fff; border-radius: 14px; padding: 8px; }
 .sd-keys { display: grid; grid-template-columns: repeat(var(--kcols), 1fr); gap: 10px; }
-.sd-key { height: 74px; border-radius: 16px; background: #fff; border: 0; border-bottom: 5px solid #c9c3dc;
+.sd-key { height: 80px; border-radius: 16px; background: #fff; border: 0; border-bottom: 5px solid #c9c3dc;
   font-size: 38px; font-weight: 900; color: #2d5ea8; }
 .sd-key:active { transform: translateY(2px); border-bottom-width: 3px; }
 .sd-acts { display: flex; gap: 10px; }
 .sd-acts .btn { flex: 1; white-space: nowrap; padding: 12px 6px; font-size: 20px; }
 .sd-help { font-size: 15px; color: var(--soft); font-weight: 700; text-align: center; }
 .sd-side { gap: 10px; padding-top: 0; }
-.sd-keys.k9 .sd-key { height: 58px; font-size: 32px; }
+.sd-keys.k9 .sd-key { height: 60px; font-size: 34px; }
+.sd-side .sd-keys:not(.k9) .sd-key { font-size: 52px; }
 /* 坦克组装战场 */
-.sd-arena { position: relative; flex: none; height: 138px; border-radius: 16px; overflow: hidden;
-  background: linear-gradient(#d4ecff 0 64%, #a5d98a 64% 100%); box-shadow: inset 0 -4px 0 #86c26b; }
-.sd-arena.mini { height: 108px; }
-.sd-me { position: absolute; left: 16px; bottom: 24px; width: 136px; transform-origin: 50% 100%; }
-.sd-foe { position: absolute; right: 8px; bottom: 26px; width: 100px; transform-origin: 50% 100%; }
-.sd-foe.s4 { width: 86px; }
-.sd-foe.s9 { width: 112px; }
-.sd-arena.mini .sd-me { bottom: 8px; width: 120px; }
-.sd-arena.mini .sd-foe { bottom: 10px; }
+.sd-arena { position: relative; flex: none; height: clamp(190px, 30vh, 260px); border-radius: 16px; overflow: hidden;
+  background: linear-gradient(#d4ecff 0 56%, #a5d98a 56% 100%); box-shadow: inset 0 -4px 0 #86c26b; }
+.sd-arena.mini { background: linear-gradient(#d4ecff 0 64%, #a5d98a 64% 100%); }
+.sd-arena.mini { height: 140px; }
+.sd-me { position: absolute; left: 4%; bottom: 30px; width: 55%; transform-origin: 50% 100%; }
+.sd-foe { position: absolute; right: 0; bottom: 34px; width: 44%; transform-origin: 50% 100%; }
+.sd-foe.s4 { width: 40%; }
+.sd-foe.s9 { width: 48%; }
+.sd-arena.mini .sd-me { bottom: 14px; width: 46%; }
+.sd-arena.mini .sd-foe { bottom: 16px; width: 34%; }
 .bt-svg { display: block; width: 100%; height: auto; overflow: visible; }
 .bt-ghost { opacity: .25; animation: bt-ghost 1.2s ease-in-out infinite; }
 @keyframes bt-ghost { 50% { opacity: .5; } }
@@ -1227,8 +1229,8 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .sd-beam { position: absolute; height: 12px; border-radius: 6px; transform-origin: left center; pointer-events: none;
   background: linear-gradient(90deg, #fffbd0, #ffc107 40%, #ff5722); box-shadow: 0 0 12px #ffb300; animation: bt-beam .3s ease-out forwards; }
 @keyframes bt-beam { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-.sd-bang { position: absolute; font-size: 64px; pointer-events: none; opacity: 0; animation: sd-pop 1s ease-out; }
-.sd-meter { position: absolute; left: 8px; right: 8px; bottom: 4px; height: 18px; border-radius: 9px; overflow: hidden; background: rgba(255, 255, 255, .8); }
+.sd-bang { position: absolute; font-size: 88px; pointer-events: none; opacity: 0; animation: sd-pop 1s ease-out; }
+.sd-meter { position: absolute; left: 10px; right: 10px; bottom: 6px; height: 24px; border-radius: 12px; overflow: hidden; background: rgba(255, 255, 255, .8); }
 .sd-meter i { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: linear-gradient(90deg, #ffe066, #ffa726); transition: width .4s; }
-.sd-meter span { position: relative; display: block; text-align: center; font-size: 12px; line-height: 18px; font-weight: 900; color: #5a4a1a; }
+.sd-meter span { position: relative; display: block; text-align: center; font-size: 15px; line-height: 24px; font-weight: 900; color: #5a4a1a; }
 .sd-star { position: fixed; z-index: 60; font-size: 30px; pointer-events: none; transition: transform .55s cubic-bezier(.4, -.4, .6, 1); }
