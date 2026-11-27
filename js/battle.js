@@ -369,9 +369,22 @@
       return p;
     }
 
+    // 开炮时乘客跳一下、头饰晃一下、泡泡多冒一串（只是好看）
+    react() {
+      const m = this.me;
+      if (!m) return;
+      m.classList.remove('react');
+      void m.offsetWidth;
+      m.classList.add('react');
+      clearTimeout(this.reactT);
+      this.reactT = setTimeout(() => m.classList.remove('react'), 800);
+      if (m.querySelector('.bub')) this.sparks(this.center(m), 6, 70, ['🫧']);
+    }
+
     // 按武器发射，返回命中点。twin：五连击的双发
     async launch(id, twin) {
       const fx = FX[id] || FX.shell, fly = fx.fly || 'shell';
+      this.react();
       if (fly === 'air') return this.airStrike();
       this.me.classList.add('recoil');
       Audio.sfx[fx.sfx || 'shoot']();

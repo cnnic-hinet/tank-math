@@ -515,6 +515,9 @@
     double: c => `${turret(c, 27)}<circle cx="50" cy="58" r="18" fill="${c.fill}" stroke="${c.dark}" stroke-width="2"/>`,
     cube: () => `<rect x="30" y="38" width="40" height="40" rx="6" fill="#2b2b38"/>${grid3(32.5, 40.5, 11, 11, 1.5)}<rect x="32" y="51" width="36" height="16" rx="5" fill="#fff" opacity=".9"/>`,
   };
+  // 小乘客的眼睛和鼻子
+  const critter = (x, y) => `<circle cx="${x - 3.5}" cy="${y - 2}" r="1.8" fill="#222"/><circle cx="${x + 3.5}" cy="${y - 2}" r="1.8" fill="#222"/>
+    <path d="M${x - 1.5} ${y + 1.5} h3 l-1.5 1.8z" fill="#5a2a2a"/>`;
   // 挂件（画在最上面，避开脸）
   const AD = {
     none: () => '',
@@ -528,6 +531,78 @@
     badge: () => `<path d="${starPath(50, 84, 9)}" fill="#ffd23f" stroke="#b98500" stroke-width="1.5"/>`,
     pzCube: () => `<path d="M78 88 V96" stroke="#555" stroke-width="2"/><rect x="70" y="76" width="18" height="18" rx="3" fill="#2b2b38" transform="rotate(12 79 85)"/>
       <g transform="rotate(12 79 85)">${grid3(71.5, 77.5, 4.5, 4.5, 1)}</g>`,
+    balloon: () => `<g class="bob"><path d="M80 50 Q92 40 90 26" stroke="#888" stroke-width="1.5" fill="none"/>
+      <ellipse cx="90" cy="14" rx="9" ry="11" fill="#ff5252"/><path d="M90 24 l-3 4 h6z" fill="#ff5252"/><ellipse cx="86.5" cy="10" rx="2.5" ry="4" fill="#fff" opacity=".55"/></g>`,
+    cape: () => `<path class="cape" d="M32 80 H68 L80 106 Q72 100 65 106 Q57 100 50 106 Q43 100 35 106 Q28 100 20 106Z"
+      fill="#e53935" stroke="#a31515" stroke-width="1.5" stroke-linejoin="round"/><circle cx="34" cy="81" r="3" fill="#ffd23f"/><circle cx="66" cy="81" r="3" fill="#ffd23f"/>`,
+    pinwheel: () => `<path d="M24 44 L16 22" stroke="#8d6e63" stroke-width="3" stroke-linecap="round"/><g class="whirl">
+      ${['#ff5252', '#ffd23f', '#3d8bfd', '#4caf50'].map((f, i) => `<path d="M16 22 L16 10 L26 16Z" fill="${f}" transform="rotate(${i * 90} 16 22)"/>`).join('')}</g>
+      <circle cx="16" cy="22" r="2.5" fill="#fff" stroke="#888"/>`,
+    bubbles: () => `<rect x="6" y="40" width="16" height="13" rx="4" fill="#4da3ff" stroke="#1f5fbf" stroke-width="2"/><rect x="10" y="35" width="8" height="6" rx="2" fill="#1f5fbf"/>
+      ${[[12, 0], [18, .7], [8, 1.4]].map(([x, d]) => `<circle class="bub" cx="${x}" cy="30" r="4" fill="#cfeeff" stroke="#7db4ff" stroke-width="1.5" style="animation-delay:-${d}s"/>`).join('')}`,
+    chimney: () => `<rect x="70" y="30" width="10" height="16" rx="2" fill="#6d4c41"/><rect x="68" y="28" width="14" height="5" rx="2" fill="#4e342e"/>
+      ${[0, .8, 1.6].map(d => `<circle class="smoke" cx="75" cy="22" r="5" fill="#e6e6e6" style="animation-delay:-${d}s"/>`).join('')}`,
+    booster: () => [36, 64].map(x => `<g class="jet"><path d="M${x - 8} 94 Q${x} 126 ${x + 8} 94Z" fill="#ff7a2f"/><path d="M${x - 4.5} 94 Q${x} 112 ${x + 4.5} 94Z" fill="#ffe14d"/></g>
+      <rect x="${x - 9}" y="85" width="18" height="10" rx="3" fill="#5b6470"/>`).join(''),
+    drill: () => `<rect x="20" y="32" width="16" height="6" rx="2" fill="#5b6470"/><path d="M21 33 L28 6 L35 33Z" fill="#b8c1cc" stroke="#5b6470" stroke-width="1.5" stroke-linejoin="round"/>
+      ${[0, 1].map(k => `<g class="drill d${k}" stroke="#5b6470" stroke-width="2">${[0, 1, 2].map(i => {
+        const y = 29 - i * 7 - k * 3.5, w = (y - 6) * 7 / 27;
+        return `<path d="M${28 - w} ${y} L${28 + w} ${y - 3}"/>`;
+      }).join('')}</g>`).join('')}`,
+    spikes: () => `<g fill="#6bd66b" stroke="#2e7d32" stroke-width="1.5" stroke-linejoin="round">${[46, 58, 70, 82].map(y =>
+      `<path d="M21 ${y - 5} L10 ${y} L21 ${y + 5}Z M79 ${y - 5} L90 ${y} L79 ${y + 5}Z"/>`).join('')}</g>`,
+    rainbowtail: () => `<g class="tail" fill="none" stroke-width="4" stroke-linecap="round">${['#ff6b6b', '#ffb84d', '#ffe14d', '#6bd66b', '#4da3ff'].map((col, i) =>
+      `<path d="M${40 + i * 5} 86 q-8 10 0 18 q8 8 0 16" stroke="${col}"/>`).join('')}</g>`,
+    // 车尾坐着的小乘客，开炮时跳一下
+    cat: () => `<g class="rider"><g transform="translate(75 84) scale(1.4) translate(-75 -84)"><path d="M67 80 L66 70 L73 76Z M83 80 L84 70 L77 76Z" fill="#ff9f43" stroke="#c96f1c" stroke-width="1.2"/>
+      <circle cx="75" cy="84" r="9" fill="#ff9f43" stroke="#c96f1c" stroke-width="1.5"/>${critter(75, 84)}
+      <path d="M71 87 h-7 M71 89 l-6 2 M79 87 h7 M79 89 l6 2" stroke="#6b3d10" stroke-width=".8"/></g></g>`,
+    dog: () => `<g class="rider"><g transform="translate(75 84) scale(1.4) translate(-75 -84)"><circle cx="75" cy="84" r="9" fill="#d7a86e" stroke="#8d6e3f" stroke-width="1.5"/>
+      <ellipse cx="66" cy="84" rx="3.5" ry="6.5" fill="#8d6e3f"/><ellipse cx="84" cy="84" rx="3.5" ry="6.5" fill="#8d6e3f"/>${critter(75, 84)}
+      <path d="M75 90 q0 4 2 4" stroke="#e05757" stroke-width="2" fill="none" stroke-linecap="round"/></g></g>`,
+    duck: () => `<g class="rider"><g transform="translate(75 84) scale(1.4) translate(-75 -84)"><circle cx="75" cy="84" r="9" fill="#ffe14d" stroke="#d1a800" stroke-width="1.5"/>
+      <path d="M75 74 q-2 -4 2 -5" stroke="#d1a800" stroke-width="1.5" fill="none"/>
+      <circle cx="71.5" cy="82" r="1.8" fill="#222"/><circle cx="78.5" cy="82" r="1.8" fill="#222"/><ellipse cx="75" cy="87.5" rx="5" ry="2.6" fill="#ff9f1c"/></g></g>`,
+  };
+  // 头饰（画在脸上面）；外面包一层 .hat，开炮时晃一下
+  const flower = (x, y, f) => `${[0, 72, 144, 216, 288].map(r => `<circle cx="${x}" cy="${y - 3}" r="2.6" fill="${f}" transform="rotate(${r} ${x} ${y})"/>`).join('')}
+    <circle cx="${x}" cy="${y}" r="2" fill="#ffd23f"/>`;
+  const HT = {
+    nohat: () => '',
+    glasses: () => `<rect x="34" y="52" width="15" height="11" rx="4" fill="#222"/><rect x="51" y="52" width="15" height="11" rx="4" fill="#222"/>
+      <path d="M48 56 h4 M34 55 l-8 -3 M66 55 l8 -3" stroke="#222" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M37 55 l4 -1 M54 55 l4 -1" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".7"/>`,
+    mustache: () => `<path d="M50 67 q-5 -5 -11 -2 q-5 3 -9 -1 q2 7 10 6 q6 -1 10 -3 q4 2 10 3 q8 1 10 -6 q-4 4 -9 1 q-6 -3 -11 2z" fill="#4e342e"/>`,
+    bow: () => `<path d="M50 40 L37 32 Q34 40 37 48Z M50 40 L63 32 Q66 40 63 48Z" fill="#ff7eb6" stroke="#d9488a" stroke-width="2" stroke-linejoin="round"/>
+      <circle cx="50" cy="40" r="4.5" fill="#d9488a"/>`,
+    catears: c => `<path d="M30 46 L31 24 L47 37Z M70 46 L69 24 L53 37Z" fill="${c.dark}" stroke="${c.dark}" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M33 42 L34 30 L42 37Z M67 42 L66 30 L58 37Z" fill="#ff9fbf"/>`,
+    bunny: () => `<g stroke="#d6d6e0" stroke-width="1.5"><ellipse cx="40" cy="22" rx="6.5" ry="17" fill="#fff" transform="rotate(-14 40 38)"/>
+      <ellipse cx="60" cy="22" rx="6.5" ry="17" fill="#fff" transform="rotate(14 60 38)"/></g>
+      <ellipse cx="40" cy="23" rx="3" ry="12" fill="#ffb3d4" transform="rotate(-14 40 38)"/><ellipse cx="60" cy="23" rx="3" ry="12" fill="#ffb3d4" transform="rotate(14 60 38)"/>`,
+    phones: () => `<path d="M28 58 A22 22 0 0 1 72 58" stroke="#333" stroke-width="4.5" fill="none"/>
+      <rect x="21" y="50" width="11" height="17" rx="5" fill="#ff5252" stroke="#333" stroke-width="2"/><rect x="68" y="50" width="11" height="17" rx="5" fill="#ff5252" stroke="#333" stroke-width="2"/>
+      <path d="M84 38 v-8 l6 -2 v8" stroke="#3d8bfd" stroke-width="2" fill="none" class="blink"/>`,
+    wreath: () => `<path d="M28 58 A22 22 0 0 1 72 58" stroke="#4caf50" stroke-width="3" fill="none"/>
+      ${[180, 210, 240, 270, 300, 330, 360].map((a, i) => { const r = a * Math.PI / 180;
+        return flower(50 + 22 * Math.cos(r), 58 + 22 * Math.sin(r), ['#ff7eb6', '#fff', '#b86bff', '#ff9f43'][i % 4]); }).join('')}`,
+    santa: () => `<path d="M33 42 Q46 10 76 20 Q62 26 67 42Z" fill="#e53935" stroke="#a31515" stroke-width="1.5" stroke-linejoin="round"/>
+      <rect x="30" y="38" width="40" height="9" rx="4.5" fill="#fff" stroke="#ddd"/><circle cx="76" cy="20" r="5.5" fill="#fff" stroke="#ddd"/>`,
+    chef: () => `<path d="M37 40 q-11 -6 -4 -16 q3 -10 13 -7 q5 -9 14 -2 q11 -3 11 8 q6 9 -5 17z" fill="#fff" stroke="#cfcfd8" stroke-width="1.5"/>
+      <rect x="36" y="36" width="28" height="10" rx="3" fill="#fff" stroke="#cfcfd8" stroke-width="1.5"/>
+      <path d="M44 38 v6 M50 38 v6 M56 38 v6" stroke="#e0e0e8" stroke-width="1.5"/>`,
+    bulb: () => `<path d="M72 36 v-4" stroke="#888" stroke-width="2"/><rect x="68" y="30" width="8" height="6" rx="1.5" fill="#9a9aa6"/>
+      <circle cx="72" cy="22" r="9" fill="#fff59d" stroke="#e6b422" stroke-width="2"/><path d="M69 25 q3 -6 6 0" stroke="#e6b422" stroke-width="1.5" fill="none"/>
+      <path d="M72 8 v-4 M83 12 l3 -3 M61 12 l-3 -3 M86 22 h4 M58 22 h-4" stroke="#ffb300" stroke-width="2.5" stroke-linecap="round" class="blink"/>`,
+    copter: () => `<rect x="48" y="30" width="4" height="10" rx="2" fill="#8d6e63"/>
+      <g class="whirl copter"><ellipse cx="38" cy="30" rx="12" ry="3.5" fill="#ffb300"/><ellipse cx="62" cy="30" rx="12" ry="3.5" fill="#ffb300"/></g><circle cx="50" cy="30" r="3.5" fill="#e53935"/>`,
+    unicorn: () => `${['#ff6b6b', '#ffb84d', '#ffe14d', '#6bd66b', '#4da3ff', '#b86bff'].map((col, i) => {
+        const y1 = 42 - i * 6, y2 = y1 - 6, w1 = (y1 - 6) * 9 / 36, w2 = Math.max(0, (y2 - 6) * 9 / 36);
+        return `<path d="M${50 - w1} ${y1} L${50 - w2} ${y2} H${50 + w2} L${50 + w1} ${y1}Z" fill="${col}"/>`; }).join('')}
+      <path d="M41 42 L50 6 L59 42Z" fill="none" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="${starPath(64, 14, 5)}" fill="#fff59d" class="blink"/>`,
+    pzClip: () => `<g transform="rotate(-15 66 38)"><rect x="58" y="32" width="16" height="13" rx="3" fill="#e0508f" stroke="#a52a65" stroke-width="1.5"/>
+      <circle cx="66" cy="31" r="3.5" fill="#e0508f"/><circle cx="74.5" cy="38.5" r="3.5" fill="#e0508f"/><circle cx="63" cy="38" r="1.6" fill="#fff"/></g>`,
   };
   const buildSvg = (c, b) => (CH[b.chassis] || CH.track)(c) + (BD[b.body] || BD.round)(c)
     + (GN[b.gun] || GN.short)(c) + (TU[b.turret] || TU.tround)(c) + (AD[b.addon] || AD.none)(c);
@@ -540,9 +615,10 @@
     const c = { fill: g ? `url(#${g})` : body, light, dark, deco: sk.deco ? DECO[sk.deco](dark) : '' };
     const custom = m.id === 'custom' && m.build;
     const [svg, fy] = custom ? [buildSvg(c, m.build), 58] : (MODELS[m.id] || MODELS.basic)(c);
+    const hat = custom && HT[m.build.hat] && m.build.hat !== 'nohat' ? `<g class="hat">${HT[m.build.hat](c)}</g>` : '';
     const defs = g ? `<defs><linearGradient id="${g}" x1="0" y1="0" x2="1" y2="1">${sk.grad.map((col, i) =>
       `<stop offset="${i / (sk.grad.length - 1)}" stop-color="${col}"/>`).join('')}</linearGradient></defs>` : '';
-    return `<svg viewBox="0 0 100 100" class="tank-svg m-${m.id}${custom ? ' c-' + m.build.chassis : ''}">${defs}${svg}${face(50, fy, 'me', false)}</svg>`;
+    return `<svg viewBox="0 0 100 100" class="tank-svg m-${m.id}${custom ? ' c-' + m.build.chassis : ''}">${defs}${svg}${face(50, fy, 'me', false)}${hat}</svg>`;
   };
 
   V.tank = (kind = 'me', skin, model) => {

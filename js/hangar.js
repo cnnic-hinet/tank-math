@@ -5,7 +5,7 @@
   const H = {};
 
   const TABS = [['chassis', '🛞 底盘'], ['body', '🛡️ 车身'], ['turret', '🎯 炮塔'], ['gun', '💥 主炮'],
-    ['addon', '📡 挂件'], ['skin', '🎨 涂装'], ['weapon', '🚀 武器'], ['classic', '🚜 经典车型']];
+    ['addon', '📡 挂件'], ['hat', '🎩 头饰'], ['skin', '🎨 涂装'], ['weapon', '🚀 武器'], ['classic', '🚜 经典车型']];
   const LIST = {
     skin: () => RW.SKINS,
     weapon: () => RW.WEAPONS,
@@ -46,7 +46,7 @@
   // 没选东西时，告诉孩子每种星星在哪儿攒、能买什么
   const legend = () => h('div', { class: 'gem-legend' }, RW.GEM_IDS.map(k => h('div', null,
     H.gem(k), h('b', null, RW.GEMS[k].name), ` ${RW.GEMS[k].from} → ${RW.GEMS[k].buys}`)),
-  h('div', null, H.gem(null), h('b', null, '星星'), ' 所有关卡 → 涂装、武器、经典车型'));
+  h('div', null, H.gem(null), h('b', null, '星星'), ' 所有关卡 → 头饰、涂装、武器、经典车型'));
 
   H.show = startTab => {
     if (startTab) tab = startTab;
@@ -102,7 +102,7 @@
       const x = sel;
       if (!x) {
         info.append(h('div', { class: 'i-tip' }, tab === 'weapon' ? '点一下武器就能试射。打仗时，从「出战」的武器里随机挑一种开炮。'
-          : RW.slotParts(tab).length ? `点一下零件就能先装上看看。有了的点一下就换上，五个部位随便搭！` : '点一下看看装上是什么样。已经有的点一下就换上。'),
+          : RW.slotParts(tab).length ? `点一下零件就能先装上看看。有了的点一下就换上，六个部位随便搭！` : '点一下看看装上是什么样。已经有的点一下就换上。'),
         legend());
         return;
       }
@@ -120,7 +120,8 @@
       const status = got ? (x.kind !== 'weapon' ? (using(x) ? '✅ 正在使用' : '已拥有') : RW.carrying(x) ? '✅ 带着出战' : '已拥有，这次不带')
         : x.streak ? '🔒 ' + RW.needText(x) : '👀 先装上看看';
       const where = x.kind === 'part' ? h('div', { class: 'i-where' }, H.gem(x.cur),
-        `${slotName(x.slot)}零件，用${RW.unit(x.cur)}买。${RW.GEMS[x.cur].from}能攒${RW.unit(x.cur)}。`) : null;
+        x.cur ? `${slotName(x.slot)}零件，用${RW.unit(x.cur)}买。${RW.GEMS[x.cur].from}能攒${RW.unit(x.cur)}。`
+          : `${slotName(x.slot)}，用星星买。所有关卡都能攒星星。`) : null;
       info.append(...[
         h('div', { class: 'i-head' }, h('b', null, (x.icon ? x.icon + ' ' : '') + x.name), h('span', { class: 'i-status' }, status)),
         x.desc ? h('div', { class: 'i-desc' }, x.desc) : null,

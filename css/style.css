@@ -649,7 +649,7 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .gem.g-green { color: #2fa84f; } .gem.g-blue { color: #2f7fe8; } .gem.g-orange { color: #ff8a1c; } .gem.g-purple { color: #9b4fd6; }
 .gem[class*="g-"] { text-shadow: 0 1px 0 rgba(0, 0, 0, .25); font-size: 1.15em; line-height: 1; }
 .cost { display: inline-flex; align-items: center; white-space: nowrap; }
-.h-tabs.f-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.h-tabs.f-tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
 .f-tabs .h-tab { min-height: 42px; font-size: 18px; position: relative; white-space: nowrap; }
 .tab-dot { position: absolute; top: 5px; right: 7px; width: 11px; height: 11px; border-radius: 50%; background: #ff5252; box-shadow: 0 0 0 2px #fff; }
 .hangar .h-grid .h-tank { width: 84px; height: 84px; }
@@ -666,6 +666,30 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .tank-svg.c-legs { animation: stomp .9s ease-in-out infinite; }
 .tank-svg .radar { transform-origin: 26px 30px; animation: radarSpin 2.4s ease-in-out infinite; }
 @keyframes radarSpin { 50% { transform: rotate(-35deg); } }
+/* 新挂件和头饰的小动画 */
+.tank-svg .bob { animation: bob 2s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translate(-2px, -4px) rotate(-3deg); } }
+.tank-svg .cape { transform-origin: 50px 80px; animation: capeWave 1.2s ease-in-out infinite; }
+@keyframes capeWave { 50% { transform: skewX(8deg) scaleY(1.06); } }
+.tank-svg .whirl { transform-origin: 16px 22px; animation: spin 1s linear infinite; }
+.tank-svg .whirl.copter { transform-origin: 50px 30px; animation-duration: .35s; }
+.tank-svg .bub { animation: bub 2.1s ease-out infinite; }
+@keyframes bub { from { transform: translateY(0); opacity: 0; } 15% { opacity: 1; } to { transform: translateY(-34px) translateX(-6px); opacity: 0; } }
+.tank-svg .smoke { animation: smoke 2.4s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes smoke { from { transform: translateY(0) scale(.5); opacity: .9; } to { transform: translateY(-26px) scale(1.6); opacity: 0; } }
+.tank-svg .jet { transform-box: fill-box; transform-origin: top; animation: jet .14s steps(2) infinite; }
+@keyframes jet { 50% { transform: scaleY(.75); } }
+.tank-svg .drill { animation: drill .24s steps(1) infinite; }
+.tank-svg .drill.d1 { animation-delay: -.12s; }
+@keyframes drill { 50% { opacity: 0; } }
+.tank-svg .tail { transform-origin: 50px 86px; animation: wave 1.4s ease-in-out infinite; }
+/* 开炮时：乘客跳一下、头饰晃一下、尾焰喷大火 */
+.tank.me.react .rider { animation: hop .45s ease-out 2; }
+.tank.me.react .hat { transform-origin: 50px 58px; animation: hatWob .6s ease-in-out; }
+@keyframes hatWob { 25% { transform: rotate(-10deg) translateY(-3px); } 60% { transform: rotate(8deg); } }
+.tank.me.react .jet { animation: jetBig .6s ease-out; }
+@keyframes jetBig { 30% { transform: scaleY(2.2) scaleX(1.3); } }
+.tank.me.react .smoke { animation-duration: .8s; }
 .h-body { flex: 1; display: flex; gap: 18px; padding: 4px 20px 16px; min-height: 0; }
 .h-left { width: 38%; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
 .h-left .field { flex: 1; min-height: 220px; }
