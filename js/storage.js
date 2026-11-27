@@ -2,7 +2,7 @@
 (function (TM) {
   const U = TM.U;
   const KEY = 'tankmath.v1';
-  const SCHEMA = 7;               // 存档结构版本，改结构时 +1 并在 migrate 里补
+  const SCHEMA = 8;               // 存档结构版本，改结构时 +1 并在 migrate 里补
   const SNAP = 'tankmath.snap.';  // 自动快照：tankmath.snap.2026-11-03 / pre-migrate / pre-restore / pre-import
   const SNAP_DAYS = 7;            // 每天的快照留几天
 
@@ -26,7 +26,7 @@
     recent: {},         // 每个题型最近 10 次首次作答 {type: [true, false...]}，用来调难度
     bestStreak: 0,      // 每日任务最长连续天数
     lastBackup: null,   // 上次备份的日期
-    sudoku: { done: {}, saves: {} }, // 数独训练营：每盘的星级，saves 是各盘没做完的进度
+    sudoku: { done: {}, saves: {}, seen: {} }, // 数独训练营：每盘的星级；saves 是各盘没做完的进度；seen 记哪种大小看过怎么玩
     // hide：学校还没学到、先藏起来的战区；goal：家长设的现实奖励 {text, need, start, done}
     settings: { limitMin: 20, voice: true, hide: { z5: true, z6: true }, goal: null },
     created: U.today(),
@@ -112,6 +112,8 @@
       if (sd.save && sd.save.id) sd.saves[sd.save.id] = sd.save;
       delete sd.save;
     }
+    // v7 → v8：数独题库换成按难度递进的新题，旧盘的星级和进度对不上新题，清掉重来（家长已确认）
+    if (from < 8) data.sudoku = { done: {}, saves: {}, seen: {} };
     data.schema = SCHEMA;
     return data;
   };

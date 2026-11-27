@@ -9,11 +9,26 @@
 
   const starsOf = id => (Store.data.sudoku.done[id] || {}).stars || 0;
   const saves = () => (Store.data.sudoku.saves = Store.data.sudoku.saves || {});
+  const seen = () => (Store.data.sudoku.seen = Store.data.sudoku.seen || {});
   const sayOf = (g, v) => (g.names ? g.names[v - 1] : String(v));
   const symOf = (g, v) => (g.sym ? g.sym[v - 1] : String(v));
   const allPuzzles = () => DATA.flatMap(g => g.puzzles.map(p => ({ g, p })));
+  // 每列从上往下一盘一盘开：做完上一盘才开下一盘
+  const isOpen = (g, i) => i === 0 || starsOf(g.puzzles[i - 1].id) > 0;
+  const rule = g => (g.sym ? '每行、每列、每个小宫，4 种水果各一个'
+    : `每行、每列、每个 ${g.br}×${g.bc} 小宫，1～${g.size} 各一个`);
 
-  // ---------- 训练营首页 ----------
+  // 进一盘：这种大小第一次玩，先看怎么玩
+  S.open = async (g, p) => {
+    if (!seen()[g.id]) {
+      await S.demo(g);
+      seen()[g.id] = 1;
+      Store.save();
+    }
+    S.start(g, p);
+  };
+
+  // ---------- 训练营首页：和地图一样，一种大小一列，从上到下越来越难 ----------
   S.show = () => {
     if (live) { live.stop(); live = null; }
     const total = allPuzzles().length;
@@ -23,24 +38,205 @@
       h('div', { class: 'title' }, '🧩 数独训练营'),
       h('div', { class: 'pill' }, `完成 ${done}/${total}`));
 
-    const groups = DATA.map(g => h('div', { class: 'sd-group' },
-      h('div', { class: 'sd-group-head' },
-        h('b', null, g.name),
-        h('small', null, g.size === 4 && g.sym ? '每行、每列、每个小宫，4 种水果各一个'
-          : `每行、每列、每个 ${g.br}×${g.bc} 宫，1～${g.size} 各一个`)),
-      h('div', { class: 'sd-puzzles' }, g.puzzles.map((p, i) => {
-        const st = starsOf(p.id), saved = !!saves()[p.id];
-        return h('button', { class: 'sd-lv' + (st ? ' done' : '') + (st ? '' : saved ? ' inprog' : ''),
-          onclick: () => { Audio.sfx.tap(); S.start(g, p); } },
-          h('b', null, `第 ${i + 1} 盘`),
-          h('small', null, st ? p.lv : saved ? '接着做 ⏳' : p.lv),
-          TM.App.starsEl(st));
-      }))));
+    const cols = DATA.map(g => {
+      const got = g.puzzles.reduce((s, p) => s + starsOf(p.id), 0);
+      let marked = false;
+      const nodes = g.puzzles.map((p, i) => {
+        const open = isOpen(g, i), st = starsOf(p.id), saved = !!saves()[p.id];
+        const next = open && !st && !marked;
+        if (next) marked = true;
+        return h('button', {
+          class: 'node' + (open ? '' : ' locked') + (next ? ' next' : ''),
+          onclick: () => { Audio.sfx.tap(); S.open(g, p); },
+        },
+        h('span', { class: 'n-idx' }, String(i + 1)),
+        h('span', { class: 'n-name' }, saved && !st ? '接着做 ⏳' : p.lv),
+        TM.App.starsEl(st));
+      });
+      return h('div', { class: 'zone', style: '--zc:' + g.color },
+        h('div', { class: 'zone-head' },
+          h('span', { class: 'icon' }, g.icon),
+          h('div', null, h('div', { class: 'name' }, g.name), h('div', { class: 'desc' }, rule(g))),
+          h('div', { class: 'sd-zfoot' },
+            h('span', { class: 'zstars' }, `★ ${got}/${g.puzzles.length * 3}`),
+            h('button', { class: 'sd-howto', onclick: () => { Audio.sfx.tap(); S.demo(g).then(S.show); } }, '▶ 怎么玩'))),
+        h('div', { class: 'nodes' }, nodes));
+    });
 
-    TM.App.show(h('div', { class: 'screen sudoku' }, top,
-      h('div', { class: 'sd-rule' }, '👆 点一个空格，再点下面的数字。每行、每列、每个小宫都不能重复。填对会开炮，填错会变红。'),
-      h('div', { class: 'sd-list' }, groups)));
+    TM.App.show(h('div', { class: 'screen map sudoku' }, top, h('div', { class: 'zones sd-zones' }, cols)));
   };
+
+  // ---------- 怎么玩：小手在一块小棋盘上边说边演示 ----------
+  const BOX_SAY = {
+    4: '粗线分出来的 2 乘 2 小方块，叫小宫',
+    6: '粗线分出来的小宫，是 2 行 3 列的长方形',
+    9: '粗线分出来的 3 乘 3 小方块，叫小宫，一共 9 个',
+  };
+  S.demo = g => new Promise(resolve => {
+    const n = g.size, p = g.puzzles[0];
+    const sol = [...p.s].map(Number), cells = [...p.g].map(Number);
+    const rowOf = i => Math.floor(i / n), colOf = i => i % n;
+    const unit = {
+      row: r => Array.from({ length: n }, (_, k) => r * n + k),
+      col: c => Array.from({ length: n }, (_, k) => k * n + c),
+      box: i => {
+        const r0 = Math.floor(rowOf(i) / g.br) * g.br, c0 = Math.floor(colOf(i) / g.bc) * g.bc, u = [];
+        for (let y = 0; y < g.br; y++) for (let x = 0; x < g.bc; x++) u.push((r0 + y) * n + c0 + x);
+        return u;
+      },
+    };
+    // 挑一行空格最少的，演示时先把这行补到只差一格
+    let tr = 0, best = n + 1;
+    for (let r = 0; r < n; r++) {
+      const e = unit.row(r).filter(i => !cells[i]).length;
+      if (e > 0 && e < best) { best = e; tr = r; }
+    }
+    const rowEmpty = unit.row(tr).filter(i => !cells[i]);
+    const target = rowEmpty[rowEmpty.length - 1];
+    rowEmpty.slice(0, -1).forEach(i => { cells[i] = sol[i]; });
+    // 再挑一个别的空格演示填错：填它这一行里已经有的东西
+    let wrongAt = -1, wrongV = 0;
+    for (let i = 0; i < n * n && wrongAt < 0; i++) {
+      if (cells[i] || i === target || rowOf(i) === tr) continue;
+      const had = unit.row(rowOf(i)).map(k => cells[k]).find(v => v && v !== sol[i]);
+      if (had) { wrongAt = i; wrongV = had; }
+    }
+    const thing = v => (g.names ? g.names[v - 1] : String(v));
+    const all = g.names ? g.names.join('、') : `1 到 ${n}`;
+
+    // 棋盘
+    const cellPx = n <= 4 ? 70 : n <= 6 ? 54 : 40;
+    const grid = h('div', { class: 'sd-grid', style: `--n:${n};--cell:${cellPx}px` });
+    grid.append(h('span', { class: 'sd-corner' }));
+    for (let c = 0; c < n; c++) grid.append(h('span', { class: 'sd-lab' }, String(c + 1)));
+    const els = [];
+    for (let r = 0; r < n; r++) {
+      grid.append(h('span', { class: 'sd-lab' }, String(r + 1)));
+      for (let c = 0; c < n; c++) {
+        const i = r * n + c, alt = (Math.floor(r / g.br) + Math.floor(c / g.bc)) % 2;
+        const el = h('span', { class: 'sd-cell' + (cells[i] ? ' given' : '') + (alt ? ' alt' : '') +
+          ((c + 1) % g.bc === 0 && c < n - 1 ? ' br' : '') + ((r + 1) % g.br === 0 && r < n - 1 ? ' bb' : '') },
+        cells[i] ? symOf(g, cells[i]) : '');
+        els.push(el);
+        grid.append(el);
+      }
+    }
+    const keyEls = Array.from({ length: n }, (_, k) => h('span', { class: 'sd-key' }, symOf(g, k + 1)));
+    const cap = h('div', { class: 'sd-demo-cap' });
+    const hand = h('span', { class: 'sd-hand' }, '👆');
+    const fx = h('span', { class: 'sd-demo-fx' });
+    let stopped = false;
+    const end = () => {
+      if (stopped) return;
+      stopped = true;
+      Audio.stop();
+      ov.remove();
+      resolve();
+    };
+    const doneBtn = h('button', { class: 'btn green', style: 'display:none', onclick: () => { Audio.sfx.tap(); end(); } }, '我会了，开始 ▶');
+    const box = h('div', { class: 'sd-demo' },
+      h('div', { class: 'sd-demo-head' },
+        h('b', null, `▶ ${g.name} 怎么玩`),
+        h('button', { class: 'btn small gray', onclick: () => { Audio.sfx.tap(); end(); } }, '跳过 ⏭')),
+      h('div', { class: 'sd-demo-body' },
+        h('div', { class: 'sd-gridwrap' }, grid),
+        h('div', { class: 'sd-demo-side' }, cap,
+          h('div', { class: 'sd-keys', style: `--kcols:${n <= 4 ? 2 : 3}` }, keyEls), doneBtn)),
+      hand, fx);
+    const ov = h('div', { class: 'overlay sd-demo-ov' }, box);
+    document.getElementById('app').append(ov);
+
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    const guard = () => { if (stopped) throw new Error('stop'); };
+    // 说一句：等读完；关了声音也留够看字的时间
+    const say = async t => {
+      guard();
+      cap.textContent = t;
+      const t0 = Date.now();
+      await Audio.speak(t);
+      guard();
+      const rest = t.length * 160 - (Date.now() - t0);
+      if (rest > 0) await wait(rest);
+      await wait(300);
+      guard();
+    };
+    const hl = (list, cls = 'hl') => {
+      els.forEach(e => e.classList.remove('hl', 'hl2'));
+      (list || []).forEach(i => els[i].classList.add(cls));
+    };
+    const center = el => {
+      const a = el.getBoundingClientRect(), b = box.getBoundingClientRect();
+      return [a.left - b.left + a.width / 2, a.top - b.top + a.height / 2];
+    };
+    const tap = async el => {
+      guard();
+      const [x, y] = center(el);
+      hand.style.opacity = '1';
+      hand.style.transform = `translate(${x - 14}px, ${y - 6}px)`;
+      await wait(750);
+      guard();
+      hand.classList.add('tap');
+      el.classList.add('pressed');
+      Audio.sfx.tap();
+      await wait(260);
+      hand.classList.remove('tap');
+      el.classList.remove('pressed');
+    };
+    const boom = (el, text) => {
+      const [x, y] = center(el);
+      fx.textContent = text;
+      fx.style.left = x + 'px';
+      fx.style.top = y + 'px';
+      fx.classList.remove('go');
+      void fx.offsetWidth;
+      fx.classList.add('go');
+    };
+
+    (async () => {
+      await wait(300);
+      await say(`这是数独。每一行、每一列、每一个小宫里，${all}都只能有一个，不能重复。`);
+      hl(unit.row(tr));
+      await say(`横着的一排叫一行，这是第 ${tr + 1} 行。`);
+      hl(unit.col(colOf(target)));
+      await say(`竖着的一排叫一列，这是第 ${colOf(target) + 1} 列。`);
+      hl(unit.box(target));
+      await say(BOX_SAY[n] + '。');
+      hl(unit.row(tr));
+      const have = unit.row(tr).filter(i => i !== target).map(i => thing(cells[i]));
+      await say(`看第 ${tr + 1} 行：已经有${have.join('、')}，只空一格。`);
+      await tap(els[target]);
+      els[target].classList.add('sel');
+      await say(`先点这个空格。它还缺${thing(sol[target])}。`);
+      await tap(keyEls[sol[target] - 1]);
+      els[target].classList.remove('sel');
+      els[target].classList.add('filled');
+      els[target].textContent = symOf(g, sol[target]);
+      Audio.sfx.shoot();
+      boom(els[target], '💥');
+      hl(unit.row(tr), 'hl2');
+      await say('再点下面的' + thing(sol[target]) + '，填对啦！一整行填满，坦克就会开炮。');
+      if (wrongAt >= 0) {
+        hl(unit.row(rowOf(wrongAt)));
+        await tap(els[wrongAt]);
+        els[wrongAt].classList.add('sel');
+        await tap(keyEls[wrongV - 1]);
+        Audio.sfx.bad();
+        els[wrongAt].classList.remove('sel');
+        els[wrongAt].classList.add('wrong');
+        els[wrongAt].textContent = symOf(g, wrongV);
+        await say(`如果填${thing(wrongV)}，格子会变红。因为这一行已经有${thing(wrongV)}了。`);
+        els[wrongAt].classList.remove('wrong');
+        els[wrongAt].textContent = '';
+      }
+      hl(null);
+      hand.style.opacity = '0';
+      await say(n <= 4 ? '做不出来的时候，先找只空一格的行、列或小宫。'
+        : '格子多也不怕：先找快填满的行、列或小宫，一格一格填。');
+      cap.textContent = '现在轮到你啦！';
+      doneBtn.style.display = '';
+      Audio.speak('现在轮到你啦！');
+    })().catch(() => {});
+  });
 
   // ---------- 一盘的题目和界面 ----------
   S.start = (g, p) => {
@@ -56,7 +252,13 @@
       sec = saved.sec || 0;
       (saved.cells || []).forEach((v, i) => { if (!given[i] && v && v === sol[i]) cells[i] = v; });
     }
-    const t0 = Date.now() - sec * 1000;
+    let t0 = Date.now() - sec * 1000;
+    // 棋盘上重看「怎么玩」时，计时先停住
+    const replay = async () => {
+      const a = Date.now();
+      await S.demo(g);
+      t0 += Date.now() - a;
+    };
     const st = { g, p, n, sol, cells, given, wrong, tips, sel: null, done: false, dead: false, fired: new Set() };
 
     const timeEl = h('div', { class: 'pill' }, '⏱ 0:00');
@@ -180,10 +382,10 @@
           TM.Hangar.payEl(pay),
         ],
         buttons: [
-          { label: '下一盘 ▶', value: 'next', cls: 'green' },
+          nextOf(g, p) ? { label: '下一盘 ▶', value: 'next', cls: 'green' } : null,
           { label: '再玩这盘', value: 'again', cls: 'blue' },
           { label: '回训练营', value: 'list', cls: 'gray' },
-        ],
+        ].filter(Boolean),
       }).then(v => {
         if (v === 'next') {
           const nx = nextOf(g, p);
@@ -267,7 +469,8 @@
           h('div', { class: 'sd-acts' },
             h('button', { class: 'btn green', onclick: () => { Audio.sfx.tap(); hint(); } }, '💡 提示'),
             h('button', { class: 'btn gray', onclick: erase }, '🧽 擦掉')),
-          h('div', { class: 'sd-help' }, g.sym ? '每行、每列、每个小宫，4 种水果各一个。' : `每行、每列、每个小宫，1～${n} 各一个。`)))),
+          h('div', { class: 'sd-help' }, rule(g) + '。'),
+          h('button', { class: 'sd-howto', onclick: () => { Audio.sfx.tap(); replay(); } }, '▶ 怎么玩')))),
     { keepVoice: true });
 
     paint();
@@ -286,10 +489,10 @@
     };
   };
 
+  // 下一盘：同一列往下走
   const nextOf = (g, p) => {
-    const all = allPuzzles();
-    const i = all.findIndex(x => x.p.id === p.id);
-    return all[i + 1] || null;
+    const i = g.puzzles.indexOf(p);
+    return g.puzzles[i + 1] ? { g, p: g.puzzles[i + 1] } : null;
   };
 
   TM.Sudoku = S;
