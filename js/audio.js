@@ -38,13 +38,17 @@
     }
     return true;
   };
+  // 朗读引擎常把「第一行」的「行」读成 xíng。只在送去朗读时换成同音的「航」，屏幕上的字不变。
+  // 只换数字后面的「行」（第 2 行、一行、两行）、每行、「行、列」「行或列」；不行、飞行这些不动
+  const reading = t => t.replace(/([0-9一二三四五六七八九十两每])(\s*)行/g, '$1$2航').replace(/行(?=、列|或列)/g, '航');
+  A.reading = reading;
   const say = text => new Promise(resolve => {
     if (!text || !hasTTS || !TM.Store.data.settings.voice) return resolve(true);
     if (!voice.zh) pickVoice();
     const my = ++seq;
     const go = () => {
       if (my !== seq) return resolve(false);
-      const u = new SpeechSynthesisUtterance(text);
+      const u = new SpeechSynthesisUtterance(reading(text));
       u.lang = 'zh-CN';
       if (voice.zh) u.voice = voice.zh;
       u.rate = 0.9;
