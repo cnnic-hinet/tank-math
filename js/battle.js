@@ -284,7 +284,7 @@
     // offs：多发的横向偏移，比如双管坦克、连击五连的双发
     async shell(from, to, cls, text, ms = 380, offs) {
       const a = this.center(from), b = this.center(to);
-      const dxs = offs || (from === this.me && TM.Rewards.twin() ? [-13, 13] : [0]);
+      const dxs = offs || (from === this.me ? TM.Rewards.volley() : [0]);
       const ss = dxs.map(dx => {
         const s = h('div', { class: 'shell ' + cls }, text || '');
         s.style.transitionDuration = ms + 'ms';
@@ -378,7 +378,12 @@
       m.classList.add('react');
       clearTimeout(this.reactT);
       this.reactT = setTimeout(() => m.classList.remove('react'), 800);
-      if (m.querySelector('.bub')) this.sparks(this.center(m), 6, 70, ['🫧']);
+      const p = this.center(m), top = { x: p.x, y: p.y - 40 };
+      if (m.querySelector('.bub')) this.sparks(p, 6, 70, ['🫧']);
+      // 小号吹音符、魔法棒冒星光、水枪滋水花
+      [['.fx-note', ['🎵', '🎶']], ['.fx-magic', ['✨', '🌟', '⭐']], ['.fx-water', ['💧']]].forEach(([q, set]) => {
+        if (m.querySelector(q)) this.sparks(top, 6, 60, set);
+      });
     }
 
     // 按武器发射，返回命中点。twin：五连击的双发

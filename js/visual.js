@@ -468,6 +468,32 @@
     pzTrack: () => `<rect x="8" y="30" width="20" height="64" rx="10" fill="#4a4a55"/><rect x="72" y="30" width="20" height="64" rx="10" fill="#4a4a55"/>
       ${[[18, 1], [82, 4]].map(([x, k]) => [42, 62, 82].map((y, i) => `<circle cx="${x}" cy="${y}" r="7" fill="${TILE[(k + i) % 4]}"/>
         <text x="${x}" y="${y + 4}" font-size="11" font-weight="900" text-anchor="middle" fill="#222">${k + i}</text>`).join('')).join('')}`,
+    donut: () => [[15, 40], [85, 40], [15, 82], [85, 82]].map(([x, y]) => `<g class="roll"><circle cx="${x}" cy="${y}" r="12" fill="#d9a066"/>
+      <circle cx="${x}" cy="${y}" r="9.5" fill="#ff8ac0"/><circle cx="${x}" cy="${y}" r="3.5" fill="#c98a4a"/>
+      ${[0, 60, 120, 180, 240, 300].map((a, i) => `<rect x="${x - 1}" y="${y - 8}" width="2" height="3.5" rx="1" fill="${TILE[i]}" transform="rotate(${a} ${x} ${y})"/>`).join('')}</g>`).join(''),
+    skate: () => `<rect x="16" y="14" width="68" height="94" rx="32" fill="#ff9f1c" stroke="#b35c00" stroke-width="2"/>
+      <path d="M30 98 h40 M34 103 h32 M30 22 h40" stroke="#ffe14d" stroke-width="3" stroke-linecap="round"/>
+      <g fill="#ffe14d" stroke="#b35c00" stroke-width="1.5">${[[10, 32], [90, 32], [10, 90], [90, 90]].map(([x, y]) => `<rect x="${x - 5}" y="${y - 6}" width="10" height="12" rx="4"/>`).join('')}</g>`,
+    caterpillar: () => `<g fill="#8bc34a" stroke="#558b2f" stroke-width="1.5">${[36, 48, 60, 72, 84].map((y, i) =>
+      `<ellipse class="foot" cx="13" cy="${y}" rx="7" ry="5" style="animation-delay:-${i * .1}s"/><ellipse class="foot" cx="87" cy="${y}" rx="7" ry="5" style="animation-delay:-${i * .1 + .25}s"/>`).join('')}</g>
+      <circle cx="50" cy="96" r="7" fill="#8bc34a" stroke="#558b2f" stroke-width="1.5"/><circle cx="50" cy="104" r="5" fill="#8bc34a" stroke="#558b2f" stroke-width="1.5"/>`,
+    sled: () => `<g fill="#8d6e63"><rect x="12" y="44" width="76" height="7" rx="3"/><rect x="12" y="78" width="76" height="7" rx="3"/></g>
+      <path d="M14 98 V34 q0 -14 12 -14 M86 98 V34 q0 -14 -12 -14" stroke="#b8c1cc" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path d="M14 34 q0 -14 12 -14 M86 34 q0 -14 -12 -14" stroke="#e53935" stroke-width="6" fill="none" stroke-linecap="round"/>
+      ${[[14, 0], [86, .6]].map(([x, d]) => `<circle class="trail" cx="${x}" cy="102" r="4" fill="#fff" stroke="#dbe9f5" style="animation-delay:-${d}s"/>`).join('')}`,
+    spring: () => [[14, 26], [86, 26], [14, 72], [86, 72]].map(([x, y]) => `<path d="M${x} ${y} l-6 3 l12 4 l-12 4 l12 4 l-12 4 l6 3" stroke="#9a9aa6" stroke-width="3.5" fill="none" stroke-linejoin="round"/>
+      <ellipse cx="${x}" cy="${y + 24}" rx="9" ry="4.5" fill="#ff5252" stroke="#a31515" stroke-width="1.5"/>`).join(''),
+    boat: () => `${[0, .9].map(d => `<ellipse class="ripple" cx="50" cy="60" rx="46" ry="50" fill="none" stroke="#4da3ff" stroke-width="2.5" style="animation-delay:-${d}s"/>`).join('')}
+      <path d="M50 8 Q90 30 88 70 Q86 102 50 106 Q14 102 12 70 Q10 30 50 8Z" fill="#8d6e63" stroke="#5d4037" stroke-width="2.5"/>
+      <path d="M50 16 Q82 34 80 70 Q78 96 50 99 Q22 96 20 70 Q18 34 50 16Z" fill="#bc8f6a"/>
+      <path d="M22 50 H78 M20 76 H80" stroke="#8d6e63" stroke-width="1.5" opacity=".6"/>`,
+    cloud: () => `<ellipse cx="50" cy="104" rx="34" ry="4" fill="#000" opacity=".12"/>
+      <g fill="#fff" stroke="#cfe3f5" stroke-width="2">${[[20, 44, 13], [14, 66, 14], [22, 88, 12], [80, 44, 13], [86, 66, 14], [78, 88, 12], [50, 96, 12], [34, 98, 10], [66, 98, 10], [34, 30, 10], [66, 30, 10]]
+        .map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}"/>`).join('')}</g>
+      <rect x="18" y="32" width="64" height="62" rx="24" fill="#fff"/>`,
+    dinofeet: () => [[14, 38], [86, 38], [14, 86], [86, 86]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="11" ry="13" fill="#6bd66b" stroke="#2e7d32" stroke-width="2"/>
+      ${[-6, 0, 6].map(dx => `<path d="M${x + dx - 2.5} ${y - 10} L${x + dx} ${y - 17} L${x + dx + 2.5} ${y - 10}Z" fill="#fff" stroke="#999" stroke-width=".8"/>`).join('')}
+      <circle cx="${x - 4}" cy="${y + 3}" r="2" fill="#2e7d32" opacity=".4"/><circle cx="${x + 4}" cy="${y + 6}" r="1.5" fill="#2e7d32" opacity=".4"/>`).join(''),
   };
   // 车身（c.deco 是涂装的花纹）
   const BD = {
@@ -490,6 +516,45 @@
     pzArmor: c => `<rect x="20" y="36" width="60" height="52" rx="12" fill="${c.dark}"/>
       ${[[21, 37, c.fill], [51, 37, c.light], [21, 63, c.light], [51, 63, c.fill]].map(([x, y, f]) => `<rect x="${x}" y="${y}" width="28" height="24" rx="6" fill="${f}"/>`).join('')}
       <g><circle cx="50" cy="49" r="4.5" fill="${c.fill}"/><circle cx="50" cy="75" r="4.5" fill="${c.light}"/><circle cx="35" cy="62" r="4.5" fill="${c.fill}"/><circle cx="65" cy="62" r="4.5" fill="${c.light}"/></g>${c.deco}`,
+    melon: () => `<rect x="18" y="32" width="64" height="60" rx="22" fill="#2e9e44"/>
+      <path d="M26 36 q-4 26 0 52 M74 36 q4 26 0 52" stroke="#1f6b2e" stroke-width="3" fill="none"/>
+      <rect x="23" y="37" width="54" height="50" rx="18" fill="#c8f0a0"/><rect x="26" y="40" width="48" height="44" rx="16" fill="#ff5a6a"/>
+      <g fill="#222">${[[31, 46], [69, 46], [30, 78], [70, 78], [50, 81], [29, 62], [71, 62]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="1.6" ry="2.6"/>`).join('')}</g>`,
+    blocks: c => `<rect x="18" y="32" width="64" height="60" rx="6" fill="${c.fill}" stroke="${c.dark}" stroke-width="2"/>${c.deco}
+      <g fill="${c.light}" stroke="${c.dark}" stroke-width="1.5">${[[28, 41], [72, 41], [28, 62], [72, 62], [28, 83], [72, 83]].map(([x, y]) =>
+        `<circle cx="${x}" cy="${y}" r="5.5"/>`).join('')}</g>`,
+    gift: () => `<rect x="18" y="32" width="64" height="60" rx="6" fill="#e53935"/>
+      <g fill="#fff" opacity=".8">${[[26, 40], [74, 40], [26, 84], [74, 84], [26, 62], [74, 62]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="2.6"/>`).join('')}</g>
+      <rect x="45" y="32" width="10" height="60" fill="#ffd23f"/><rect x="18" y="57" width="64" height="10" fill="#ffd23f"/>
+      <path d="M50 92 q-16 -4 -14 6 q4 6 14 -6 q16 -4 14 6 q-4 6 -14 -6z" fill="#ffd23f" stroke="#b98500" stroke-width="1.5"/>`,
+    burger: () => `<path d="M14 40 q4 -6 10 -4 q4 -6 10 -2 q6 -4 10 0 q6 -4 12 0 q4 -4 10 0 q6 -4 10 2 q6 -2 10 4 q4 6 0 12 q4 8 0 14 q4 8 0 14 q4 6 -4 10
+      q-4 6 -10 2 q-6 4 -12 0 q-6 4 -12 0 q-6 4 -12 0 q-6 4 -10 -2 q-8 -4 -4 -10 q-4 -6 0 -14 q-4 -6 0 -14 q-4 -6 0 -12z" fill="#7cc540"/>
+      <path d="M18 34 L28 28 L30 40Z M82 34 L72 28 L70 40Z M18 90 L28 96 L30 84Z M82 90 L72 96 L70 84Z" fill="#ffc531"/>
+      <rect x="20" y="34" width="60" height="56" rx="22" fill="#e9a53f"/><ellipse cx="34" cy="42" rx="9" ry="4" fill="#fff" opacity=".3"/>
+      <g fill="#fff7df">${[[30, 46], [70, 44], [26, 64], [74, 66], [32, 84], [68, 84], [50, 87]].map(([x, y], i) =>
+        `<ellipse cx="${x}" cy="${y}" rx="1.4" ry="2.6" transform="rotate(${i * 40} ${x} ${y})"/>`).join('')}</g>`,
+    cake: () => `<rect x="18" y="32" width="64" height="60" rx="20" fill="#fff1d6" stroke="#e8c79a" stroke-width="2"/>
+      <path d="M20 46 q6 6 10 0 q5 6 10 0 q5 6 10 0 q5 6 10 0 q5 6 10 0 q5 6 10 0 V40 q0 -8 -20 -8 H40 q-20 0 -20 8Z" fill="#ff8ac0"/>
+      <g>${[[0, 52], [2, 70], [4, 84], [1, 60]].map(([k, y], i) => `<rect x="${i % 2 ? 76 : 22}" y="${y}" width="3" height="1.5" fill="${TILE[k]}"/>`).join('')}</g>
+      ${[[25, 38], [75, 38], [25, 84], [75, 84]].map(([x, y], i) => `<rect x="${x - 2}" y="${y - 4}" width="4" height="10" rx="1" fill="${['#4da3ff', '#ffd23f', '#6bd66b', '#ff7eb6'][i]}"/>
+        <ellipse class="blink" cx="${x}" cy="${y - 7}" rx="2.4" ry="3.6" fill="#ffb03b" style="animation-delay:-${i * .25}s"/>`).join('')}`,
+    turtle: c => `<g fill="#9ccc65" stroke="#558b2f" stroke-width="1.5">${[[20, 40, -30], [80, 40, 30], [20, 86, 30], [80, 86, -30]].map(([x, y, a]) =>
+        `<ellipse cx="${x}" cy="${y}" rx="9" ry="6" transform="rotate(${a} ${x} ${y})"/>`).join('')}<path d="M46 92 L50 102 L54 92Z"/></g>
+      <ellipse cx="50" cy="62" rx="32" ry="31" fill="${c.fill}" stroke="${c.dark}" stroke-width="2.5"/>${c.deco}
+      <g fill="none" stroke="${c.dark}" stroke-width="2" opacity=".55"><path d="M30 42 l8 8 M70 42 l-8 8 M30 82 l8 -8 M70 82 l-8 -8 M20 62 h8 M72 62 h8 M50 31 v6 M50 87 v6"/></g>`,
+    fishbowl: () => `<circle cx="50" cy="62" r="34" fill="#bfe9ff" stroke="#7db4ff" stroke-width="3"/>
+      <path d="M20 44 q8 -4 15 0 q8 4 15 0 q8 -4 15 0 q8 4 15 0" stroke="#7db4ff" stroke-width="2" fill="none"/>
+      <g fill="#ffd8a8">${[[30, 90], [40, 94], [62, 93], [72, 89]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3"/>`).join('')}</g>
+      ${[[26, 80, 0], [70, 46, 1.2]].map(([x, y, d]) => `<g class="swim" style="animation-delay:-${d}s"><ellipse cx="${x}" cy="${y}" rx="6" ry="4" fill="#ff8a1c"/>
+        <path d="M${x + 5} ${y} l6 -4 v8z" fill="#ff8a1c"/><circle cx="${x - 3}" cy="${y - 1}" r="1.2" fill="#222"/></g>`).join('')}
+      <circle cx="80" cy="70" r="2" fill="#fff" stroke="#7db4ff"/><circle cx="83" cy="62" r="1.5" fill="#fff" stroke="#7db4ff"/>
+      <path d="M28 36 q-10 10 -10 22" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".8"/>`,
+    whale: c => `<path d="M50 84 Q36 100 26 98 Q36 92 44 84Z M50 84 Q64 100 74 98 Q64 92 56 84Z" fill="${c.dark}"/>
+      <path d="M22 60 L6 70 L22 72Z M78 60 L94 70 L78 72Z" fill="${c.dark}"/>
+      <ellipse cx="50" cy="60" rx="31" ry="30" fill="${c.fill}"/>${c.deco}
+      <path d="M26 74 q24 14 48 0" stroke="#fff" stroke-width="3" fill="none" opacity=".5" stroke-linecap="round"/>
+      <g class="spout"><path d="M28 34 q-2 -10 -8 -14 M28 34 q0 -12 0 -18 M28 34 q2 -10 8 -14" stroke="#7fd4ff" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <circle cx="20" cy="18" r="2.5" fill="#7fd4ff"/><circle cx="28" cy="13" r="2.5" fill="#7fd4ff"/><circle cx="36" cy="18" r="2.5" fill="#7fd4ff"/></g>`,
   };
   // 主炮（画在炮塔下面）
   const GN = {
@@ -505,6 +570,26 @@
     flame: c => `<rect x="42" y="10" width="16" height="30" rx="8" fill="${c.dark}"/><path d="M42 4 q8 -12 16 0 q-8 8 -16 0z" fill="#ffb03b"/>
       <circle cx="50" cy="6" r="5" fill="#ffe14d" class="blink"/>`,
     pzGun: c => `${barrel(c, 45, 10, 16, 30)}<rect x="35" y="0" width="30" height="22" rx="4" fill="${c.dark}"/>${grid3(37.5, 2.5, 7, 5, 1.5)}`,
+    carrot: () => `<path d="M42 46 L50 2 L58 46Z" fill="#ff8a1c" stroke="#c96010" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M46 14 l5 2 M44 24 l6 2 M53 30 l4 -2 M45 36 l5 2" stroke="#c96010" stroke-width="1.5" stroke-linecap="round"/>`,
+    slingshot: () => `<path d="M50 46 V26 M50 27 L37 6 M50 27 L63 6" stroke="#8d6e63" stroke-width="6" stroke-linecap="round" fill="none"/>
+      <path d="M37 7 Q50 22 63 7" stroke="#ff5252" stroke-width="2.5" fill="none"/><circle cx="50" cy="15" r="4.5" fill="#9a9aa6" stroke="#5b6470"/>`,
+    lollipop: () => `<rect x="48" y="20" width="4" height="26" rx="2" fill="#fff" stroke="#ccc"/>
+      <g class="swirl"><circle cx="50" cy="13" r="12" fill="#ff7eb6" stroke="#d9488a" stroke-width="1.5"/>
+      <path d="M50 13 m0 -2 a2 2 0 1 1 -2 2 a4 4 0 1 1 4 4 a6 6 0 1 1 -6 -6 a8 8 0 1 1 8 8" stroke="#fff" stroke-width="2.2" fill="none"/></g>`,
+    watergun: () => `<g class="fx-water"><rect x="46" y="2" width="8" height="18" rx="3" fill="#ffd23f" stroke="#b98500" stroke-width="1.5"/>
+      <rect x="38" y="16" width="24" height="28" rx="8" fill="#4da3ff" stroke="#1f5fbf" stroke-width="2"/>
+      <circle cx="66" cy="28" r="7" fill="#7fe0ff" stroke="#1f5fbf" stroke-width="2"/><path d="M50 -1 v-4" stroke="#7fd4ff" stroke-width="3" stroke-linecap="round" class="blink"/></g>`,
+    trumpet: () => `<g class="fx-note"><rect x="46" y="14" width="8" height="32" fill="#ffcf40" stroke="#b98500" stroke-width="1.5"/>
+      <path d="M38 2 H62 L55 17 H45Z" fill="#ffd23f" stroke="#b98500" stroke-width="2" stroke-linejoin="round"/>
+      <g fill="#b98500">${[22, 28].map(y => `<rect x="54" y="${y}" width="7" height="3.5" rx="1.5"/>`).join('')}</g></g>`,
+    wand: () => `<g class="fx-magic"><rect x="47" y="14" width="6" height="32" rx="3" fill="#4a2a6a"/><rect x="47" y="14" width="6" height="5" fill="#fff"/>
+      <path d="${starPath(50, 9, 11)}" fill="#ffd23f" stroke="#b98500" stroke-width="1.5"/>
+      <g fill="#fff59d" class="blink">${[[36, 4], [64, 6], [40, 18], [62, 20]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="1.8"/>`).join('')}</g></g>`,
+    trunk: () => `<g class="trunk"><path d="M50 46 C50 30 42 24 45 12 C47 4 57 4 57 11" stroke="#9aa3ad" stroke-width="11" fill="none" stroke-linecap="round"/>
+      <path d="M44 34 h11 M43 26 h10 M43 18 h9" stroke="#7b858f" stroke-width="1.5" stroke-linecap="round"/></g>`,
+    five: c => [-40, -20, 0, 20, 40].map(a => `<g transform="rotate(${a} 50 58)"><rect x="45.5" y="4" width="9" height="50" rx="4" fill="${c.dark}"/>
+      <rect x="43" y="0" width="14" height="8" rx="3" fill="${c.dark}" stroke="${c.light}" stroke-width="1.5"/></g>`).join(''),
   };
   // 炮塔
   const TU = {
@@ -514,6 +599,25 @@
     dome: c => `${turret(c, 27)}<ellipse cx="40" cy="44" rx="9" ry="5" fill="#fff" opacity=".5" transform="rotate(-25 40 44)"/>`,
     double: c => `${turret(c, 27)}<circle cx="50" cy="58" r="18" fill="${c.fill}" stroke="${c.dark}" stroke-width="2"/>`,
     cube: () => `<rect x="30" y="38" width="40" height="40" rx="6" fill="#2b2b38"/>${grid3(32.5, 40.5, 11, 11, 1.5)}<rect x="32" y="51" width="36" height="16" rx="5" fill="#fff" opacity=".9"/>`,
+    soccer: () => `<circle cx="50" cy="58" r="25" fill="#fff" stroke="#333" stroke-width="2"/>
+      <g fill="#333">${[-90, -18, 54, 126, 198].map(a => { const r = a * Math.PI / 180, x = 50 + 19 * Math.cos(r), y = 58 + 19 * Math.sin(r);
+        return `<path d="${[0, 1, 2, 3, 4].map(i => { const t = (a + 180 + i * 72) * Math.PI / 180; return `${i ? 'L' : 'M'}${(x + 5.5 * Math.cos(t)).toFixed(1)} ${(y + 5.5 * Math.sin(t)).toFixed(1)}`; }).join(' ')}Z"/>`; }).join('')}</g>`,
+    heart: () => `<g class="beat"><path d="M50 86 C14 66 16 32 36 32 C44 32 50 38 50 44 C50 38 56 32 64 32 C84 32 86 66 50 86Z" fill="#ff5a7a" stroke="#c2185b" stroke-width="2"/>
+      <ellipse cx="34" cy="42" rx="6" ry="3.5" fill="#fff" opacity=".45" transform="rotate(-30 34 42)"/></g>`,
+    starT: () => `<path d="${starPath(50, 60, 32)}" fill="#ffd23f" stroke="#b98500" stroke-width="2" stroke-linejoin="round"/>`,
+    flower: () => `<g fill="#ff7eb6" stroke="#d9488a" stroke-width="1.5">${[0, 45, 90, 135, 180, 225, 270, 315].map(a =>
+        `<ellipse cx="50" cy="38" rx="9" ry="13" transform="rotate(${a} 50 58)"/>`).join('')}</g><circle cx="50" cy="58" r="18" fill="#ffd23f" stroke="#e6a800" stroke-width="2"/>`,
+    pumpkin: () => `<rect x="47" y="28" width="6" height="9" rx="2" fill="#6d4c41"/><path d="M53 31 q8 -6 12 0" stroke="#4caf50" stroke-width="3" fill="none" stroke-linecap="round"/>
+      ${[[30, 11], [70, 11], [41, 14], [59, 14], [50, 15]].map(([x, rx]) => `<ellipse cx="${x}" cy="59" rx="${rx}" ry="22" fill="#ff8a1c" stroke="#c96010" stroke-width="1.8"/>`).join('')}`,
+    sun: () => `<g class="rays" fill="#ffb300">${[...Array(12)].map((_, i) => `<path d="M46 30 L50 20 L54 30Z" transform="rotate(${i * 30} 50 58)"/>`).join('')}</g>
+      <circle cx="50" cy="58" r="24" fill="#ffe14d" stroke="#ff9f1c" stroke-width="2.5"/>`,
+    helmet: () => `<rect x="20" y="52" width="8" height="12" rx="3" fill="#ff5252"/><rect x="72" y="52" width="8" height="12" rx="3" fill="#ff5252"/>
+      <circle cx="50" cy="58" r="26" fill="#f4f6fa" stroke="#b8c1cc" stroke-width="3"/><circle cx="50" cy="59" r="19" fill="#9fd8ff" stroke="#5fa8d3" stroke-width="2"/>
+      <path d="M38 46 q6 -6 14 -6" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".9"/>`,
+    octopus: () => `<g class="tent" stroke="#9b59d6" stroke-width="7" fill="none" stroke-linecap="round">${[0, 45, 90, 135, 180, 225, 270, 315].map(a =>
+        `<path d="M50 40 q8 -8 0 -18 q-6 -6 2 -10" transform="rotate(${a} 50 58)"/>`).join('')}</g>
+      <circle cx="50" cy="58" r="22" fill="#b86bff" stroke="#7b3fc4" stroke-width="2"/>
+      <g fill="#d9b3ff">${[[38, 44, 3], [62, 44, 2.5], [50, 40, 2]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}"/>`).join('')}</g>`,
   };
   // 小乘客的眼睛和鼻子
   const critter = (x, y) => `<circle cx="${x - 3.5}" cy="${y - 2}" r="1.8" fill="#222"/><circle cx="${x + 3.5}" cy="${y - 2}" r="1.8" fill="#222"/>

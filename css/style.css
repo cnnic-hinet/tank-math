@@ -683,6 +683,44 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .tank-svg .drill.d1 { animation-delay: -.12s; }
 @keyframes drill { 50% { opacity: 0; } }
 .tank-svg .tail { transform-origin: 50px 86px; animation: wave 1.4s ease-in-out infinite; }
+/* 新底盘、车身、炮塔、主炮的小动画 */
+.tank-svg .roll { transform-box: fill-box; transform-origin: center; animation: spin 2.4s linear infinite; }
+.tank-svg.c-spring { animation: boing .7s ease-in-out infinite; }
+@keyframes boing { 50% { transform: translateY(-5px) scaleY(1.03); } }
+.tank-svg.c-cloud { animation: hover 2s ease-in-out infinite; }
+.tank-svg.c-skate { animation: skate 1.8s ease-in-out infinite; }
+@keyframes skate { 25% { transform: translateX(-4px) rotate(-2deg); } 75% { transform: translateX(4px) rotate(2deg); } }
+.tank-svg.c-boat { animation: rock 2.2s ease-in-out infinite; }
+@keyframes rock { 25% { transform: rotate(-3deg); } 75% { transform: rotate(3deg); } }
+.tank-svg.c-dinofeet { animation: stomp .8s ease-in-out infinite; }
+.tank-svg .foot { transform-box: fill-box; transform-origin: center; animation: footStep .5s ease-in-out infinite; }
+@keyframes footStep { 50% { transform: translateY(-4px) scaleX(.8); } }
+.tank-svg .trail { animation: trail 1.2s ease-out infinite; }
+@keyframes trail { from { transform: translateY(0); opacity: .9; } to { transform: translateY(16px) scale(1.6); opacity: 0; } }
+.tank-svg .ripple { transform-box: fill-box; transform-origin: center; animation: ripple 1.8s ease-out infinite; }
+@keyframes ripple { from { transform: scale(.9); opacity: .8; } to { transform: scale(1.12); opacity: 0; } }
+.tank-svg .swim { animation: swim 3s ease-in-out infinite; }
+@keyframes swim { 50% { transform: translateX(6px); } }
+.tank-svg .spout { transform-origin: 28px 34px; animation: spout 1.6s ease-in-out infinite; }
+@keyframes spout { 50% { transform: scaleY(1.2); } }
+.tank-svg .beat { transform-origin: 50px 58px; animation: beat 1s ease-in-out infinite; }
+@keyframes beat { 15%, 45% { transform: scale(1.07); } 30% { transform: scale(1); } }
+.tank-svg .rays { transform-origin: 50px 58px; animation: spin 8s linear infinite; }
+.tank-svg .tent { transform-origin: 50px 58px; animation: tent 1.6s ease-in-out infinite; }
+@keyframes tent { 50% { transform: rotate(10deg); } }
+.tank-svg .swirl { transform-origin: 50px 13px; animation: spin 2s linear infinite; }
+.tank-svg .trunk { transform-origin: 50px 46px; animation: trunk 2s ease-in-out infinite; }
+@keyframes trunk { 50% { transform: rotate(-8deg); } }
+.tank.me.react .tank-svg.c-spring { animation: springJump .6s ease-out; }
+@keyframes springJump { 35% { transform: translateY(-28px) scaleY(1.08); } 70% { transform: translateY(0) scaleY(.92); } }
+.tank.me.react .tank-svg.c-skate { animation: skateBack .6s ease-out; }
+@keyframes skateBack { 30% { transform: translateY(16px); } }
+.tank.me.react .trunk { animation: trunkSwing .6s ease-out; }
+@keyframes trunkSwing { 30% { transform: rotate(22deg); } 65% { transform: rotate(-16deg); } }
+.tank.me.react .tent { animation-duration: .3s; }
+.tank.me.react .rays { animation-duration: .6s; }
+.tank.me.react .spout { animation: spoutBig .7s ease-out; }
+@keyframes spoutBig { 40% { transform: scale(1.4, 2.4); } }
 /* 开炮时：乘客跳一下、头饰晃一下、尾焰喷大火 */
 .tank.me.react .rider { animation: hop .45s ease-out 2; }
 .tank.me.react .hat { transform-origin: 50px 58px; animation: hatWob .6s ease-in-out; }
