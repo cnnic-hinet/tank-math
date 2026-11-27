@@ -284,7 +284,7 @@
     // offs：多发的横向偏移，比如双管坦克、连击五连的双发
     async shell(from, to, cls, text, ms = 380, offs) {
       const a = this.center(from), b = this.center(to);
-      const dxs = offs || (from === this.me && TM.Rewards.model().id === 'twin' ? [-13, 13] : [0]);
+      const dxs = offs || (from === this.me && TM.Rewards.twin() ? [-13, 13] : [0]);
       const ss = dxs.map(dx => {
         const s = h('div', { class: 'shell ' + cls }, text || '');
         s.style.transitionDuration = ms + 'ms';

@@ -425,7 +425,11 @@
       const gain = Math.max(0, stars - old.stars);
       const comboPay = maxCombo >= 5 ? 2 : 0;
       const replayWins = results.filter(r => r.replay && r.firstOk).length;
+      // 彩色星星：这个战区的颜色，过关 1 颗，新拿到的关卡星每颗 2 颗（重玩只给 1 颗）
+      const gem = RW.zoneGem(zi), gn = gem ? RW.GEMS[gem].name : '';
       const pay = RW.pay([
+        [`过关得${gn}`, 1, gem],
+        [`新关卡星得${gn}`, gain * 2, gem],
         [`一次答对 ${first} 题`, first],
         [`新拿到 ${gain} 颗关卡星`, gain * 2],
         replayWins ? [`打退老对手 ${replayWins} 只`, replayWins] : ['', 0],
@@ -480,7 +484,7 @@
     Audio.sfx.win();
     const boss = L.get(zi, li).boss;
     const rec = (boss && await TM.Rec.play('boss')) || await TM.Rec.play('win');
-    if (!rec) Lines.say('win', 0, `${nick()}，${lines.join('')}${stars === 3 ? '拿到了三颗星！' : ''}${newZone ? '新战区' + newZone.name + '解锁啦！' : ''}${pay.total ? `得到${pay.total}颗星星！` : ''}${pay.canBuy.length ? '星星够买新装备啦，快去装备库看看吧！' : ''}`);
+    if (!rec) Lines.say('win', 0, `${nick()}，${lines.join('')}${stars === 3 ? '拿到了三颗星！' : ''}${newZone ? '新战区' + newZone.name + '解锁啦！' : ''}${pay.total ? `得到${pay.total}颗星星！` : ''}${pay.canBuy.length ? '星星够买新东西啦，快去改装工厂看看吧！' : ''}`);
     const v = await TM.App.ask({
       cls: 'report', title: `${nick()}的战报`,
       text: [
@@ -498,7 +502,7 @@
       buttons: [
         next ? { label: '下一关 ▶', value: 'next', cls: 'green' } : null,
         { label: '再玩一次', value: 'again', cls: 'blue' },
-        pay.canBuy.length ? { label: '🛒 装备库', value: 'hangar', cls: 'blue' } : null,
+        pay.canBuy.length ? { label: '🏭 改装工厂', value: 'hangar', cls: 'blue' } : null,
         { label: '回地图', value: 'map', cls: 'gray' },
       ].filter(Boolean),
     });
@@ -557,7 +561,7 @@
     const f = st.field;
     f.garage();
     let fixed = 0, earned = 0;
-    const marks = [];
+    const marks = [], gems = {};
     try {
       for (let i = 0; i < items.length; i++) {
         const item = items[i];
@@ -578,7 +582,7 @@
         });
         Store.record(q.type, r.firstOk, { diff: q.diff, prompt: q.prompt, answer: q.answer, got: r.wrong, kind: q.topic, src: 'review' });
         if (r.ok) TM.Tasks.bump('fix');
-        if (r.firstOk) { TM.Tasks.bump('first'); RW.earn(1); earned++; }
+        if (r.firstOk) { TM.Tasks.bump('first'); RW.earn(1); earned++; RW.gemAdd(gems, RW.typeGem(q.type)); }
         Store.save();
         marks.push(r.firstOk ? 'ok' : 'miss');
       }
@@ -592,7 +596,8 @@
         });
         return fixed;
       }
-      const got = earned ? `得到 ${earned} 颗星星，现在有 ${RW.wallet()} ⭐ 可以花。` : '';
+      const gt = RW.gemText(gems);
+      const got = earned ? `得到 ${earned} 颗星星${gt ? '，还有 ' + gt : ''}，现在有 ${RW.wallet()} ⭐ 可以花。` : '';
       Audio.speak((fixed ? `${nick()}今天修好了${fixed}辆坦克！` : '维修完成！') + (earned ? `得到${earned}颗星星！` : ''));
       await TM.App.ask({
         emoji: '🛠️', title: '维修完成！',
@@ -616,7 +621,7 @@
     for (let i = 0; i < n; i++) qs.push(Q.make(list[i % list.length], i < n - 1 ? 0 : 1));
     const st = stage({ title: '🎯 弱项特训', exitText: '这次练习的进度不会保存。' });
     const f = st.field;
-    const results = [], marks = [];
+    const results = [], marks = [], gems = {};
     let earned = 0;
     try {
       await Audio.wait();
@@ -636,7 +641,7 @@
         });
         Store.record(q.type, r.firstOk, { diff: q.diff, prompt: q.prompt, answer: q.answer, got: r.wrong, kind: q.topic, src: 'practice' });
         if (!r.ok) Repair.add(q, r.wrong);
-        if (r.firstOk) { TM.Tasks.bump('first'); RW.earn(1); earned++; }
+        if (r.firstOk) { TM.Tasks.bump('first'); RW.earn(1); earned++; RW.gemAdd(gems, RW.typeGem(q.type)); }
         Store.save();
         results.push(r);
         marks.push(r.ok ? 'ok' : 'miss');
@@ -652,6 +657,7 @@
           h('div', { class: 'stat-row' },
             h('div', { class: 'stat' }, h('b', null, `${first}/${results.length}`), h('span', null, '一次答对')),
             h('div', { class: 'stat' }, h('b', null, `+${earned}`), h('span', null, '得到星星'))),
+          RW.gemText(gems) ? h('div', { class: 'dtext' }, `还得到 ${RW.gemText(gems)}，可以去改装工厂买零件。`) : null,
           h('div', { class: 'praise' }, first === results.length ? '全部一次答对，这个题型已经拿下啦！' : first * 2 >= results.length ? '大部分都对了，再练几次就熟了。' : '没关系，做错的已经送到维修厂，明天再修一次。'),
           h('div', { class: 'note' }, '在维修厂「📊 学习分析」里可以随时再练。'),
         ],

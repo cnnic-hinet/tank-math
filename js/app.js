@@ -79,7 +79,7 @@
     // 备份超过 7 天没做，家长入口上亮个小红点
     if (App.backupOld()) lock.append(h('span', { class: 'dot-red' }));
     const left = TM.Tasks.left(), g = TM.Tasks.goal(), RW = TM.Rewards;
-    const canBuy = [...RW.MODELS, ...RW.SKINS, ...RW.WEAPONS].some(RW.canBuy);
+    const canBuy = [...RW.PARTS, ...RW.MODELS, ...RW.SKINS, ...RW.WEAPONS].some(RW.canBuy);
     const top = h('div', { class: 'topbar' },
       h('div', { class: 'brand' }, '🪖 坦克大作战'),
       h('div', { class: 'pill', title: '可以花的星星' }, '⭐ ', String(RW.wallet())),
@@ -89,7 +89,7 @@
       h('button', { class: 'btn small gray', onclick: () => { Audio.sfx.tap(); TM.Garage.show(); } },
         '🔧 维修厂', due ? h('span', { class: 'badge' }, String(due)) : null),
       h('button', { class: 'btn small gray', onclick: () => { Audio.sfx.tap(); TM.Hangar.show(); } },
-        h('span', { class: 'top-tank', html: TM.V.tank('me') }), '装备库', canBuy ? h('span', { class: 'badge ok' }, '🛒') : null),
+        h('span', { class: 'top-tank', html: TM.V.tank('me') }), '改装工厂', canBuy ? h('span', { class: 'badge ok' }, '🛒') : null),
       h('button', { class: 'btn small gray', onclick: () => { Audio.sfx.tap(); TM.Sudoku.show(); } }, '🧩 数独'),
       lock);
 

@@ -2,7 +2,7 @@
 (function (TM) {
   const U = TM.U;
   const KEY = 'tankmath.v1';
-  const SCHEMA = 8;               // 存档结构版本，改结构时 +1 并在 migrate 里补
+  const SCHEMA = 9;               // 存档结构版本，改结构时 +1 并在 migrate 里补
   const SNAP = 'tankmath.snap.';  // 自动快照：tankmath.snap.2026-11-03 / pre-migrate / pre-restore / pre-import
   const SNAP_DAYS = 7;            // 每天的快照留几天
 
@@ -19,10 +19,13 @@
     mistakesBackfilled: false, // 是否已经从维修厂的历史记录里补过错题样本
     daily: {},          // 每天 {sec, n, ok, wrong: {type: count}}
     skin: 'green',      // 我方坦克涂装
-    model: 'basic',     // 我方坦克车型
+    model: 'custom',    // 我方坦克车型：custom 是改装工厂里自己拼的，其他是经典车型 id
     wallet: 0,          // 可以花的星星
     owned: null,        // 买过的装备 {model: [], skin: [], weapon: []}；null 表示老存档，第一次用时迁移
     benched: [],        // 买了但不带出战的武器
+    gems: null,         // 彩色星星 {green, blue, orange, purple, puzzle}；null 表示还没按老关卡星补发
+    parts: [],          // 改装工厂买过的零件 id
+    build: {},          // 自己拼的坦克每个部位用哪个零件 {chassis, body, turret, gun, addon}
     recent: {},         // 每个题型最近 10 次首次作答 {type: [true, false...]}，用来调难度
     bestStreak: 0,      // 每日任务最长连续天数
     lastBackup: null,   // 上次备份的日期
@@ -114,6 +117,12 @@
     }
     // v7 → v8：数独题库换成按难度递进的新题，旧盘的星级和进度对不上新题，清掉重来（家长已确认）
     if (from < 8) data.sudoku = { done: {}, saves: {}, seen: {} };
+    // v8 → v9：v8.20 改装工厂（只加字段；gems 留 null，第一次用时按老关卡星补发）
+    if (from < 9) {
+      if (!Array.isArray(data.parts)) data.parts = [];
+      if (!data.build || typeof data.build !== 'object') data.build = {};
+      if (data.gems === undefined) data.gems = null;
+    }
     data.schema = SCHEMA;
     return data;
   };

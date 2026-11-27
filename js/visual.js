@@ -442,16 +442,107 @@
       <g fill="#fff59d" class="blink"><circle cx="16" cy="64" r="4"/><circle cx="34" cy="70" r="4"/><circle cx="66" cy="70" r="4"/><circle cx="84" cy="64" r="4"/></g>`, 42],
   };
 
-  // 我方坦克：没传 skin、model 就用当前装备的
+  // ---------- 改装工厂的零件（从上往下看，炮口朝上，炮塔中心 50,58） ----------
+  const starPath = (cx, cy, r) => 'M' + [...Array(10)].map((_, i) => {
+    const a = Math.PI / 5 * i - Math.PI / 2, k = i % 2 ? r * .45 : r;
+    return `${(cx + k * Math.cos(a)).toFixed(1)} ${(cy + k * Math.sin(a)).toFixed(1)}`;
+  }).join(' L') + 'Z';
+  const TILE = ['#ff5252', '#ffd23f', '#3d8bfd', '#4caf50', '#ffffff', '#ff9f1c'];
+  const grid3 = (x, y, w, ht, gap) => [0, 1, 2].map(j => [0, 1, 2].map(i =>
+    `<rect x="${x + i * (w + gap)}" y="${y + j * (ht + gap)}" width="${w}" height="${ht}" rx="${ht / 5}" fill="${TILE[(i + j * 2) % 6]}"/>`).join('')).join('');
+  // 底盘
+  const CH = {
+    track: () => TRACKS,
+    wide: () => `<rect x="2" y="24" width="25" height="72" rx="11" fill="#3e3e48"/><rect x="73" y="24" width="25" height="72" rx="11" fill="#3e3e48"/>
+      <g fill="#6d6d7a">${[36, 52, 68, 84].map(y => `<circle cx="14.5" cy="${y}" r="6"/><circle cx="85.5" cy="${y}" r="6"/>`).join('')}</g>`,
+    wheel4: () => `<g fill="#4a4a55"><rect x="8" y="30" width="18" height="26" rx="8"/><rect x="74" y="30" width="18" height="26" rx="8"/><rect x="8" y="64" width="18" height="26" rx="8"/><rect x="74" y="64" width="18" height="26" rx="8"/></g>
+      <g fill="#9a9aa6"><circle cx="17" cy="43" r="4"/><circle cx="83" cy="43" r="4"/><circle cx="17" cy="77" r="4"/><circle cx="83" cy="77" r="4"/></g>`,
+    wheel6: () => `<g fill="#4a4a55">${[30, 52, 74].map(y => `<rect x="6" y="${y}" width="18" height="19" rx="8"/><rect x="76" y="${y}" width="18" height="19" rx="8"/>`).join('')}</g>
+      <g fill="#9a9aa6">${[39.5, 61.5, 83.5].map(y => `<circle cx="15" cy="${y}" r="4"/><circle cx="85" cy="${y}" r="4"/>`).join('')}</g>`,
+    hover: c => `<ellipse cx="50" cy="97" rx="34" ry="4" fill="#000" opacity=".15"/>
+      <g fill="#7fe0ff" class="blink"><ellipse cx="24" cy="32" rx="9" ry="4.5"/><ellipse cx="76" cy="32" rx="9" ry="4.5"/><ellipse cx="24" cy="91" rx="9" ry="4.5"/><ellipse cx="76" cy="91" rx="9" ry="4.5"/></g>
+      <path d="M18 56 L4 80 L22 74Z M82 56 L96 80 L78 74Z" fill="${c.dark}"/>`,
+    legs: () => `<g stroke="#4a4a55" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"><path d="M28 44 L10 32 L6 18 M72 44 L90 32 L94 18 M28 80 L10 88 L6 98 M72 80 L90 88 L94 98"/></g>
+      <g fill="#6d6d7a"><circle cx="10" cy="32" r="5"/><circle cx="90" cy="32" r="5"/><circle cx="10" cy="88" r="5"/><circle cx="90" cy="88" r="5"/></g>
+      <g fill="#4a4a55"><ellipse cx="6" cy="18" rx="6" ry="4"/><ellipse cx="94" cy="18" rx="6" ry="4"/><ellipse cx="6" cy="98" rx="6" ry="4"/><ellipse cx="94" cy="98" rx="6" ry="4"/></g>`,
+    pzTrack: () => `<rect x="8" y="30" width="20" height="64" rx="10" fill="#4a4a55"/><rect x="72" y="30" width="20" height="64" rx="10" fill="#4a4a55"/>
+      ${[[18, 1], [82, 4]].map(([x, k]) => [42, 62, 82].map((y, i) => `<circle cx="${x}" cy="${y}" r="7" fill="${TILE[(k + i) % 4]}"/>
+        <text x="${x}" y="${y + 4}" font-size="11" font-weight="900" text-anchor="middle" fill="#222">${k + i}</text>`).join('')).join('')}`,
+  };
+  // 车身（c.deco 是涂装的花纹）
+  const BD = {
+    round: c => hull(c),
+    box: c => `<path d="M20 44 L26 32 H74 L80 44 V82 a8 8 0 0 1 -8 8 H28 a8 8 0 0 1 -8 -8Z" fill="${c.fill}"/>${c.deco}
+      <g fill="${c.dark}" opacity=".45"><circle cx="27" cy="40" r="2.5"/><circle cx="73" cy="40" r="2.5"/><circle cx="27" cy="84" r="2.5"/><circle cx="73" cy="84" r="2.5"/></g>`,
+    sharkhead: c => `<path d="M50 84 L36 100 L50 93 L64 100Z" fill="${c.dark}"/><path d="M24 56 L3 74 L24 72Z M76 56 L97 74 L76 72Z" fill="${c.dark}"/>
+      <rect x="20" y="34" width="60" height="56" rx="18" fill="${c.fill}"/>${c.deco}
+      <path d="M26 36 ${[0, 1, 2, 3, 4, 5, 6, 7].map(i => `L${29 + i * 6} 45 L${32 + i * 6} 36`).join(' ')}Z" fill="#fff" stroke="${c.dark}" stroke-width="1"/>`,
+    sleek: c => `<path d="M50 22 L80 46 V82 q0 8 -8 8 H28 q-8 0 -8 -8 V46Z" fill="${c.fill}"/>${c.deco}
+      <path d="M26 86 h12 M62 86 h12 M50 26 v8" stroke="${c.dark}" stroke-width="3" stroke-linecap="round" opacity=".5"/>`,
+    fort: c => `<rect x="16" y="32" width="68" height="60" rx="6" fill="${c.fill}"/>${c.deco}
+      <g stroke="${c.dark}" stroke-width="1.5" opacity=".3"><path d="M16 50 H84 M16 74 H84 M34 32 V50 M66 32 V50 M50 50 V74 M34 74 V92 M66 74 V92"/></g>
+      <g fill="${c.dark}">${[[10, 26], [78, 26], [10, 86], [78, 86]].map(([x, y]) => `<rect x="${x}" y="${y}" width="12" height="12" rx="2"/>`).join('')}</g>`,
+    beetle: c => `<path d="M40 34 q-6 -12 -14 -14 M60 34 q6 -12 14 -14" stroke="${c.dark}" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <ellipse cx="50" cy="62" rx="33" ry="32" fill="${c.fill}"/>${c.deco}
+      <path d="M50 30 V94" stroke="${c.dark}" stroke-width="2.5"/>
+      <g fill="${c.dark}" opacity=".5"><circle cx="34" cy="78" r="5"/><circle cx="66" cy="78" r="5"/><circle cx="28" cy="56" r="4"/><circle cx="72" cy="56" r="4"/></g>
+      <ellipse cx="36" cy="40" rx="8" ry="4" fill="#fff" opacity=".4" transform="rotate(-30 36 40)"/>`,
+    pzArmor: c => `<rect x="20" y="36" width="60" height="52" rx="12" fill="${c.dark}"/>
+      ${[[21, 37, c.fill], [51, 37, c.light], [21, 63, c.light], [51, 63, c.fill]].map(([x, y, f]) => `<rect x="${x}" y="${y}" width="28" height="24" rx="6" fill="${f}"/>`).join('')}
+      <g><circle cx="50" cy="49" r="4.5" fill="${c.fill}"/><circle cx="50" cy="75" r="4.5" fill="${c.light}"/><circle cx="35" cy="62" r="4.5" fill="${c.fill}"/><circle cx="65" cy="62" r="4.5" fill="${c.light}"/></g>${c.deco}`,
+  };
+  // 主炮（画在炮塔下面）
+  const GN = {
+    short: c => barrel(c, 44, 12, 12, 36),
+    long: c => `<rect x="45" y="0" width="10" height="52" rx="5" fill="${c.dark}"/><rect x="38" y="0" width="24" height="9" rx="4" fill="${c.dark}"/>`,
+    twin: c => barrel(c, 32, 10, 0, 44) + barrel(c, 58, 10, 0, 44),
+    rockets: c => `<rect x="22" y="20" width="56" height="24" rx="8" fill="${c.dark}"/>
+      ${[27, 40, 53, 66].map(x => `<rect x="${x}" y="6" width="7" height="22" rx="3" fill="#eee"/><path d="M${x} 8 q3.5 -10 7 0z" fill="#ff5252"/>`).join('')}`,
+    missiles: c => [22, 60].map(x => `<rect x="${x}" y="6" width="18" height="34" rx="9" fill="#eef2f6" stroke="${c.dark}" stroke-width="2"/>
+      <path d="M${x} 13 q9 -15 18 0z" fill="#ff5252"/>`).join(''),
+    laser: c => `<rect x="46" y="12" width="8" height="30" rx="4" fill="${c.dark}"/><circle cx="50" cy="10" r="8" fill="#7fe0ff" class="blink"/>
+      <path d="M36 40 q14 -14 28 0" stroke="${c.dark}" stroke-width="3" fill="none"/>`,
+    flame: c => `<rect x="42" y="10" width="16" height="30" rx="8" fill="${c.dark}"/><path d="M42 4 q8 -12 16 0 q-8 8 -16 0z" fill="#ffb03b"/>
+      <circle cx="50" cy="6" r="5" fill="#ffe14d" class="blink"/>`,
+    pzGun: c => `${barrel(c, 45, 10, 16, 30)}<rect x="35" y="0" width="30" height="22" rx="4" fill="${c.dark}"/>${grid3(37.5, 2.5, 7, 5, 1.5)}`,
+  };
+  // 炮塔
+  const TU = {
+    tround: c => turret(c),
+    tmini: c => turret(c, 17),
+    tsquare: c => `<rect x="29" y="37" width="42" height="42" rx="9" fill="${c.light}" stroke="${c.dark}" stroke-width="2"/>`,
+    dome: c => `${turret(c, 27)}<ellipse cx="40" cy="44" rx="9" ry="5" fill="#fff" opacity=".5" transform="rotate(-25 40 44)"/>`,
+    double: c => `${turret(c, 27)}<circle cx="50" cy="58" r="18" fill="${c.fill}" stroke="${c.dark}" stroke-width="2"/>`,
+    cube: () => `<rect x="30" y="38" width="40" height="40" rx="6" fill="#2b2b38"/>${grid3(32.5, 40.5, 11, 11, 1.5)}<rect x="32" y="51" width="36" height="16" rx="5" fill="#fff" opacity=".9"/>`,
+  };
+  // 挂件（画在最上面，避开脸）
+  const AD = {
+    none: () => '',
+    antenna: () => '<path d="M72 44 L84 8" stroke="#555" stroke-width="3" stroke-linecap="round"/><circle cx="84" cy="8" r="4.5" fill="#ff5252" class="blink"/>',
+    flag: () => '<path d="M76 46 V10" stroke="#555" stroke-width="3" stroke-linecap="round"/><path d="M77 10 L96 16 L77 23Z" fill="#ff5252" class="flag"/>',
+    radar: () => '<path d="M26 44 V32" stroke="#555" stroke-width="3"/><g class="radar"><path d="M13 30 q13 -13 26 0z" fill="#dfe6ee" stroke="#5b6470" stroke-width="2"/></g><circle cx="26" cy="26" r="2.5" fill="#ff5252" class="blink"/>',
+    horn: () => `<rect x="27" y="32" width="6" height="12" fill="#b98500"/><path d="M25 34 L18 18 H42 L35 34Z" fill="#ffd23f" stroke="#b98500" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M16 12 l-4 -5 M30 10 v-7 M44 12 l4 -5" stroke="#ff9f1c" stroke-width="2.5" stroke-linecap="round" class="blink"/>`,
+    shield: () => '<path d="M16 34 Q50 12 84 34 L82 41 Q50 22 18 41Z" fill="#8fdcff" stroke="#3f86c4" stroke-width="2" opacity=".85"/>',
+    wings: () => '<g class="wings" fill="#fff" stroke="#b8c1cc" stroke-width="2" stroke-linejoin="round"><path d="M10 52 Q-8 38 -2 20 Q6 34 16 40Z M90 52 Q108 38 102 20 Q94 34 84 40Z"/></g>',
+    badge: () => `<path d="${starPath(50, 84, 9)}" fill="#ffd23f" stroke="#b98500" stroke-width="1.5"/>`,
+    pzCube: () => `<path d="M78 88 V96" stroke="#555" stroke-width="2"/><rect x="70" y="76" width="18" height="18" rx="3" fill="#2b2b38" transform="rotate(12 79 85)"/>
+      <g transform="rotate(12 79 85)">${grid3(71.5, 77.5, 4.5, 4.5, 1)}</g>`,
+  };
+  const buildSvg = (c, b) => (CH[b.chassis] || CH.track)(c) + (BD[b.body] || BD.round)(c)
+    + (GN[b.gun] || GN.short)(c) + (TU[b.turret] || TU.tround)(c) + (AD[b.addon] || AD.none)(c);
+
+  // 我方坦克：没传 skin、model 就用当前装备的；model.id 是 custom 时按 model.build 拼零件
   let gid = 0;
   const meTank = (sk, m) => {
     const [body, light, dark] = sk.pal;
     const g = sk.grad ? 'tg' + ++gid : null;
     const c = { fill: g ? `url(#${g})` : body, light, dark, deco: sk.deco ? DECO[sk.deco](dark) : '' };
-    const [svg, fy] = (MODELS[m.id] || MODELS.basic)(c);
+    const custom = m.id === 'custom' && m.build;
+    const [svg, fy] = custom ? [buildSvg(c, m.build), 58] : (MODELS[m.id] || MODELS.basic)(c);
     const defs = g ? `<defs><linearGradient id="${g}" x1="0" y1="0" x2="1" y2="1">${sk.grad.map((col, i) =>
       `<stop offset="${i / (sk.grad.length - 1)}" stop-color="${col}"/>`).join('')}</linearGradient></defs>` : '';
-    return `<svg viewBox="0 0 100 100" class="tank-svg m-${m.id}">${defs}${svg}${face(50, fy, 'me', false)}</svg>`;
+    return `<svg viewBox="0 0 100 100" class="tank-svg m-${m.id}${custom ? ' c-' + m.build.chassis : ''}">${defs}${svg}${face(50, fy, 'me', false)}</svg>`;
   };
 
   V.tank = (kind = 'me', skin, model) => {

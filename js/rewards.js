@@ -1,4 +1,4 @@
-// 奖励：答题攒星星，在装备库花星星买车型、涂装和武器
+// 奖励：答题攒星星，在改装工厂花星星买零件、车型、涂装和武器
 (function (TM) {
   const { U } = TM;
   const R = {};
@@ -86,9 +86,47 @@
     { id: 'meteor', icon: '☄️', name: '流星雨', price: 160, desc: '一串流星从天上砸下来' },
   ];
 
+  // ---------- 改装工厂：坦克拆成 5 个部位，零件用彩色星星买 ----------
+  // 彩色星星：每种只能在对应战区攒，买对应部位的零件；拼图星在数独训练营攒
+  R.GEMS = {
+    green: { name: '绿星', color: '#2fa84f', from: '新兵营、侦察营', buys: '底盘' },
+    blue: { name: '蓝星', color: '#2f7fe8', from: '加减阵地、退位峡谷', buys: '车身' },
+    orange: { name: '橙星', color: '#ff8a1c', from: '进位要塞、百数高地', buys: '炮塔和主炮' },
+    purple: { name: '紫星', color: '#9b4fd6', from: '智慧营', buys: '挂件' },
+    puzzle: { name: '拼图星', color: '#e0508f', from: '数独训练营', buys: '拼图零件' },
+  };
+  R.GEM_IDS = Object.keys(R.GEMS);
+  R.ZONE_GEM = { z1: 'green', z4: 'green', z2: 'blue', z5: 'blue', z3: 'orange', z6: 'orange', z7: 'purple' };
+  // [部位 id, 名字, 默认用哪种星星]
+  R.SLOTS = [['chassis', '底盘', 'green'], ['body', '车身', 'blue'], ['turret', '炮塔', 'orange'], ['gun', '主炮', 'orange'], ['addon', '挂件', 'purple']];
+  const SLOT_GEM = Object.fromEntries(R.SLOTS.map(([s, , g]) => [s, g]));
+  // 每个部位第一个免费；pz 开头的是数独专属，用拼图星买
+  const PART_ROWS = {
+    chassis: [['track', '小履带', 0, '两条小履带，稳稳当当'], ['wide', '宽履带', 6, '又宽又厚，什么路都压得过'], ['wheel4', '四轮', 10, '四个大轮子，跑得飞快'],
+      ['wheel6', '六轮', 16, '六个轮子，越野最稳'], ['hover', '悬浮垫', 28, '飘在空中走'], ['legs', '机械腿', 40, '四条机械腿，一步一步走'],
+      ['pzTrack', '数字履带', 8, '履带上印着 1 到 6', 'puzzle']],
+    body: [['round', '圆角车身', 0, '圆圆的，很可爱'], ['box', '方块装甲', 6, '方方正正，装甲很厚'], ['sharkhead', '鲨鱼头', 12, '一口大白牙，敌人都怕'],
+      ['sleek', '流线型', 18, '尖尖的车头，跑起来带风'], ['fort', '堡垒', 28, '像一座小城堡'], ['beetle', '甲虫壳', 40, '亮亮的硬壳，还有小圆点'],
+      ['pzArmor', '拼图装甲', 12, '四块拼图拼成的装甲', 'puzzle']],
+    turret: [['tround', '圆炮塔', 0, '圆圆的炮塔'], ['tmini', '迷你炮塔', 4, '小小的，转得快'], ['tsquare', '方炮塔', 8, '方方的炮塔'],
+      ['dome', '大圆顶', 15, '又大又圆的顶盖'], ['double', '双层炮塔', 26, '炮塔上面还有一层'], ['cube', '魔方炮塔', 18, '一个会转的魔方', 'puzzle']],
+    gun: [['short', '短炮', 0, '短短的炮管'], ['long', '长炮', 6, '长长的炮管，打得远'], ['twin', '双管', 12, '两根炮管，一次打两发'],
+      ['rockets', '火箭巢', 18, '背着四枚小火箭'], ['missiles', '导弹架', 24, '两枚大导弹'], ['laser', '激光炮', 32, '顶着一颗亮亮的激光球'],
+      ['flame', '喷火口', 38, '车头会喷火'], ['pzGun', '九宫炮', 25, '炮口是一个九宫格', 'puzzle']],
+    addon: [['none', '不挂', 0, '什么都不挂，清清爽爽'], ['antenna', '天线', 3, '会闪红灯的天线'], ['flag', '小旗', 5, '插一面小红旗'],
+      ['radar', '雷达', 8, '雷达找敌人'], ['horn', '喇叭', 12, '嘟嘟嘟，开道啦'], ['shield', '盾牌', 16, '车头挡一面大盾牌'],
+      ['wings', '小翅膀', 22, '一对白色小翅膀'], ['badge', '星徽', 30, '车身上一颗金色大星星'], ['pzCube', '小魔方', 5, '车尾挂一个小魔方', 'puzzle']],
+  };
+  R.PARTS = R.SLOTS.flatMap(([slot]) => PART_ROWS[slot].map(([id, name, price, desc, cur]) =>
+    ({ id, name, price, desc, slot, cur: cur || SLOT_GEM[slot], kind: 'part' })));
+  R.part = id => R.PARTS.find(p => p.id === id);
+  R.slotParts = slot => R.PARTS.filter(p => p.slot === slot);
+  // 老车型买过了，送对应的零件
+  const GRANT = { cannon: 'long', twin: 'twin', shark: 'sharkhead', flamer: 'flame', rocket: 'rockets', missile: 'missiles', hover: 'hover', laser: 'laser' };
+
   const KINDS = { model: R.MODELS, skin: R.SKINS, weapon: R.WEAPONS };
   Object.entries(KINDS).forEach(([k, xs]) => xs.forEach(x => (x.kind = k)));
-  R.KIND_NAME = { model: '车型', skin: '涂装', weapon: '武器' };
+  R.KIND_NAME = { model: '车型', skin: '涂装', weapon: '武器', part: '零件' };
 
   // 必杀技不用买：攒满能量就会出现
   R.SUPER = { id: 'air', icon: '✈️', name: '空中支援', desc: '能量攒满 3 格，下一炮飞机来帮忙' };
@@ -114,15 +152,41 @@
       TM.Store.save();
     }
     d.benched = d.benched || [];
+    d.parts = Array.isArray(d.parts) ? d.parts : [];
+    d.build = d.build && typeof d.build === 'object' ? d.build : {};
+    // 改装工厂第一次用：按每个战区已经拿到的关卡星补发彩色星星（每颗关卡星 1 颗），
+    // 拼图星按数独星补发，买过的老车型送对应零件。gemGift 留给工厂弹一次说明
+    if (!d.gems || typeof d.gems !== 'object') {
+      const g = Object.fromEntries(R.GEM_IDS.map(k => [k, 0]));
+      Object.entries(d.levels || {}).forEach(([k, l]) => {
+        const cur = R.ZONE_GEM[k.split('-')[0]];
+        if (cur) g[cur] += (l && l.stars) || 0;
+      });
+      g.puzzle = Object.values((d.sudoku && d.sudoku.done) || {}).reduce((s, x) => s + ((x && x.stars) || 0), 0);
+      const before = d.parts.length;
+      (d.owned.model || []).forEach(grant);
+      d.gems = g;
+      if (R.GEM_IDS.some(k => g[k]) || d.parts.length > before) d.gemGift = { gems: { ...g }, parts: d.parts.slice(before) };
+      TM.Store.save();
+    }
+    R.GEM_IDS.forEach(k => (d.gems[k] = d.gems[k] || 0));
     return d;
+  };
+  const grant = modelId => {
+    const id = GRANT[modelId], d = TM.Store.data;
+    if (id && !d.parts.includes(id)) d.parts.push(id);
   };
 
   R.wallet = () => data().wallet || 0;
-  R.has = x => (x.streak ? (TM.Store.data.bestStreak || 0) >= x.streak : x.price === 0 || data().owned[x.kind].includes(x.id));
-  R.canBuy = x => !x.streak && !R.has(x) && R.wallet() >= x.price;
+  // 某种星星还有几颗；cur 不写就是普通星星
+  R.balance = cur => (cur ? data().gems[cur] || 0 : R.wallet());
+  R.unit = cur => (cur ? R.GEMS[cur].name : '星星');
+  R.has = x => (x.streak ? (TM.Store.data.bestStreak || 0) >= x.streak
+    : x.price === 0 || (x.kind === 'part' ? data().parts : data().owned[x.kind]).includes(x.id));
+  R.canBuy = x => !x.streak && !R.has(x) && R.balance(x.cur) >= x.price;
   // 没拥有时的提示文字
   R.needText = x => (x.streak ? `连续 ${x.streak} 天完成每日任务就能拿到`
-    : R.wallet() >= x.price ? `${x.price} 颗星星就能买` : `还差 ${x.price - R.wallet()} 颗星星`);
+    : R.balance(x.cur) >= x.price ? `${x.price} 颗${R.unit(x.cur)}就能买` : `还差 ${x.price - R.balance(x.cur)} 颗${R.unit(x.cur)}`);
 
   // 加星星
   R.earn = n => {
@@ -131,25 +195,58 @@
     d.wallet = (d.wallet || 0) + n;
     TM.Store.save();
   };
+  // 加彩色星星
+  R.earnGem = (cur, n) => {
+    if (!(n > 0) || !R.GEMS[cur]) return;
+    const d = data();
+    d.gems[cur] = (d.gems[cur] || 0) + n;
+    TM.Store.save();
+  };
+  // 战区、题型对应哪种彩色星星
+  R.zoneGem = zi => { const z = TM.Levels.ZONES[zi]; return (z && R.ZONE_GEM[z.id]) || null; };
+  R.typeGem = type => R.zoneGem(TM.Repair.zoneIndex(type));
 
   // 买下并马上用上。星星不够、买过了都返回 false
   R.buy = x => {
     if (!R.canBuy(x)) return false;
     const d = data();
-    d.wallet -= x.price;
-    d.owned[x.kind].push(x.id);
+    if (x.cur) d.gems[x.cur] -= x.price;
+    else d.wallet -= x.price;
+    if (x.kind === 'part') d.parts.push(x.id);
+    else d.owned[x.kind].push(x.id);
+    if (x.kind === 'model') grant(x.id);
     R.equip(x);
     return true;
   };
 
-  // 换上车型或涂装；武器是带上出战
+  // 换上车型、涂装或零件（换零件就改用自己拼的坦克）；武器是带上出战
   R.equip = x => {
     const d = data();
     if (x.kind === 'model') d.model = x.id;
     else if (x.kind === 'skin') d.skin = x.id;
+    else if (x.kind === 'part') { d.build[x.slot] = x.id; d.model = 'custom'; }
     else d.benched = d.benched.filter(id => id !== x.id);
     TM.Store.save();
   };
+
+  // 自己拼的坦克：每个部位用买过的零件，没有就用免费的那个。over 用来先套上看看
+  R.build = (over = {}) => {
+    const d = data(), b = {};
+    R.SLOTS.forEach(([s]) => {
+      const p = R.part(over[s] || d.build[s]);
+      b[s] = p && p.slot === s && (over[s] || R.has(p)) ? p.id : R.slotParts(s)[0].id;
+    });
+    return b;
+  };
+  R.custom = over => ({ id: 'custom', kind: 'model', name: '我的坦克', price: 0, build: R.build(over) });
+  R.usingCustom = () => data().model === 'custom';
+  // 双管：老车型「双管坦克」或者自己拼的坦克装了双管
+  R.twin = () => { const m = R.model(); return m.id === 'twin' || (m.id === 'custom' && m.build.gun === 'twin'); };
+  // {green: 2, blue: 1} → 「2 颗绿星、1 颗蓝星」；add 把一次答对的彩色星星记进去
+  R.gemText = gems => R.GEM_IDS.filter(k => gems[k]).map(k => `${gems[k]} 颗${R.GEMS[k].name}`).join('、');
+  R.gemAdd = (gems, cur, n = 1) => { if (cur) { R.earnGem(cur, n); gems[cur] = (gems[cur] || 0) + n; } };
+  // 工厂第一次打开时弹的补发说明，看过就清掉
+  R.takeGift = () => { const d = data(), g = d.gemGift; if (g) { delete d.gemGift; TM.Store.save(); } return g || null; };
 
   // 武器带不带出战。至少要带一种，最后一种不能取下
   R.carrying = w => R.has(w) && !data().benched.includes(w.id);
@@ -167,20 +264,27 @@
   R.pickWeapon = () => (U.pick(R.carried()) || R.WEAPONS[0]).id;
   R.weapon = id => R.WEAPONS.find(w => w.id === id) || R.SUPER;
   R.skin = () => R.SKINS.find(s => s.id === TM.Store.data.skin && R.has(s)) || R.SKINS[0];
-  R.model = () => R.MODELS.find(m => m.id === data().model && R.has(m)) || R.MODELS[0];
+  R.model = () => (data().model === 'custom' ? R.custom()
+    : R.MODELS.find(m => m.id === data().model && R.has(m)) || R.MODELS[0]);
 
-  const shop = () => [...R.MODELS, ...R.SKINS, ...R.WEAPONS].filter(x => !x.streak && !R.has(x));
-  // 星星从 before 涨到 after，新买得起了哪些
-  R.affordable = (before, after) => shop().filter(x => x.price > before && x.price <= after);
-  // 还没买的里面最便宜的一个
-  R.next = () => shop().sort((a, b) => a.price - b.price)[0] || null;
+  const shop = () => [...R.MODELS, ...R.SKINS, ...R.WEAPONS, ...R.PARTS].filter(x => !x.streak && !R.has(x));
+  const balances = () => Object.fromEntries([['', R.wallet()], ...R.GEM_IDS.map(k => [k, R.balance(k)])]);
+  // 星星从 before 涨到 after（每种星星各算各的），新买得起了哪些
+  R.affordable = (before, after) => shop().filter(x => x.price > before[x.cur || ''] && x.price <= after[x.cur || '']);
+  // 普通星星还没买的里面最便宜的一个
+  R.next = () => shop().filter(x => !x.cur).sort((a, b) => a.price - b.price)[0] || null;
 
-  // 发奖励：rows = [[说明, 星星数]]，返回发奖前后的星星和新买得起的装备
+  // 发奖励：rows = [[说明, 数量, 彩色星星种类(不写是普通星星)]]
+  // 返回普通星星总数 total、彩色星星 gems {green: 3}、发奖前后的普通星星和新买得起的东西
   R.pay = rows => {
-    rows = rows.filter(r => r[1] > 0);
-    const before = R.wallet(), total = rows.reduce((s, r) => s + r[1], 0);
+    rows = rows.filter(r => r[1] > 0 && (r.length < 3 || R.GEMS[r[2]]));
+    const b = balances(), gems = {};
+    let total = 0;
+    rows.forEach(([, n, cur]) => {
+      if (cur) { R.earnGem(cur, n); gems[cur] = (gems[cur] || 0) + n; } else total += n;
+    });
     R.earn(total);
-    return { rows, total, before, after: R.wallet(), canBuy: R.affordable(before, R.wallet()) };
+    return { rows, total, gems, before: b[''], after: R.wallet(), canBuy: R.affordable(b, balances()) };
   };
 
   TM.Rewards = R;

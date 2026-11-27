@@ -195,7 +195,9 @@
     if (stars === 3) TM.Tasks.bump('three');
     // 发星星：这次拿到几颗星就给几颗，新拿到的关卡星每颗再给 2 颗
     const gain = Math.max(0, stars - old.stars);
-    const pay = TM.Rewards.pay([[`击落敌机拿到 ${stars} 颗星`, stars], [`新拿到 ${gain} 颗关卡星`, gain * 2]]);
+    const gem = TM.Rewards.zoneGem(zi), gn = gem ? TM.Rewards.GEMS[gem].name : '';
+    const pay = TM.Rewards.pay([[`击落敌机拿到 ${stars} 颗星`, stars], [`新拿到 ${gain} 颗关卡星`, gain * 2],
+      [`过关得${gn}`, 1, gem], [`新关卡星得${gn}`, gain * 2, gem]]);
     Audio.sfx.win();
     const v = await TM.App.ask({
       cls: 'report', title: '敌机编队全部击落！',

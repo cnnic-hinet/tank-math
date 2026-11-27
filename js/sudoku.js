@@ -463,6 +463,8 @@
       const base = n <= 4 ? 1 : n <= 6 ? 2 : 3;
       const rows = [[`完成一盘${g.name}数独`, base]];
       if (gain) rows.push([`新拿到 ${gain} 颗关卡星`, gain * 2]);
+      // 拼图星：辛苦星多少就给多少，破纪录的新星每颗再给 1 颗，在改装工厂买拼图零件
+      rows.push(['完成一盘得拼图星', base + gain, 'puzzle']);
       const pay = TM.Rewards.pay(rows);
       // 最后一颗星飞到、坦克变成金色，再发起致命一击；中途离开这一页就不弹完成框
       await wait(700);
