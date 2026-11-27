@@ -191,9 +191,9 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 /* 特殊小兵：盾牌兵、飞行兵、反击兵 */
 .trait-badge {
   position: absolute; right: -6px; top: -10px; font-size: 30px; line-height: 1;
-  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, .25)); animation: bob 1.4s ease-in-out infinite;
+  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, .25)); animation: badgeBob 1.4s ease-in-out infinite;
 }
-@keyframes bob { 50% { transform: translateY(-6px); } }
+@keyframes badgeBob { 50% { transform: translateY(-6px); } }
 .trait-shield .tank-svg { filter: drop-shadow(0 0 10px #58b6ff) drop-shadow(0 0 22px #8fd3ff); }
 .trait-shield.shield-broken .tank-svg { animation: hurt .5s; }
 .trait-flyer .tank-svg { animation: flyerFloat 1.6s ease-in-out infinite; }
@@ -667,8 +667,8 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
 .tank-svg .radar { transform-origin: 26px 30px; animation: radarSpin 2.4s ease-in-out infinite; }
 @keyframes radarSpin { 50% { transform: rotate(-35deg); } }
 /* 新挂件和头饰的小动画 */
-.tank-svg .bob { animation: bob 2s ease-in-out infinite; }
-@keyframes bob { 50% { transform: translate(-2px, -4px) rotate(-3deg); } }
+.tank-svg .bob { animation: balloonBob 2s ease-in-out infinite; }
+@keyframes balloonBob { 50% { transform: translate(-2px, -4px) rotate(-3deg); } }
 .tank-svg .cape { transform-origin: 50px 80px; animation: capeWave 1.2s ease-in-out infinite; }
 @keyframes capeWave { 50% { transform: skewX(8deg) scaleY(1.06); } }
 .tank-svg .whirl { transform-origin: 16px 22px; animation: spin 1s linear infinite; }
@@ -976,8 +976,8 @@ input, textarea { font: inherit; -webkit-user-select: text; user-select: text; }
   font-size: 80px; background: rgba(200, 200, 210, .96); border-radius: 18px; transition: opacity .7s;
 }
 .smoke.clear { opacity: 0; }
-.choices.shuffling .choice { animation: wobble .6s ease-in-out; }
-@keyframes wobble { 25% { transform: rotate(-6deg) scale(.95); } 75% { transform: rotate(6deg) scale(.95); } }
+.choices.shuffling .choice { animation: shuffleWobble .6s ease-in-out; }
+@keyframes shuffleWobble { 25% { transform: rotate(-6deg) scale(.95); } 75% { transform: rotate(6deg) scale(.95); } }
 .hint-btn { position: absolute; top: 10px; right: 82px; z-index: 2; }
 
 /* ---------- 小游戏：敌机编队 ---------- */
